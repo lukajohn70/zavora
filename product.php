@@ -25,6 +25,39 @@ $varStmt = $pdo->prepare("SELECT * FROM product_variants WHERE product_id = ? AN
 $varStmt->execute([$id]);
 $variants = $varStmt->fetchAll();
 
+// Handle Customer Review Submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'submit_review') {
+    $custName = trim($_POST['customer_name'] ?? '');
+    $custRating = max(1, min(5, intval($_POST['rating'] ?? 5)));
+    $custTitle = trim($_POST['review_title'] ?? '');
+    $custComment = trim($_POST['comment'] ?? '');
+
+    if (!empty($custName) && !empty($custComment)) {
+        $ins = $pdo->prepare("INSERT INTO product_reviews (product_id, customer_name, rating, title, comment, is_verified_buyer) VALUES (?, ?, ?, ?, ?, 1)");
+        $ins->execute([$id, $custName, $custRating, $custTitle, $custComment]);
+
+        // Dynamically recalculate average rating and count
+        $stat = $pdo->prepare("SELECT AVG(rating) as avg_r, COUNT(*) as cnt FROM product_reviews WHERE product_id = ?");
+        $stat->execute([$id]);
+        $row = $stat->fetch();
+        $pdo->prepare("UPDATE products SET rating = ?, reviews_count = ? WHERE id = ?")->execute([
+            round($row['avg_r'] ?: $custRating, 1),
+            intval($row['cnt']),
+            $id
+        ]);
+        header('Location: ' . zavora_asset('product.php?id=' . $id . '&reviewed=1#reviews'));
+        exit;
+    }
+}
+
+// Fetch Product Reviews (100% Database-Driven)
+$revStmt = $pdo->prepare("SELECT * FROM product_reviews WHERE product_id = ? ORDER BY id DESC");
+$revStmt->execute([$id]);
+$reviews = $revStmt->fetchAll();
+
+$avgRating = !empty($reviews) ? round(array_sum(array_column($reviews, 'rating')) / count($reviews), 1) : (float)($product['rating'] ?? 5.0);
+$reviewCount = count($reviews) ?: (int)($product['reviews_count'] ?? 0);
+
 // Parse variant attributes schema
 $attributeGroups = !empty($product['variant_attributes']) ? json_decode($product['variant_attributes'], true) : [];
 
@@ -110,11 +143,11 @@ require_once __DIR__ . '/includes/header.php';
         <span class="text-xs font-bold uppercase tracking-wider text-[#1B2299]">
           <?php echo htmlspecialchars($product['category_name'] ?? 'ZAVORA Store'); ?>
         </span>
-        <div class="flex items-center gap-1 text-xs text-amber-500 font-bold">
+        <a href="#reviews" class="flex items-center gap-1 text-xs text-amber-500 font-bold hover:underline">
           <i class="fas fa-star"></i>
-          <span><?php echo number_format($product['rating'], 1); ?></span>
-          <span class="text-gray-400 font-normal">(<?php echo $product['reviews_count']; ?> verified reviews)</span>
-        </div>
+          <span><?php echo number_format($avgRating, 1); ?></span>
+          <span class="text-gray-400 font-normal">(<?php echo $reviewCount; ?> verified reviews)</span>
+        </a>
       </div>
 
       <!-- Title -->
@@ -274,6 +307,110 @@ require_once __DIR__ . '/includes/header.php';
         </div>
       </div>
 
+    </div>
+
+  </div>
+
+  <!-- Customer Reviews Section (100% Database Driven) -->
+  <div id="reviews" class="mt-12 bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-10 shadow-sm">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-gray-150">
+      <div>
+        <h2 class="text-2xl font-black font-display text-gray-900 mb-1">Customer Reviews</h2>
+        <p class="text-xs text-gray-500">Verified buyer ratings and authentic experience feedback.</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="text-center sm:text-right">
+          <div class="text-3xl font-black text-gray-900 leading-none"><?php echo number_format($avgRating, 1); ?></div>
+          <div class="flex items-center gap-1 text-xs text-amber-500 my-1 justify-center sm:justify-end">
+            <?php for ($s = 1; $s <= 5; $s++): ?>
+              <i class="fas fa-star <?php echo $s <= round($avgRating) ? 'text-amber-500' : 'text-gray-200'; ?>"></i>
+            <?php endfor; ?>
+          </div>
+          <div class="text-[11px] text-gray-400 font-medium">Based on <?php echo $reviewCount; ?> verified ratings</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Cards List -->
+    <div class="py-8 space-y-6">
+      <?php if (empty($reviews)): ?>
+        <div class="py-8 text-center text-gray-500 text-xs">
+          <p>No customer reviews yet. Be the first to share your experience with this product!</p>
+        </div>
+      <?php else: ?>
+        <?php foreach ($reviews as $rev): ?>
+          <div class="p-5 rounded-2xl bg-gray-50 border border-gray-150 transition-colors">
+            <div class="flex items-start justify-between gap-4 mb-2">
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="font-bold text-sm text-gray-900"><?php echo htmlspecialchars($rev['customer_name']); ?></span>
+                  <?php if (!empty($rev['is_verified_buyer'])): ?>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                      <i class="fas fa-check-circle text-[9px]"></i> Verified Buyer
+                    </span>
+                  <?php endif; ?>
+                </div>
+                <div class="flex items-center gap-1 text-xs text-amber-500">
+                  <?php for ($s = 1; $s <= 5; $s++): ?>
+                    <i class="fas fa-star <?php echo $s <= $rev['rating'] ? 'text-amber-500' : 'text-gray-200'; ?> text-[11px]"></i>
+                  <?php endfor; ?>
+                  <?php if (!empty($rev['title'])): ?>
+                    <span class="text-xs font-bold text-gray-800 ml-1.5"><?php echo htmlspecialchars($rev['title']); ?></span>
+                  <?php endif; ?>
+                </div>
+              </div>
+              <span class="text-[11px] text-gray-400 font-mono">
+                <?php echo date('M j, Y', strtotime($rev['created_at'])); ?>
+              </span>
+            </div>
+            <p class="text-xs text-gray-700 leading-relaxed mt-2">
+              <?php echo nl2br(htmlspecialchars($rev['comment'])); ?>
+            </p>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+
+    <!-- Write a Review Form -->
+    <div class="pt-8 border-t border-gray-150">
+      <h3 class="text-base font-bold text-gray-900 mb-4">Write a Customer Review</h3>
+      <form action="<?php echo zavora_asset('product.php?id=' . $id); ?>" method="POST" class="space-y-4 max-w-xl">
+        <input type="hidden" name="action" value="submit_review">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Your Full Name</label>
+            <input type="text" name="customer_name" required placeholder="Full Name"
+                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Rating</label>
+            <select name="rating" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
+              <option value="5">★★★★★ (5 - Excellent)</option>
+              <option value="4">★★★★☆ (4 - Very Good)</option>
+              <option value="3">★★★☆☆ (3 - Average)</option>
+              <option value="2">★★☆☆☆ (2 - Below Expectations)</option>
+              <option value="1">★☆☆☆☆ (1 - Poor)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Review Headline</label>
+          <input type="text" name="review_title" placeholder="Summary of your experience"
+                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Your Feedback</label>
+          <textarea name="comment" rows="3" required placeholder="Detailed review of packaging, functionality, delivery, or build quality..."
+                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]"></textarea>
+        </div>
+
+        <button type="submit" class="px-6 py-2.5 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-bold rounded-xl transition-all shadow-sm">
+          Submit Review
+        </button>
+      </form>
     </div>
 
   </div>

@@ -191,14 +191,14 @@ require_once __DIR__ . '/includes/header.php';
         <div class="space-y-4 pl-8">
           <div>
             <label class="block text-xs font-bold text-gray-700 mb-1">Full Name *</label>
-            <input type="text" name="customer_name" required placeholder="e.g. Chukwuma Okafor"
+            <input type="text" name="customer_name" required placeholder="Full Name"
                    value="<?php echo htmlspecialchars($_POST['customer_name'] ?? ''); ?>"
                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]" />
           </div>
 
           <div>
             <label class="block text-xs font-bold text-gray-700 mb-1">Email Address *</label>
-            <input type="email" name="customer_email" required placeholder="e.g. chukwuma@example.com"
+            <input type="email" name="customer_email" required placeholder="name@domain.com"
                    value="<?php echo htmlspecialchars($_POST['customer_email'] ?? ''); ?>"
                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]" />
             <span class="text-[11px] text-gray-400 mt-1 block">
@@ -208,7 +208,7 @@ require_once __DIR__ . '/includes/header.php';
 
           <div>
             <label class="block text-xs font-bold text-gray-700 mb-1">Phone Number (WhatsApp preferred) *</label>
-            <input type="tel" name="customer_phone" required placeholder="e.g. +234 801 234 5678"
+            <input type="tel" name="customer_phone" required placeholder="080XXXXXXXX or +234..."
                    value="<?php echo htmlspecialchars($_POST['customer_phone'] ?? ''); ?>"
                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]" />
           </div>

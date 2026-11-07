@@ -5,6 +5,27 @@ $pdo = zavora_get_db();
 $error = '';
 $success = '';
 
+$nigerianBanks = [
+    'Access Bank',
+    'Guaranty Trust Bank (GTBank)',
+    'Zenith Bank',
+    'First Bank of Nigeria',
+    'United Bank for Africa (UBA)',
+    'Kuda Microfinance Bank',
+    'OPay (PayCom)',
+    'PalmPay',
+    'Moniepoint MFB',
+    'Stanbic IBTC Bank',
+    'Fidelity Bank',
+    'First City Monument Bank (FCMB)',
+    'Sterling Bank',
+    'Wema Bank (ALAT)',
+    'Union Bank of Nigeria',
+    'Polaris Bank',
+    'Keystone Bank',
+    'Taj Bank'
+];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $storeName = trim($_POST['store_name'] ?? '');
     $ownerName = trim($_POST['owner_name'] ?? '');
@@ -74,19 +95,19 @@ require_once __DIR__ . '/../includes/header.php';
     <form method="POST" class="space-y-4">
       <div>
         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Store / Brand Name *</label>
-        <input type="text" name="store_name" required placeholder="e.g. Lagos Tech Studio"
+        <input type="text" name="store_name" required placeholder="Store or Business Name"
                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-[#1B2299] focus:outline-none">
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Owner Full Name *</label>
-          <input type="text" name="owner_name" required placeholder="e.g. Tunde Balogun"
+          <input type="text" name="owner_name" required placeholder="Full Name"
                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-[#1B2299] focus:outline-none">
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Phone Number *</label>
-          <input type="tel" name="phone" required placeholder="08012345678"
+          <input type="tel" name="phone" required placeholder="080XXXXXXXX"
                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-[#1B2299] focus:outline-none">
         </div>
       </div>
@@ -111,18 +132,22 @@ require_once __DIR__ . '/../includes/header.php';
         </span>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label class="block text-[11px] font-bold text-gray-500 mb-1">Bank Name</label>
-            <input type="text" name="bank_name" placeholder="e.g. GTBank / Zenith"
-                   class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+            <label class="block text-[11px] font-bold text-gray-500 mb-1">Select Bank *</label>
+            <select name="bank_name" required class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:bg-white focus:outline-none">
+              <option value="">Choose Bank...</option>
+              <?php foreach ($nigerianBanks as $bnk): ?>
+                <option value="<?php echo htmlspecialchars($bnk); ?>"><?php echo htmlspecialchars($bnk); ?></option>
+              <?php endforeach; ?>
+            </select>
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-gray-500 mb-1">Account Number</label>
-            <input type="text" name="account_number" placeholder="10 digits" maxlength="10"
-                   class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+            <label class="block text-[11px] font-bold text-gray-500 mb-1">Account Number *</label>
+            <input type="text" name="account_number" required placeholder="10-digit NUBAN" maxlength="10"
+                   class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono font-bold focus:bg-white focus:outline-none">
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-gray-500 mb-1">Account Name</label>
-            <input type="text" name="account_name" placeholder="Name as in bank"
+            <label class="block text-[11px] font-bold text-gray-500 mb-1">Account Name *</label>
+            <input type="text" name="account_name" required placeholder="Name on Bank Account"
                    class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
           </div>
         </div>

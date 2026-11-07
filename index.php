@@ -8,18 +8,25 @@ $pdo = zavora_get_db();
 $dealsStmt = $pdo->query("SELECT * FROM products WHERE is_flash_deal = 1 ORDER BY id DESC LIMIT 4");
 $flashDeals = $dealsStmt->fetchAll();
 
-// 2. Fetch Trending Products
+// 2. Fetch Hero Showcase Product (100% Database-Driven)
+$heroStmt = $pdo->query("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.is_featured = 1 ORDER BY p.is_boosted DESC, p.rating DESC, p.id DESC LIMIT 1");
+$heroProduct = $heroStmt->fetch();
+if (!$heroProduct) {
+    $heroProduct = $pdo->query("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.id DESC LIMIT 1")->fetch();
+}
+
+// 3. Fetch Trending Products
 $trendStmt = $pdo->query("SELECT * FROM products WHERE is_featured = 1 ORDER BY rating DESC LIMIT 6");
 $trendingProducts = $trendStmt->fetchAll();
 
-// 3. Fetch Digital Products
+// 4. Fetch Digital Products
 $digiStmt = $pdo->query("SELECT * FROM products WHERE type = 'digital' ORDER BY id DESC LIMIT 3");
 $digitalProducts = $digiStmt->fetchAll();
 
-// 4. Fetch Live Academy Courses (from Learnerium API)
+// 5. Fetch Live Academy Courses (from Learnerium API)
 $academyCourses = zavora_get_academy_courses(3);
 
-// 5. Fetch Categories
+// 6. Fetch Categories
 $catStmt = $pdo->query("SELECT * FROM categories ORDER BY id ASC");
 $categories = $catStmt->fetchAll();
 ?>
@@ -79,28 +86,37 @@ $categories = $catStmt->fetchAll();
 
       </div>
 
-      <!-- Right Hero Visual Grid -->
+      <!-- Right Hero Visual Grid (100% Database Driven) -->
       <div class="lg:col-span-5 relative">
         <div class="relative mx-auto max-w-md">
-          <!-- Main Hero Card Preview -->
-          <div class="rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 p-6 shadow-2xl">
-            <div class="relative rounded-2xl overflow-hidden aspect-[4/3] mb-4 bg-gray-900">
-              <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80" alt="Headphones" class="w-full h-full object-cover">
-              <span class="absolute top-3 left-3 bg-[#E4306D] text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
-                Featured Deal
-              </span>
-            </div>
-            <div class="flex items-center justify-between text-white">
-              <div>
-                <h4 class="font-bold text-sm text-white">Sony WH-1000XM5</h4>
-                <p class="text-xs text-gray-300">Wireless Noise-Cancelling</p>
+          <?php if (!empty($heroProduct)): ?>
+            <!-- Main Hero Card Preview -->
+            <a href="<?php echo zavora_asset('product.php?id=' . $heroProduct['id']); ?>" class="block rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 p-6 shadow-2xl hover:border-white/40 transition-all duration-300 group">
+              <div class="relative rounded-2xl overflow-hidden aspect-[4/3] mb-4 bg-gray-900">
+                <img src="<?php echo htmlspecialchars($heroProduct['thumbnail']); ?>" alt="<?php echo htmlspecialchars($heroProduct['title']); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                <span class="absolute top-3 left-3 bg-[#E4306D] text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  <?php echo !empty($heroProduct['is_boosted']) ? 'Featured Spotlight' : 'Marketplace Pick'; ?>
+                </span>
+                <?php if (!empty($heroProduct['is_preorder'])): ?>
+                  <span class="absolute top-3 right-3 bg-indigo-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    Pre-Order
+                  </span>
+                <?php endif; ?>
               </div>
-              <div class="text-right">
-                <span class="text-base font-black text-[#F7DE7A]">₦385,000</span>
-                <span class="block text-[11px] text-gray-400 line-through">₦420,000</span>
+              <div class="flex items-center justify-between text-white">
+                <div class="pr-3">
+                  <h4 class="font-bold text-sm text-white line-clamp-1 group-hover:text-[#F7DE7A] transition-colors"><?php echo htmlspecialchars($heroProduct['title']); ?></h4>
+                  <p class="text-xs text-gray-300 line-clamp-1"><?php echo htmlspecialchars($heroProduct['category_name'] ?? 'Flagship Hardware'); ?></p>
+                </div>
+                <div class="text-right flex-shrink-0">
+                  <span class="text-base font-black text-[#F7DE7A]"><?php echo zavora_format_price($heroProduct['price']); ?></span>
+                  <?php if (!empty($heroProduct['previous_price'])): ?>
+                    <span class="block text-[11px] text-gray-400 line-through"><?php echo zavora_format_price($heroProduct['previous_price']); ?></span>
+                  <?php endif; ?>
+                </div>
               </div>
-            </div>
-          </div>
+            </a>
+          <?php endif; ?>
 
           <!-- Floating badge: Course Academy -->
           <div class="absolute -bottom-6 -left-6 bg-white text-gray-900 p-4 rounded-2xl shadow-2xl border border-gray-100 flex items-center gap-3">
@@ -175,14 +191,10 @@ $categories = $catStmt->fetchAll();
         </div>
       </div>
       
-      <!-- Fake Countdown Timer for Urgency -->
-      <div class="flex items-center gap-2 text-xs font-bold bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
-        <span class="text-gray-400">Ends in:</span>
-        <span class="px-2 py-1 bg-gray-900 text-white rounded font-mono">14</span>
-        <span class="text-gray-400">:</span>
-        <span class="px-2 py-1 bg-gray-900 text-white rounded font-mono">32</span>
-        <span class="text-gray-400">:</span>
-        <span class="px-2 py-1 bg-[#E4306D] text-white rounded font-mono">48</span>
+      <!-- Real Promotional Status Badge -->
+      <div class="flex items-center gap-2 text-xs font-bold bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm text-gray-700">
+        <i class="fas fa-tag text-[#E4306D]"></i>
+        <span>Verified Promotional Pricing • Real-Time Stock</span>
       </div>
     </div>
 

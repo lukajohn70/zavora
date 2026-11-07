@@ -326,10 +326,13 @@ require_once __DIR__ . '/../includes/header.php';
                   <p class="text-[11px] text-gray-500">Order: <?php echo htmlspecialchars($dItem['order_number']); ?> • Unlimited Redownloads</p>
                 </div>
               </div>
-              <a href="<?php echo zavora_asset('uploads/downloads/sample_asset.zip'); ?>" download
+              <?php 
+                $downloadUrl = !empty($dItem['digital_file_url']) ? $dItem['digital_file_url'] : zavora_asset('order_confirmation.php?order=' . urlencode($dItem['order_number']));
+              ?>
+              <a href="<?php echo htmlspecialchars($downloadUrl); ?>"
                  class="px-4 py-2 bg-[#E4306D] hover:bg-[#0B132B] text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5">
                 <i class="fas fa-download"></i>
-                <span>Download</span>
+                <span>Download Asset</span>
               </a>
             </div>
           <?php endforeach; ?>

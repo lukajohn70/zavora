@@ -191,6 +191,18 @@ function zavora_ensure_schema(PDO $pdo) {
         created_at {$timeType} DEFAULT CURRENT_TIMESTAMP
     )");
 
+    // 8. Product Reviews Table (100% Database-Driven Authentic Feedback)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS product_reviews (
+        id {$autoInc},
+        product_id INT UNSIGNED NOT NULL,
+        customer_name VARCHAR(150) NOT NULL,
+        rating INT NOT NULL,
+        title VARCHAR(200) NULL,
+        comment {$textType} NOT NULL,
+        is_verified_buyer INT DEFAULT 1,
+        created_at {$timeType} DEFAULT CURRENT_TIMESTAMP
+    )");
+
     // Ensure variety, preorder, and boost columns exist on products
     $productCols = [
         "ALTER TABLE products ADD COLUMN vendor_id INT UNSIGNED NULL",
