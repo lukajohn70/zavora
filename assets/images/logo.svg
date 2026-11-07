@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 50" fill="none">
+  <defs>
+    <linearGradient id="logoZGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1B2299" />
+      <stop offset="100%" stop-color="#0B132B" />
+    </linearGradient>
+    <linearGradient id="logoGlyphGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E4306D" />
+      <stop offset="100%" stop-color="#F7DE7A" />
+    </linearGradient>
+  </defs>
+  <!-- Symbol -->
+  <g transform="translate(0, 5)">
+    <rect width="40" height="40" rx="10" fill="url(#logoZGrad)" />
+    <path d="M10 12h20l-12 10h12v5H10l12-10H10v-5z" fill="url(#logoGlyphGrad)" />
+    <circle cx="30" cy="12" r="2.5" fill="#F7DE7A" />
+  </g>
+  <!-- Brand Wordmark -->
+  <text x="52" y="32" font-family="'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" font-weight="900" font-size="24" fill="#0B132B" letter-spacing="1.5">ZAVORA</text>
+  <!-- Micro endorsement badge -->
+  <g transform="translate(53, 36)">
+    <text font-family="'Inter', sans-serif" font-weight="700" font-size="7.5" fill="#E4306D" letter-spacing="1">A JLM PRODUCT</text>
+  </g>
+</svg>

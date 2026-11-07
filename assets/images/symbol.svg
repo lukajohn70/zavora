@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="zGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1B2299" />
+      <stop offset="100%" stop-color="#0B132B" />
+    </linearGradient>
+    <linearGradient id="zGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E4306D" />
+      <stop offset="100%" stop-color="#F7DE7A" />
+    </linearGradient>
+    <linearGradient id="zGrad3" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1B2299" />
+      <stop offset="100%" stop-color="#E4306D" />
+    </linearGradient>
+  </defs>
+  <!-- Background rounded squircle -->
+  <rect width="48" height="48" rx="12" fill="url(#zGrad1)" />
+  <!-- Futuristic dynamic Z glyph -->
+  <path d="M12 14h24l-14 12h14v6H12l14-12H12v-6z" fill="url(#zGrad2)" />
+  <!-- Accent glow sphere -->
+  <circle cx="36" cy="14" r="3" fill="#F7DE7A" />
+</svg>

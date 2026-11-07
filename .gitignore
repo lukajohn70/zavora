@@ -1,0 +1,38 @@
+# Environment & Credentials
+.env
+.env.backup
+.env.local
+.env.production
+*.key
+*.pem
+
+# Local SQLite Database & WAL files
+database/*.sqlite
+database/*.sqlite-journal
+database/*.sqlite-wal
+database/*.sqlite-shm
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE & Editor Directories
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Large Uploads & User Generated Files
+uploads/downloads/*.zip
+uploads/downloads/*.pdf
+uploads/temp/*
+!uploads/downloads/.gitkeep
+!uploads/products/.gitkeep
+
+# Logs & Cache
+*.log
