@@ -1,0 +1,13 @@
+---
+# cPanel Git™ Version Control Automated Deployment Configuration
+# ZAVORA Marketplace — zavora.jlm.com.ng
+deployment:
+  tasks:
+    - if [ -d "/home/gwylvxeo/zavora.jlm.com.ng" ]; then export DEPLOYPATH=/home/gwylvxeo/zavora.jlm.com.ng; elif [ -d "/home/gwylvxeo/public_html/zavora" ]; then export DEPLOYPATH=/home/gwylvxeo/public_html/zavora; else export DEPLOYPATH=/home/gwylvxeo/zavora.jlm.com.ng; fi
+    - /bin/mkdir -p $DEPLOYPATH
+    - /bin/cp -R * $DEPLOYPATH/
+    - /bin/cp .htaccess $DEPLOYPATH/.htaccess
+    - if [ ! -f "$DEPLOYPATH/.env" ] && [ -f ".env.example" ]; then /bin/cp .env.example $DEPLOYPATH/.env; fi
+    - /bin/chmod 755 $DEPLOYPATH
+    - /bin/chmod -R 775 $DEPLOYPATH/uploads 2>/dev/null || true
+    - /bin/chmod -R 775 $DEPLOYPATH/database 2>/dev/null || true
