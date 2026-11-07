@@ -215,6 +215,32 @@ function zavora_ensure_schema(PDO $pdo) {
         created_at {$timeType} DEFAULT CURRENT_TIMESTAMP
     )");
 
+    // 10. System Settings Table (Admin-configurable platform parameters)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS system_settings (
+        id {$autoInc},
+        setting_key VARCHAR(100) NOT NULL UNIQUE,
+        setting_value {$textType} NULL,
+        description VARCHAR(255) NULL,
+        updated_at {$timeType} DEFAULT CURRENT_TIMESTAMP
+    )");
+
+    // Seed default system settings if empty
+    try {
+        $sCount = $pdo->query("SELECT COUNT(*) FROM system_settings")->fetchColumn();
+        if ($sCount == 0) {
+            $defSettings = [
+                ['vendor_trial_ai_credits', '5', 'Complimentary AI credits (trials) granted to new vendors on signup'],
+                ['vendor_trial_boost_credits', '3', 'Complimentary product boost credits granted to new vendors'],
+                ['learnerium_online_url', 'https://learnerium.jlm.com.ng', 'Canonical online Learnerium LMS portal URL'],
+                ['ai_image_provider', 'pollinations_flux', 'Active AI image generation provider (pollinations_flux)'],
+            ];
+            $sStmt = $pdo->prepare("INSERT INTO system_settings (setting_key, setting_value, description) VALUES (?, ?, ?)");
+            foreach ($defSettings as $ds) {
+                try { $sStmt->execute($ds); } catch (\Throwable $e) {}
+            }
+        }
+    } catch (\Throwable $e) {}
+
     // Ensure variety, preorder, and boost columns exist on products
     $productCols = [
         "ALTER TABLE products ADD COLUMN vendor_id INT UNSIGNED NULL",
@@ -389,5 +415,40 @@ function zavora_seed_initial_data(PDO $pdo) {
 
     foreach ($products as $p) {
         $pStmt->execute($p);
+    }
+}
+
+/**
+ * Retrieve a system setting value with fallback
+ */
+function zavora_get_setting($key, $default = null) {
+    try {
+        $pdo = zavora_get_db();
+        $stmt = $pdo->prepare("SELECT setting_value FROM system_settings WHERE setting_key = ?");
+        $stmt->execute([$key]);
+        $val = $stmt->fetchColumn();
+        return ($val !== false && $val !== null) ? $val : $default;
+    } catch (\Throwable $e) {
+        return $default;
+    }
+}
+
+/**
+ * Set or update a system setting value (admin configurable)
+ */
+function zavora_set_setting($key, $value, $description = null) {
+    try {
+        $pdo = zavora_get_db();
+        $chk = $pdo->prepare("SELECT id FROM system_settings WHERE setting_key = ?");
+        $chk->execute([$key]);
+        if ($chk->fetch()) {
+            $upd = $pdo->prepare("UPDATE system_settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?");
+            return $upd->execute([$value, $key]);
+        } else {
+            $ins = $pdo->prepare("INSERT INTO system_settings (setting_key, setting_value, description) VALUES (?, ?, ?)");
+            return $ins->execute([$key, $value, $description]);
+        }
+    } catch (\Throwable $e) {
+        return false;
     }
 }

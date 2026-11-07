@@ -223,14 +223,23 @@ if ($action === 'generate_image') {
         $chosenKey = 'digital';
     }
 
+    // 1. Primary Engine: Free High-Fidelity Generative AI Studio via Pollinations (FLUX.1 Model)
+    // Completely free, requires no API key or paid tokens, generates unique photorealistic product images on demand.
+    $seed = rand(10000, 999999);
+    $cleanPrompt = "commercial product photography of " . $prompt . ", professional studio lighting, 8k resolution, neutral clean white background, photorealistic e-commerce catalog image, sharp focus";
+    $aiGeneratedUrl = "https://image.pollinations.ai/prompt/" . rawurlencode($cleanPrompt) . "?width=800&height=800&model=flux&seed={$seed}&nologo=true";
+
     $candidates = $studioPhotos[$chosenKey];
-    $imageUrl = $candidates[array_rand($candidates)];
+    $fallbackUrl = $candidates[array_rand($candidates)];
+
+    // Use AI generated FLUX.1 asset
+    $imageUrl = $aiGeneratedUrl;
 
     // Deduct 1 Credit & Record Transaction
     $pdo->beginTransaction();
     $pdo->prepare("UPDATE vendors SET ai_credits = ai_credits - 1 WHERE id = ?")->execute([$vendorId]);
     $pdo->prepare("INSERT INTO ai_credit_transactions (vendor_id, action_type, credits_change, prompt_summary) VALUES (?, 'image_generation', -1, ?)")
-        ->execute([$vendorId, "Image studio generation: " . substr($prompt, 0, 100)]);
+        ->execute([$vendorId, "AI Studio image: " . substr($prompt, 0, 100)]);
     $pdo->commit();
 
     echo json_encode([

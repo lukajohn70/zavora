@@ -293,4 +293,23 @@ INSERT INTO `ai_credit_transactions` (`vendor_id`, `action_type`, `credits_chang
 (1, "signup_bonus", 3, 0.00, "BONUS-APEX-001", "Complimentary AI Studio onboarding credits"),
 (2, "signup_bonus", 3, 0.00, "BONUS-JLM-002", "Complimentary AI Studio onboarding credits");
 
+-- --------------------------------------------------------
+-- Table structure for `system_settings`
+-- --------------------------------------------------------
+DROP TABLE IF EXISTS `system_settings`;
+CREATE TABLE IF NOT EXISTS `system_settings` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `setting_key` VARCHAR(100) NOT NULL UNIQUE,
+  `setting_value` TEXT NULL,
+  `description` VARCHAR(255) NULL,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dumping initial system settings
+INSERT INTO `system_settings` (`setting_key`, `setting_value`, `description`) VALUES
+("vendor_trial_ai_credits", "5", "Complimentary AI generation trials granted to new vendors on signup"),
+("vendor_trial_boost_credits", "3", "Complimentary product boost credits granted to new vendors"),
+("learnerium_online_url", "https://learnerium.jlm.com.ng", "Canonical online Learnerium LMS portal URL"),
+("ai_image_provider", "pollinations_flux", "Active AI image generation provider (Pollinations FLUX.1)");
+
 SET FOREIGN_KEY_CHECKS=1;

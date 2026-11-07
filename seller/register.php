@@ -45,19 +45,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
         try {
+            $trialAiCredits = intval(zavora_get_setting('vendor_trial_ai_credits', 5));
+            $trialBoostCredits = intval(zavora_get_setting('vendor_trial_boost_credits', 3));
+
             $stmt = $pdo->prepare("
                 INSERT INTO vendors (
-                    store_name, slug, owner_name, email, phone, password_hash, bank_name, account_number, account_name, commission_rate, balance, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 15.00, 0.00, 'approved')
+                    store_name, slug, owner_name, email, phone, password_hash, 
+                    bank_name, account_number, account_name, commission_rate, balance, status,
+                    ai_credits, boost_credits, subscription_tier
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 15.00, 0.00, 'approved', ?, ?, 'free')
             ");
 
             $stmt->execute([
-                $storeName, $slug, $ownerName, $email, $phone, $hash, $bankName, $accountNumber, $accountName
+                $storeName, $slug, $ownerName, $email, $phone, $hash, 
+                $bankName, $accountNumber, $accountName, $trialAiCredits, $trialBoostCredits
             ]);
 
             $vendorId = $pdo->lastInsertId();
             $_SESSION['zavora_vendor_id'] = $vendorId;
             $_SESSION['zavora_vendor_name'] = $storeName;
+
+            // Log complimentary onboarding trial transaction
+            try {
+                $pdo->prepare("INSERT INTO ai_credit_transactions (vendor_id, action_type, credits_change, amount_paid, payment_reference, prompt_summary) VALUES (?, 'signup_trial', ?, 0, ?, ?)")
+                    ->execute([$vendorId, $trialAiCredits, 'TRIAL-' . strtoupper(substr(uniqid(), -6)), "Complimentary welcome trial ({$trialAiCredits} AI generation credits granted)"]);
+            } catch (\Throwable $e) {}
 
             header('Location: ' . zavora_asset('seller/index.php?registered=1'));
             exit;

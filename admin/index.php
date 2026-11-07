@@ -46,6 +46,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Clear cached courses if any
         $flashMessage = 'Academy LMS Course catalog cache refreshed from remote endpoint.';
         $flashType = 'success';
+    } elseif ($action === 'update_ai_settings') {
+        $trialAi = max(0, intval($_POST['vendor_trial_ai_credits'] ?? 5));
+        $trialBoost = max(0, intval($_POST['vendor_trial_boost_credits'] ?? 3));
+        zavora_set_setting('vendor_trial_ai_credits', (string)$trialAi, 'Complimentary AI generation trials for new vendors');
+        zavora_set_setting('vendor_trial_boost_credits', (string)$trialBoost, 'Complimentary boost credits for new vendors');
+        $flashMessage = "Vendor trial limits updated: {$trialAi} Free AI Generations, {$trialBoost} Boost Trials.";
+        $flashType = 'success';
+    } elseif ($action === 'grant_vendor_bonus') {
+        $targetVendorId = intval($_POST['vendor_id'] ?? 0);
+        $bonusAmount = intval($_POST['bonus_credits'] ?? 0);
+        if ($targetVendorId > 0 && $bonusAmount != 0) {
+            $pdo->prepare("UPDATE vendors SET ai_credits = MAX(0, ai_credits + ?) WHERE id = ?")->execute([$bonusAmount, $targetVendorId]);
+            $pdo->prepare("INSERT INTO ai_credit_transactions (vendor_id, action_type, credits_change, prompt_summary) VALUES (?, 'admin_grant', ?, ?)")
+                ->execute([$targetVendorId, $bonusAmount, "Admin granted {$bonusAmount} trial credits"]);
+            $flashMessage = "Granted {$bonusAmount} AI credits to vendor #{$targetVendorId}.";
+            $flashType = 'success';
+        }
     }
 }
 
@@ -78,6 +95,11 @@ $recentOrders = $pdo->query("SELECT * FROM orders ORDER BY id DESC LIMIT 15")->f
 
 // 6. Fetch Products
 $products = $pdo->query("SELECT * FROM products ORDER BY id DESC LIMIT 20")->fetchAll();
+
+// 7. Fetch System Settings & Registered Vendors
+$currentTrialAi = intval(zavora_get_setting('vendor_trial_ai_credits', '5'));
+$currentTrialBoost = intval(zavora_get_setting('vendor_trial_boost_credits', '3'));
+$adminVendors = $pdo->query("SELECT id, store_name, owner_name, email, ai_credits, boost_credits, balance, status FROM vendors ORDER BY id DESC")->fetchAll();
 
 $title = 'ZAVORA Operations & Ecosystem Bridge Console';
 require_once __DIR__ . '/../includes/header.php';
@@ -343,6 +365,107 @@ require_once __DIR__ . '/../includes/header.php';
                   <a href="<?php echo zavora_asset('order_confirmation.php?order=' . urlencode($o['order_number'])); ?>" class="text-[#1B2299] hover:underline font-bold">
                     View
                   </a>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 3: VENDOR AI TRIAL ALLOCATION & MONETIZATION SETTINGS -->
+  <div class="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 gap-3 mb-6">
+      <div>
+        <h2 class="text-lg font-black text-[#0B132B] font-display flex items-center gap-2">
+          <i class="fas fa-wand-magic-sparkles text-amber-500"></i>
+          <span>Vendor Free Trial & AI Generation Allocations</span>
+        </h2>
+        <p class="text-xs text-gray-500">Configure free trial limits for new vendors before paid Paystack credit packs are required.</p>
+      </div>
+      <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-black w-max">
+        Trial Config Live
+      </span>
+    </div>
+
+    <!-- Trial Limits Form -->
+    <form method="POST" class="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-6">
+      <input type="hidden" name="action" value="update_ai_settings">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Free AI Generations (Onboarding Trial)</label>
+          <div class="flex items-center gap-2">
+            <input type="number" name="vendor_trial_ai_credits" min="0" max="100" value="<?php echo $currentTrialAi; ?>" required
+                   class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
+            <span class="text-xs font-bold text-gray-500 whitespace-nowrap">Trials</span>
+          </div>
+          <span class="text-[10px] text-gray-400 mt-1 block">Granted to new vendors for image/copy drafting.</span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Free Product Boost Trials</label>
+          <div class="flex items-center gap-2">
+            <input type="number" name="vendor_trial_boost_credits" min="0" max="50" value="<?php echo $currentTrialBoost; ?>" required
+                   class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
+            <span class="text-xs font-bold text-gray-500 whitespace-nowrap">Boosts</span>
+          </div>
+          <span class="text-[10px] text-gray-400 mt-1 block">Free search boost placements for new stores.</span>
+        </div>
+
+        <div>
+          <button type="submit" class="w-full py-2.5 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-bold rounded-xl transition shadow">
+            Save Trial Settings
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Vendor Balances & Instant Bonus Credit Grant -->
+    <h3 class="text-xs font-black uppercase text-gray-700 tracking-wider mb-3 flex items-center gap-2">
+      <i class="fas fa-users-gear text-gray-500"></i> Registered Vendors & Live Credit Balances
+    </h3>
+    <div class="overflow-x-auto border border-gray-200 rounded-2xl">
+      <table class="w-full text-left text-xs text-gray-600">
+        <thead class="bg-gray-50 text-gray-700 font-bold uppercase text-[10px] tracking-wider border-b border-gray-200">
+          <tr>
+            <th class="p-3">Store</th>
+            <th class="p-3">Owner / Email</th>
+            <th class="p-3">AI Credits Left</th>
+            <th class="p-3">Boost Credits</th>
+            <th class="p-3">Sales Balance</th>
+            <th class="p-3 text-right">Grant Bonus Credits</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <?php if (empty($adminVendors)): ?>
+            <tr>
+              <td colspan="6" class="p-6 text-center text-gray-400 italic">No vendors registered yet.</td>
+            </tr>
+          <?php else: ?>
+            <?php foreach ($adminVendors as $v): ?>
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="p-3 font-bold text-gray-900"><?php echo htmlspecialchars($v['store_name']); ?></td>
+                <td class="p-3">
+                  <div class="font-bold text-gray-800"><?php echo htmlspecialchars($v['owner_name']); ?></div>
+                  <div class="text-[11px] text-gray-400"><?php echo htmlspecialchars($v['email']); ?></div>
+                </td>
+                <td class="p-3">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-black <?php echo $v['ai_credits'] > 0 ? 'bg-blue-100 text-[#1B2299]' : 'bg-rose-100 text-rose-800'; ?>">
+                    <?php echo intval($v['ai_credits']); ?> Credits
+                  </span>
+                </td>
+                <td class="p-3 font-bold text-amber-700"><?php echo intval($v['boost_credits']); ?></td>
+                <td class="p-3 font-black text-gray-900"><?php echo zavora_format_price($v['balance']); ?></td>
+                <td class="p-3 text-right">
+                  <form method="POST" class="inline-flex items-center gap-1.5">
+                    <input type="hidden" name="action" value="grant_vendor_bonus">
+                    <input type="hidden" name="vendor_id" value="<?php echo $v['id']; ?>">
+                    <input type="number" name="bonus_credits" value="5" min="1" max="100" class="w-14 px-2 py-1 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-center">
+                    <button type="submit" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg transition shadow-sm">
+                      + Add
+                    </button>
+                  </form>
                 </td>
               </tr>
             <?php endforeach; ?>

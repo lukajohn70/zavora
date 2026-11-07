@@ -58,7 +58,7 @@ define('ZAVORA_BASE_URL', getenv('ZAVORA_SITE_URL') ?: ($protocol . ($httpHost ?
 
 // Ecosystem Inter-Service URLs & Keys
 define('JLM_CORPORATE_URL', getenv('JLM_CORPORATE_URL') ?: ($isDev ? 'http://localhost/jlm' : 'https://jlm.com.ng'));
-define('LEARNERIUM_URL', getenv('LEARNERIUM_URL') ?: ($isDev ? 'http://localhost/learnerium/public' : 'https://learnerium.jlm.com.ng'));
+define('LEARNERIUM_URL', getenv('LEARNERIUM_URL') ?: 'https://learnerium.jlm.com.ng');
 define('LEARNERIUM_API_URL', LEARNERIUM_URL . '/api/v1');
 define('ECOSYSTEM_API_SECRET', getenv('ECOSYSTEM_API_SECRET') ?: 'eco_sec_jlm_zavora_01a2c11beee84a1bb6e5ce40a29769f4');
 
@@ -206,7 +206,7 @@ function zavora_call_lms_api($endpoint, $method = 'GET', $data = null) {
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
-    curl_close($ch);
+    @curl_close($ch);
 
     if ($response === false) {
         return [
