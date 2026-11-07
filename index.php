@@ -129,10 +129,10 @@ $categories = $catStmt->fetchAll();
             </div>
           </div>
 
-          <!-- Floating badge: Fast Delivery -->
+          <!-- Floating badge: Secure Payment -->
           <div class="absolute -top-6 -right-6 bg-white text-gray-900 px-4 py-3 rounded-2xl shadow-2xl border border-gray-100 flex items-center gap-2">
-            <i class="fas fa-shield-halved text-[#16865B]"></i>
-            <span class="text-xs font-bold">Paystack Verified</span>
+            <i class="fas fa-lock text-[#16865B]"></i>
+            <span class="text-xs font-bold">Encrypted Checkout</span>
           </div>
 
         </div>

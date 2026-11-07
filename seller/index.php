@@ -290,6 +290,19 @@ $payoutStmt = $pdo->prepare("SELECT * FROM vendor_payouts WHERE vendor_id = ? OR
 $payoutStmt->execute([$vendorId]);
 $payouts = $payoutStmt->fetchAll();
 
+// 7. Handle AI Credit Payment Callback & Fetch AI Credit Ledger (Paid Feature)
+if (isset($_GET['ai_payment']) && $_GET['ai_payment'] === 'success') {
+    $flashMessage = 'AI Credit recharge successful! Your AI balance has been updated.';
+    $flashType = 'success';
+    // Refresh vendor to get updated ai_credits
+    $stmt->execute([$vendorId]);
+    $vendor = $stmt->fetch();
+}
+
+$aiTransStmt = $pdo->prepare("SELECT * FROM ai_credit_transactions WHERE vendor_id = ? ORDER BY id DESC LIMIT 50");
+$aiTransStmt->execute([$vendorId]);
+$aiTransactions = $aiTransStmt->fetchAll();
+
 // Calculate total sales
 $totalVendorSales = 0;
 foreach ($vendorOrders as $vo) {
@@ -345,38 +358,57 @@ require_once __DIR__ . '/../includes/header.php';
   <?php endif; ?>
 
   <!-- KPI Cards -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-    <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm flex flex-col justify-between">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+    <div class="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm flex flex-col justify-between">
       <div>
-        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Available Payout Balance</span>
+        <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Available Balance</span>
         <p class="text-2xl font-black text-emerald-700 mt-2 font-display"><?php echo zavora_format_price($vendor['balance']); ?></p>
       </div>
       <button onclick="document.getElementById('payoutModal').classList.remove('hidden')" 
               class="mt-4 w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-colors shadow-sm flex items-center justify-center gap-1.5">
-        <i class="fas fa-money-bill-transfer"></i> Withdraw to Bank
+        <i class="fas fa-money-bill-transfer"></i> Withdraw
       </button>
     </div>
 
-    <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
-      <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Gross Store Sales</span>
+    <div class="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm">
+      <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Gross Sales</span>
       <p class="text-2xl font-black text-[#0B132B] mt-2 font-display"><?php echo zavora_format_price($totalVendorSales); ?></p>
       <p class="text-[11px] text-gray-500 font-medium mt-1">Across all product lines</p>
     </div>
 
-    <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
-      <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Products</span>
+    <div class="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm">
+      <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Active Products</span>
       <p class="text-2xl font-black text-[#1B2299] mt-2 font-display"><?php echo count($vendorProducts); ?></p>
       <p class="text-[11px] text-gray-500 font-medium mt-1">Listed in catalog</p>
     </div>
 
-    <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm flex flex-col justify-between">
+    <div class="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm flex flex-col justify-between">
       <div>
-        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Boost Credits</span>
+        <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Boost Credits</span>
         <p class="text-2xl font-black text-amber-600 mt-2 font-display"><?php echo intval($vendor['boost_credits'] ?? 5); ?> Left</p>
       </div>
       <span class="text-[11px] text-amber-700 font-medium mt-1 flex items-center gap-1">
-        <i class="fas fa-bolt text-amber-500"></i> Promotes items to top of search
+        <i class="fas fa-bolt text-amber-500"></i> Search promotion
       </span>
+    </div>
+
+    <div class="bg-gradient-to-br from-[#1B2299] to-[#0B132B] p-5 rounded-3xl text-white shadow-sm flex flex-col justify-between relative overflow-hidden">
+      <div>
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold text-blue-200 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fas fa-wand-magic-sparkles text-[#F7DE7A]"></i> AI Studio
+          </span>
+          <span class="px-2 py-0.5 rounded-full bg-white/10 text-amber-300 border border-white/20 text-[9px] font-black uppercase">
+            Paid
+          </span>
+        </div>
+        <p class="text-2xl font-black text-white mt-2 font-display" id="kpiAiCreditsDisplay"><?php echo intval($vendor['ai_credits'] ?? 3); ?> Credits</p>
+        <p class="text-[11px] text-blue-200 font-medium mt-1">Copy, titles & studio photos</p>
+      </div>
+      <button onclick="openAiTopupModal()" 
+              class="mt-4 w-full py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-gray-950 font-black text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5">
+        <i class="fas fa-plus-circle text-xs"></i> Top Up Credits
+      </button>
     </div>
   </div>
 
@@ -405,6 +437,12 @@ require_once __DIR__ . '/../includes/header.php';
         <i class="fas fa-building-columns"></i>
         <span>Settlements & Payouts</span>
         <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[11px] font-bold"><?php echo count($payouts); ?></span>
+      </button>
+
+      <button onclick="switchVendorTab('ai')" id="vtab-btn-ai" class="vtab-btn pb-4 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-900 flex items-center gap-2">
+        <i class="fas fa-wand-magic-sparkles text-amber-500"></i>
+        <span>AI Merchant Studio</span>
+        <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold" id="tabAiCreditsBadge"><?php echo intval($vendor['ai_credits'] ?? 3); ?> credits</span>
       </button>
     </div>
 
@@ -745,6 +783,257 @@ require_once __DIR__ . '/../includes/header.php';
       </div>
     </div>
 
+    <!-- TAB 5: AI MERCHANT STUDIO (PAID FEATURE) -->
+    <div id="vtab-ai" class="p-6 hidden">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-200">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
+              <i class="fas fa-sparkles"></i> Paid Merchant Studio
+            </span>
+            <span class="text-xs font-bold text-gray-500">Commercial Copy & Photo Generation</span>
+          </div>
+          <h2 class="text-xl font-black text-[#0B132B] font-display">AI Merchant Studio & Automation</h2>
+          <p class="text-xs text-gray-500 max-w-2xl mt-1">
+            Empower your store with generative AI. Create high-converting product titles, marketing copy, and generate clean studio product photography. Powered by Paystack credits.
+          </p>
+        </div>
+        <div class="flex items-center gap-4 bg-slate-50 border border-slate-200 p-4 rounded-2xl">
+          <div>
+            <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Your Balance</div>
+            <div class="text-2xl font-black text-[#1B2299] font-display" id="aiTabBalanceDisplay"><?php echo intval($vendor['ai_credits'] ?? 3); ?> Credits</div>
+          </div>
+          <button onclick="openAiTopupModal()" class="px-4 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-gray-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 whitespace-nowrap">
+            <i class="fas fa-plus-circle"></i> Top Up Credits
+          </button>
+        </div>
+      </div>
+
+      <!-- Pricing Packs Cards -->
+      <div class="mb-10">
+        <h3 class="text-xs font-black text-gray-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <i class="fas fa-coins text-amber-500"></i> AI Credit Purchase Packs
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <!-- Starter Pack -->
+          <div class="p-6 bg-white rounded-3xl border border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all flex flex-col justify-between">
+            <div>
+              <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Starter</span>
+              <h4 class="text-lg font-black text-[#0B132B] mt-1">25 AI Credits</h4>
+              <p class="text-2xl font-black text-[#1B2299] mt-2 font-display">₦2,500</p>
+              <span class="text-[11px] text-gray-500 font-medium">₦100 per generation</span>
+              <ul class="mt-4 space-y-2 text-xs text-gray-600 border-t border-gray-100 pt-3">
+                <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 text-xs"></i> 25 Title & Copy generations</li>
+                <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 text-xs"></i> Studio product photography</li>
+                <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 text-xs"></i> Instant activation</li>
+              </ul>
+            </div>
+            <button onclick="buyAiCredits('starter')" class="mt-6 w-full py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl transition shadow">
+              Purchase Starter Pack
+            </button>
+          </div>
+
+          <!-- Growth Pack (Featured) -->
+          <div class="p-6 bg-gradient-to-b from-blue-50/50 to-white rounded-3xl border-2 border-[#1B2299] shadow-md relative flex flex-col justify-between">
+            <div class="absolute -top-3 right-6 bg-[#1B2299] text-white text-[10px] font-black uppercase px-3 py-1 rounded-full tracking-wider shadow">
+              Most Popular • 20% Off
+            </div>
+            <div>
+              <span class="text-xs font-bold text-[#1B2299] uppercase tracking-wider">Growth</span>
+              <h4 class="text-lg font-black text-[#0B132B] mt-1">75 AI Credits</h4>
+              <p class="text-2xl font-black text-[#1B2299] mt-2 font-display">₦6,000</p>
+              <span class="text-[11px] text-emerald-700 font-bold">₦80 per generation (Save ₦1,500)</span>
+              <ul class="mt-4 space-y-2 text-xs text-gray-600 border-t border-blue-100 pt-3">
+                <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 text-xs"></i> 75 Title, copy & spec batches</li>
+                <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 text-xs"></i> HD Studio product imagery</li>
+                <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 text-xs"></i> Priority AI queue</li>
+              </ul>
+            </div>
+            <button onclick="buyAiCredits('growth')" class="mt-6 w-full py-2.5 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-bold rounded-xl transition shadow-md">
+              Purchase Growth Pack
+            </button>
+          </div>
+
+          <!-- Pro Merchant Pack -->
+          <div class="p-6 bg-white rounded-3xl border border-gray-200 hover:border-amber-400 hover:shadow-lg transition-all flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">Pro Merchant</span>
+                <span class="text-[10px] font-black text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">30% Off</span>
+              </div>
+              <h4 class="text-lg font-black text-[#0B132B] mt-1">200 AI Credits</h4>
+              <p class="text-2xl font-black text-[#1B2299] mt-2 font-display">₦14,000</p>
+              <span class="text-[11px] text-emerald-700 font-bold">₦70 per generation (Save ₦6,000)</span>
+              <ul class="mt-4 space-y-2 text-xs text-gray-600 border-t border-gray-100 pt-3">
+                <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 text-xs"></i> 200 Complete studio runs</li>
+                <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 text-xs"></i> Full catalog optimization</li>
+                <li class="flex items-center gap-2"><i class="fas fa-check text-emerald-500 text-xs"></i> Dedicated support</li>
+              </ul>
+            </div>
+            <button onclick="buyAiCredits('pro')" class="mt-6 w-full py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl transition shadow">
+              Purchase Pro Pack
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Studio Interactive Sandbox -->
+      <div class="mb-10 bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-8">
+        <h3 class="text-base font-black text-[#0B132B] font-display mb-1 flex items-center gap-2">
+          <i class="fas fa-laptop-code text-[#1B2299]"></i> AI Studio Interactive Sandbox
+        </h3>
+        <p class="text-xs text-gray-500 mb-6">Test and generate content directly before adding to your products.</p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Copywriter Sandbox -->
+          <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
+            <div>
+              <h4 class="text-xs font-black uppercase text-gray-700 mb-3 flex items-center gap-2">
+                <i class="fas fa-pen-fancy text-[#1B2299]"></i> AI Copywriter (1 Credit)
+              </h4>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-[11px] font-bold text-gray-600 mb-1">Product Keywords / Features</label>
+                  <input type="text" id="sbCopyKeywords" placeholder="e.g. Ergonomic mechanical keyboard with RGB, tactile brown switches"
+                         class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Category</label>
+                    <select id="sbCopyCategory" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+                      <?php foreach ($categories as $cat): ?>
+                        <option value="<?php echo htmlspecialchars($cat['name']); ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+                      <?php endforeach; ?>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Tone</label>
+                    <select id="sbCopyTone" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+                      <option value="Commercial">Commercial & Persuasive</option>
+                      <option value="Luxury">Luxury & Premium</option>
+                      <option value="Minimalist">Minimalist & Direct</option>
+                      <option value="Technical">Technical & Detailed</option>
+                    </select>
+                  </div>
+                </div>
+                <button type="button" onclick="runSandboxCopy()" id="btnSbCopy"
+                        class="w-full py-2.5 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-bold rounded-xl transition shadow flex items-center justify-center gap-2">
+                  <i class="fas fa-sparkles"></i> <span>Generate Title & Copy</span>
+                </button>
+              </div>
+
+              <!-- Result Area -->
+              <div id="sbCopyResult" class="hidden mt-4 pt-4 border-t border-gray-100 space-y-3">
+                <div>
+                  <span class="text-[10px] font-bold text-gray-400 uppercase">Generated Title</span>
+                  <p id="sbResTitle" class="text-xs font-bold text-gray-900 bg-gray-50 p-2.5 rounded-lg border border-gray-200"></p>
+                </div>
+                <div>
+                  <span class="text-[10px] font-bold text-gray-400 uppercase">Description</span>
+                  <p id="sbResDesc" class="text-xs text-gray-700 bg-gray-50 p-2.5 rounded-lg border border-gray-200"></p>
+                </div>
+                <div>
+                  <span class="text-[10px] font-bold text-gray-400 uppercase">Key Specs</span>
+                  <p id="sbResSpecs" class="text-xs text-gray-700 bg-gray-50 p-2.5 rounded-lg border border-gray-200 font-mono"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Image Studio Sandbox -->
+          <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
+            <div>
+              <h4 class="text-xs font-black uppercase text-gray-700 mb-3 flex items-center gap-2">
+                <i class="fas fa-camera-retro text-purple-600"></i> AI Product Photo Studio (1 Credit)
+              </h4>
+              <div class="space-y-3">
+                <div>
+                  <label class="block text-[11px] font-bold text-gray-600 mb-1">Visual Concept Prompt</label>
+                  <input type="text" id="sbImgPrompt" placeholder="e.g. Studio shot of titanium smart watch with AMOLED display"
+                         class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-bold text-gray-600 mb-1">Product Style / Category</label>
+                  <select id="sbImgStyle" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+                    <option value="electronics">Electronics & Audio Gear</option>
+                    <option value="computing">Laptops & Computing Workstations</option>
+                    <option value="fashion">Premium Streetwear & Apparel</option>
+                    <option value="gaming">Console & Gaming Gear</option>
+                    <option value="digital">Digital Assets & Software</option>
+                  </select>
+                </div>
+                <button type="button" onclick="runSandboxImage()" id="btnSbImage"
+                        class="w-full py-2.5 bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold rounded-xl transition shadow flex items-center justify-center gap-2">
+                  <i class="fas fa-wand-magic-sparkles"></i> <span>Generate Studio Imagery</span>
+                </button>
+              </div>
+
+              <!-- Result Area -->
+              <div id="sbImgResult" class="hidden mt-4 pt-4 border-t border-gray-100 space-y-2">
+                <span class="text-[10px] font-bold text-gray-400 uppercase">Generated Studio Asset</span>
+                <div class="rounded-xl overflow-hidden border border-gray-200 aspect-video bg-gray-100 flex items-center justify-center">
+                  <img id="sbResImgTag" src="" class="w-full h-full object-cover">
+                </div>
+                <input type="text" id="sbResImgUrl" readonly class="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-[11px] font-mono text-gray-500">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Ledger Table -->
+      <div>
+        <h3 class="text-xs font-black text-gray-800 uppercase tracking-wider mb-3 flex items-center gap-2">
+          <i class="fas fa-list-check text-gray-500"></i> AI Credit Usage & Purchase Ledger
+        </h3>
+        <div class="overflow-x-auto border border-gray-200 rounded-2xl">
+          <table class="w-full text-left text-xs text-gray-600">
+            <thead class="bg-gray-50 text-gray-700 font-bold uppercase text-[10px] tracking-wider border-b border-gray-200">
+              <tr>
+                <th class="p-3">Action</th>
+                <th class="p-3">Credits</th>
+                <th class="p-3">Amount Paid</th>
+                <th class="p-3">Reference / Details</th>
+                <th class="p-3 text-right">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <?php if (empty($aiTransactions)): ?>
+                <tr>
+                  <td colspan="5" class="p-6 text-center text-gray-400 italic">No credit transactions yet. New vendors receive 3 complimentary credits to test.</td>
+                </tr>
+              <?php else: ?>
+                <?php foreach ($aiTransactions as $tx): ?>
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="p-3 font-bold text-gray-900 flex items-center gap-2">
+                      <?php if ($tx['credits_change'] > 0): ?>
+                        <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px]"><i class="fas fa-plus"></i></span>
+                      <?php else: ?>
+                        <span class="w-6 h-6 rounded-full bg-blue-100 text-[#1B2299] flex items-center justify-center text-[10px]"><i class="fas fa-wand-magic-sparkles"></i></span>
+                      <?php endif; ?>
+                      <span><?php echo htmlspecialchars(ucwords(str_replace('_', ' ', $tx['action_type']))); ?></span>
+                    </td>
+                    <td class="p-3 font-black <?php echo $tx['credits_change'] > 0 ? 'text-emerald-700' : 'text-gray-900'; ?>">
+                      <?php echo ($tx['credits_change'] > 0 ? '+' : '') . $tx['credits_change']; ?> Credits
+                    </td>
+                    <td class="p-3 font-semibold text-gray-700">
+                      <?php echo !empty($tx['amount_paid']) && $tx['amount_paid'] > 0 ? zavora_format_price($tx['amount_paid']) : '—'; ?>
+                    </td>
+                    <td class="p-3 text-gray-500 text-[11px]">
+                      <?php echo htmlspecialchars($tx['payment_reference'] ?: $tx['prompt_summary']); ?>
+                    </td>
+                    <td class="p-3 text-right text-gray-400 text-[11px]">
+                      <?php echo date('M d, Y H:i', strtotime($tx['created_at'])); ?>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php endif; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -758,19 +1047,67 @@ require_once __DIR__ . '/../includes/header.php';
     <h3 class="text-xl font-black text-[#0B132B] font-display mb-1">List a New Product</h3>
     <p class="text-xs text-gray-500 mb-6">Create a product with colors, sizes, specifications, and preorder settings.</p>
 
-    <form method="POST" class="space-y-4">
+    <form method="POST" class="space-y-4" id="newProductForm">
       <input type="hidden" name="action" value="add_product">
+
+      <!-- AI Merchant Studio Assistant Box (Paid Feature) -->
+      <div class="p-4 bg-gradient-to-r from-blue-50/70 via-indigo-50/70 to-purple-50/70 border border-blue-200/80 rounded-2xl mb-4">
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-[#1B2299] text-white flex items-center justify-center text-xs">
+              <i class="fas fa-wand-magic-sparkles"></i>
+            </span>
+            <div>
+              <h4 class="text-xs font-black text-gray-900 uppercase tracking-wider">AI Studio Assistant (Paid)</h4>
+              <p class="text-[10px] text-gray-500">Auto-draft copy or generate studio photos (1 credit/use)</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded-full bg-blue-100 text-[#1B2299] text-[10px] font-black">
+              <span id="modalAiCreditsCount"><?php echo intval($vendor['ai_credits'] ?? 3); ?></span> Credits
+            </span>
+            <button type="button" onclick="openAiTopupModal()" class="text-[10px] text-[#1B2299] hover:underline font-bold">
+              + Buy
+            </button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+          <div class="sm:col-span-2">
+            <input type="text" id="aiConceptInput" placeholder="Keywords (e.g. Wireless noise cancelling headset, 40h battery)..."
+                   class="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none">
+          </div>
+          <div>
+            <select id="aiToneInput" class="w-full px-2.5 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none">
+              <option value="Commercial">Commercial</option>
+              <option value="Luxury">Luxury</option>
+              <option value="Minimalist">Minimalist</option>
+              <option value="Technical">Technical</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 mt-2.5">
+          <button type="button" id="btnAiGenCopy" onclick="generateModalAiCopy()"
+                  class="flex-1 py-1.5 px-3 bg-[#1B2299] hover:bg-[#0B132B] text-white rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+            <i class="fas fa-pen-nib"></i> <span>Auto-Draft Title & Copy</span>
+          </button>
+          <button type="button" id="btnAiGenImage" onclick="generateModalAiImage()"
+                  class="flex-1 py-1.5 px-3 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+            <i class="fas fa-image"></i> <span>Generate Photo</span>
+          </button>
+        </div>
+        <div id="aiModalStatus" class="hidden text-[11px] font-bold mt-2 p-2 rounded-lg"></div>
+      </div>
 
       <div>
         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Product Title *</label>
-        <input type="text" name="title" required placeholder="e.g. Wireless Ergonomic Mechanical Keyboard"
+        <input type="text" name="title" id="np_title" required placeholder="e.g. Wireless Ergonomic Mechanical Keyboard"
                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
       </div>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Category</label>
-          <select name="category_id" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+          <select name="category_id" id="np_category_id" class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
             <?php foreach ($categories as $cat): ?>
               <option value="<?php echo $cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
             <?php endforeach; ?>
@@ -854,19 +1191,23 @@ require_once __DIR__ . '/../includes/header.php';
 
       <div>
         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Product Image URL</label>
-        <input type="url" name="thumbnail" placeholder="https://images.unsplash.com/..."
+        <input type="url" name="thumbnail" id="np_thumbnail" oninput="updateThumbnailPreview(this.value)" placeholder="https://images.unsplash.com/..."
                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+        <div id="np_preview_wrap" class="hidden mt-2 p-2 bg-gray-50 rounded-xl border border-gray-200 flex items-center gap-3">
+          <img id="np_preview_img" src="" class="w-14 h-14 rounded-lg object-cover border border-gray-200 flex-shrink-0">
+          <div class="text-[11px] text-gray-500 font-medium">Image preview from AI Studio / URL</div>
+        </div>
       </div>
 
       <div>
         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Product Description</label>
-        <textarea name="description" rows="2" placeholder="Key features, specifications, and warranty details..."
+        <textarea name="description" id="np_description" rows="3" placeholder="Key features, specifications, and warranty details..."
                   class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none"></textarea>
       </div>
 
       <div>
         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Technical Specifications</label>
-        <textarea name="specifications" rows="2" placeholder="Processor, Battery, Dimensions, Material, Warranty..."
+        <textarea name="specifications" id="np_specifications" rows="2" placeholder="Processor, Battery, Dimensions, Material, Warranty..."
                   class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none"></textarea>
       </div>
 
@@ -905,7 +1246,368 @@ require_once __DIR__ . '/../includes/header.php';
   </div>
 </div>
 
+<!-- Modal 3: AI Credit Top-Up (Paystack Checkout) -->
+<div id="aiTopupModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+    <button onclick="closeAiTopupModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-lg">
+      <i class="fas fa-times"></i>
+    </button>
+    <div class="flex items-center gap-2 mb-1">
+      <span class="w-8 h-8 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-gray-950 flex items-center justify-center text-sm font-black shadow-sm">
+        <i class="fas fa-wand-magic-sparkles"></i>
+      </span>
+      <h3 class="text-lg font-black text-[#0B132B] font-display">Top Up AI Studio Credits</h3>
+    </div>
+    <p class="text-xs text-gray-500 mb-5">Purchase credits for AI product descriptions, titles, and studio product imagery.</p>
+
+    <div class="space-y-3 mb-6" id="topupPackList">
+      <!-- Tier 1 -->
+      <div onclick="selectTopupPack('starter')" id="pack-card-starter"
+           class="pack-card p-3.5 border-2 border-[#1B2299] bg-blue-50/40 rounded-2xl cursor-pointer flex items-center justify-between transition">
+        <div class="flex items-center gap-3">
+          <input type="radio" name="pack_choice" id="pack_starter" value="starter" checked class="text-[#1B2299]">
+          <div>
+            <div class="text-xs font-bold text-gray-900">Starter Pack (25 Credits)</div>
+            <div class="text-[10px] text-gray-500">₦100 per generation</div>
+          </div>
+        </div>
+        <div class="text-sm font-black text-[#1B2299] font-display">₦2,500</div>
+      </div>
+
+      <!-- Tier 2 -->
+      <div onclick="selectTopupPack('growth')" id="pack-card-growth"
+           class="pack-card p-3.5 border border-gray-200 bg-white hover:bg-gray-50 rounded-2xl cursor-pointer flex items-center justify-between transition">
+        <div class="flex items-center gap-3">
+          <input type="radio" name="pack_choice" id="pack_growth" value="growth" class="text-[#1B2299]">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-gray-900">Growth Pack (75 Credits)</span>
+              <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-[9px] font-black rounded">Save 20%</span>
+            </div>
+            <div class="text-[10px] text-gray-500">₦80 per generation</div>
+          </div>
+        </div>
+        <div class="text-sm font-black text-[#1B2299] font-display">₦6,000</div>
+      </div>
+
+      <!-- Tier 3 -->
+      <div onclick="selectTopupPack('pro')" id="pack-card-pro"
+           class="pack-card p-3.5 border border-gray-200 bg-white hover:bg-gray-50 rounded-2xl cursor-pointer flex items-center justify-between transition">
+        <div class="flex items-center gap-3">
+          <input type="radio" name="pack_choice" id="pack_pro" value="pro" class="text-[#1B2299]">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-gray-900">Pro Merchant (200 Credits)</span>
+              <span class="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[9px] font-black rounded">Save 30%</span>
+            </div>
+            <div class="text-[10px] text-gray-500">₦70 per generation</div>
+          </div>
+        </div>
+        <div class="text-sm font-black text-[#1B2299] font-display">₦14,000</div>
+      </div>
+    </div>
+
+    <button type="button" id="btnConfirmTopup" onclick="submitTopupPack()"
+            class="w-full py-3 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2">
+      <i class="fas fa-lock"></i> <span>Proceed to Paystack Checkout</span>
+    </button>
+    <p class="text-[10px] text-gray-400 text-center mt-2.5 flex items-center justify-center gap-1.5">
+      <i class="fas fa-shield-alt text-emerald-600"></i> Encrypted 256-Bit SSL payment processing
+    </p>
+  </div>
+</div>
+
 <script>
+let selectedPack = 'starter';
+
+function openAiTopupModal() {
+  document.getElementById('aiTopupModal').classList.remove('hidden');
+}
+
+function closeAiTopupModal() {
+  document.getElementById('aiTopupModal').classList.add('hidden');
+}
+
+function selectTopupPack(pack) {
+  selectedPack = pack;
+  ['starter', 'growth', 'pro'].forEach(p => {
+    const card = document.getElementById('pack-card-' + p);
+    const radio = document.getElementById('pack_' + p);
+    if (p === pack) {
+      card.className = 'pack-card p-3.5 border-2 border-[#1B2299] bg-blue-50/40 rounded-2xl cursor-pointer flex items-center justify-between transition';
+      radio.checked = true;
+    } else {
+      card.className = 'pack-card p-3.5 border border-gray-200 bg-white hover:bg-gray-50 rounded-2xl cursor-pointer flex items-center justify-between transition';
+      radio.checked = false;
+    }
+  });
+}
+
+function submitTopupPack() {
+  buyAiCredits(selectedPack);
+}
+
+function buyAiCredits(pack) {
+  const btn = document.getElementById('btnConfirmTopup');
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing Paystack Checkout...';
+  }
+
+  const formData = new FormData();
+  formData.append('pack', pack);
+
+  fetch('<?php echo zavora_asset("api/ai_studio.php?action=buy_credits"); ?>', {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.authorization_url) {
+      window.location.href = data.authorization_url;
+    } else if (data.success && data.new_balance !== undefined) {
+      alert(data.message || 'Payment successful! AI credits added.');
+      updateCreditCounters(data.new_balance);
+      closeAiTopupModal();
+      location.reload();
+    } else {
+      alert(data.message || 'Unable to initialize credit purchase.');
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert('Network error connecting to payment gateway.');
+  })
+  .finally(() => {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+    }
+  });
+}
+
+function updateCreditCounters(credits) {
+  const c = parseInt(credits, 10);
+  const kpi = document.getElementById('kpiAiCreditsDisplay');
+  if (kpi) kpi.innerText = c + ' Credits';
+  const tab = document.getElementById('tabAiCreditsBadge');
+  if (tab) tab.innerText = c + ' credits';
+  const modal = document.getElementById('modalAiCreditsCount');
+  if (modal) modal.innerText = c;
+  const tabBal = document.getElementById('aiTabBalanceDisplay');
+  if (tabBal) tabBal.innerText = c + ' Credits';
+}
+
+function updateThumbnailPreview(url) {
+  const wrap = document.getElementById('np_preview_wrap');
+  const img = document.getElementById('np_preview_img');
+  if (url && url.trim().length > 5) {
+    img.src = url.trim();
+    wrap.classList.remove('hidden');
+  } else {
+    wrap.classList.add('hidden');
+  }
+}
+
+function generateModalAiCopy() {
+  const keywords = document.getElementById('aiConceptInput').value.trim();
+  const tone = document.getElementById('aiToneInput').value;
+  const catSelect = document.getElementById('np_category_id');
+  const categoryName = catSelect ? catSelect.options[catSelect.selectedIndex].text : 'General';
+  const statusEl = document.getElementById('aiModalStatus');
+  const btn = document.getElementById('btnAiGenCopy');
+
+  if (!keywords) {
+    alert('Please enter a few keywords or product concept first.');
+    document.getElementById('aiConceptInput').focus();
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+  statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-blue-50 text-[#1B2299] block';
+  statusEl.innerText = 'Consulting AI Merchant Studio (1 Credit)...';
+
+  const fd = new FormData();
+  fd.append('keywords', keywords);
+  fd.append('tone', tone);
+  fd.append('category_name', categoryName);
+
+  fetch('<?php echo zavora_asset("api/ai_studio.php?action=generate_copy"); ?>', {
+    method: 'POST',
+    body: fd
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success && data.data) {
+      document.getElementById('np_title').value = data.data.title || '';
+      document.getElementById('np_description').value = data.data.description || '';
+      document.getElementById('np_specifications').value = data.data.specifications || '';
+      if (data.remaining_credits !== undefined) {
+        updateCreditCounters(data.remaining_credits);
+      }
+      statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-emerald-50 text-emerald-800 block';
+      statusEl.innerText = 'Title, description & specs generated successfully! (1 credit deducted)';
+    } else if (data.error === 'insufficient_credits') {
+      statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-amber-50 text-amber-800 block';
+      statusEl.innerText = data.message || '0 AI Credits remaining.';
+      openAiTopupModal();
+    } else {
+      statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-rose-50 text-rose-800 block';
+      statusEl.innerText = data.message || 'AI Generation failed.';
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-rose-50 text-rose-800 block';
+    statusEl.innerText = 'Network connection error.';
+  })
+  .finally(() => {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-pen-nib"></i> <span>Auto-Draft Title & Copy</span>';
+  });
+}
+
+function generateModalAiImage() {
+  const keywords = document.getElementById('aiConceptInput').value.trim() || document.getElementById('np_title').value.trim();
+  const statusEl = document.getElementById('aiModalStatus');
+  const btn = document.getElementById('btnAiGenImage');
+
+  if (!keywords) {
+    alert('Please enter a product title or concept keywords for image generation.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Photo...';
+  statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-purple-50 text-purple-700 block';
+  statusEl.innerText = 'Rendering studio product photo (1 Credit)...';
+
+  const fd = new FormData();
+  fd.append('prompt', keywords);
+
+  fetch('<?php echo zavora_asset("api/ai_studio.php?action=generate_image"); ?>', {
+    method: 'POST',
+    body: fd
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success && data.image_url) {
+      document.getElementById('np_thumbnail').value = data.image_url;
+      updateThumbnailPreview(data.image_url);
+      if (data.remaining_credits !== undefined) {
+        updateCreditCounters(data.remaining_credits);
+      }
+      statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-emerald-50 text-emerald-800 block';
+      statusEl.innerText = 'Studio photo generated and attached! (1 credit deducted)';
+    } else if (data.error === 'insufficient_credits') {
+      statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-amber-50 text-amber-800 block';
+      statusEl.innerText = data.message || '0 AI Credits remaining.';
+      openAiTopupModal();
+    } else {
+      statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-rose-50 text-rose-800 block';
+      statusEl.innerText = data.message || 'Image generation failed.';
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-rose-50 text-rose-800 block';
+    statusEl.innerText = 'Network error generating image.';
+  })
+  .finally(() => {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-image"></i> <span>Generate Photo</span>';
+  });
+}
+
+function runSandboxCopy() {
+  const keywords = document.getElementById('sbCopyKeywords').value.trim();
+  const categoryName = document.getElementById('sbCopyCategory').value;
+  const tone = document.getElementById('sbCopyTone').value;
+  const btn = document.getElementById('btnSbCopy');
+
+  if (!keywords) {
+    alert('Please enter product keywords or features.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Drafting with AI...';
+
+  const fd = new FormData();
+  fd.append('keywords', keywords);
+  fd.append('category_name', categoryName);
+  fd.append('tone', tone);
+
+  fetch('<?php echo zavora_asset("api/ai_studio.php?action=generate_copy"); ?>', {
+    method: 'POST',
+    body: fd
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success && data.data) {
+      document.getElementById('sbResTitle').innerText = data.data.title || '';
+      document.getElementById('sbResDesc').innerText = data.data.description || '';
+      document.getElementById('sbResSpecs').innerText = data.data.specifications || '';
+      document.getElementById('sbCopyResult').classList.remove('hidden');
+      if (data.remaining_credits !== undefined) {
+        updateCreditCounters(data.remaining_credits);
+      }
+    } else if (data.error === 'insufficient_credits') {
+      alert(data.message);
+      openAiTopupModal();
+    } else {
+      alert(data.message || 'Copy generation failed.');
+    }
+  })
+  .finally(() => {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-sparkles"></i> <span>Generate Title & Copy</span>';
+  });
+}
+
+function runSandboxImage() {
+  const prompt = document.getElementById('sbImgPrompt').value.trim();
+  const btn = document.getElementById('btnSbImage');
+
+  if (!prompt) {
+    alert('Please enter a visual concept prompt.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Rendering Asset...';
+
+  const fd = new FormData();
+  fd.append('prompt', prompt);
+
+  fetch('<?php echo zavora_asset("api/ai_studio.php?action=generate_image"); ?>', {
+    method: 'POST',
+    body: fd
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success && data.image_url) {
+      document.getElementById('sbResImgTag').src = data.image_url;
+      document.getElementById('sbResImgUrl').value = data.image_url;
+      document.getElementById('sbImgResult').classList.remove('hidden');
+      if (data.remaining_credits !== undefined) {
+        updateCreditCounters(data.remaining_credits);
+      }
+    } else if (data.error === 'insufficient_credits') {
+      alert(data.message);
+      openAiTopupModal();
+    } else {
+      alert(data.message || 'Image generation failed.');
+    }
+  })
+  .finally(() => {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> <span>Generate Studio Imagery</span>';
+  });
+}
+
 function switchVendorTab(tabId) {
   document.querySelectorAll('.vtab-btn').forEach(btn => {
     btn.classList.remove('border-[#1B2299]', 'text-[#1B2299]');
@@ -921,6 +1623,8 @@ function switchVendorTab(tabId) {
   document.getElementById('vtab-settings').classList.add('hidden');
   document.getElementById('vtab-orders').classList.add('hidden');
   document.getElementById('vtab-payouts').classList.add('hidden');
+  const aiTab = document.getElementById('vtab-ai');
+  if (aiTab) aiTab.classList.add('hidden');
 
   const target = document.getElementById('vtab-' + tabId);
   if (target) {

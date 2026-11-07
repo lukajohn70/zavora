@@ -91,7 +91,7 @@ require_once __DIR__ . '/../includes/header.php';
       <div>
         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Email Address</label>
         <div class="relative">
-          <input type="email" name="email" required placeholder="you@domain.com"
+          <input type="email" name="email" required placeholder="Email address"
                  class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-[#1B2299] focus:outline-none">
           <i class="far fa-envelope absolute left-3.5 top-3.5 text-gray-400"></i>
         </div>
@@ -104,7 +104,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="mt-8 pt-6 border-t border-gray-100">
       <p class="text-xs text-gray-500 mb-3">Or track an order using your tracking reference:</p>
       <form method="GET" class="flex gap-2">
-        <input type="text" name="order" placeholder="e.g. ZAV-20261107-ABC12" 
+        <input type="text" name="order" placeholder="Order reference (e.g. ZAV-XXXX)" 
                class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
         <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-xl text-xs font-bold hover:bg-black transition-colors">
           Track

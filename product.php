@@ -190,17 +190,33 @@ require_once __DIR__ . '/includes/header.php';
         </div>
 
         <div id="product-stock-display">
-          <?php if ($product['stock_quantity'] > 10): ?>
-            <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> In Stock (<?php echo $product['stock_quantity']; ?> units)
-            </span>
-          <?php elseif ($product['stock_quantity'] > 0): ?>
-            <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-amber-500"></span> Low Stock (Only <?php echo $product['stock_quantity']; ?> left)
-            </span>
+          <?php if ($product['type'] === 'physical'): ?>
+            <?php if ($product['stock_quantity'] > 10): ?>
+              <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> In Stock (<?php echo $product['stock_quantity']; ?> units)
+              </span>
+            <?php elseif ($product['stock_quantity'] > 0): ?>
+              <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-500"></span> Low Stock (Only <?php echo $product['stock_quantity']; ?> left)
+              </span>
+            <?php else: ?>
+              <span class="px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                Out of Stock
+              </span>
+            <?php endif; ?>
+          <?php elseif ($product['type'] === 'digital'): ?>
+            <?php if (!empty($product['stock_quantity']) && $product['stock_quantity'] < 500): ?>
+              <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
+                <i class="fas fa-certificate text-amber-600"></i> Limited Release (<?php echo $product['stock_quantity']; ?> licenses remaining)
+              </span>
+            <?php else: ?>
+              <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1.5">
+                <i class="fas fa-infinity text-indigo-600"></i> Lifetime Access • Unlimited Downloads
+              </span>
+            <?php endif; ?>
           <?php else: ?>
-            <span class="px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-              Out of Stock
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1.5">
+              <i class="fas fa-graduation-cap text-purple-600"></i> Instant LMS Course Access
             </span>
           <?php endif; ?>
         </div>
@@ -299,7 +315,7 @@ require_once __DIR__ . '/includes/header.php';
       <div class="mt-8 pt-6 border-t border-gray-150 grid grid-cols-2 gap-4 text-xs text-gray-500">
         <div class="flex items-center gap-2">
           <i class="fas fa-shield-halved text-[#16865B]"></i>
-          <span>Paystack Escrow Protection</span>
+          <span>Encrypted Online Payment</span>
         </div>
         <div class="flex items-center gap-2">
           <i class="fas fa-rotate-left text-[#1B2299]"></i>

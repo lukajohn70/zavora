@@ -52,13 +52,14 @@ CREATE TABLE IF NOT EXISTS `vendors` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `subscription_tier` VARCHAR(50) DEFAULT "free",
   `boost_credits` INT DEFAULT 5,
+  `ai_credits` INT DEFAULT 3,
   `support_email` VARCHAR(150) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Dumping data for `vendors`
-INSERT INTO `vendors` (`id`, `store_name`, `slug`, `owner_name`, `email`, `phone`, `password_hash`, `logo_url`, `banner_url`, `description`, `bank_name`, `account_number`, `account_name`, `commission_rate`, `balance`, `status`, `created_at`, `subscription_tier`, `boost_credits`, `support_email`) VALUES
-(1, "Apex Audio & Tech Hub", "apex-audio-tech", "Emeka Okafor", "emeka@apexaudio.ng", "08039988776", "$2y$10$2cu9QonPYIoWTPM3Al5QfupmwnKmwmwjQ/Bkh9PB6w4bZjtvA7W.S", NULL, NULL, "Official authorized distributor of premium headphones, studio sound gear, and computing accessories in Nigeria.", "Access Bank", "0123456789", "Apex Audio Nigeria Ltd", 15, 0, "approved", "2026-11-07 13:54:55", "free", 5, NULL),
-(2, "JLM Creative Studio & Digital Lab", "jlm-creative-studio", "John Luka", "creative@jlm.com.ng", "08012345678", "$2y$10$CCS6dSr86hZxhiWD1fjbiOQc9vPLZQkBsKzhte8.2jyxnNBrTmbvq", NULL, NULL, "High-availability livestream engineering manuals, UI systems, and full-stack software templates.", "GTBank", "0987654321", "John Luka Media Enterprise", 10, 125000, "approved", "2026-11-07 13:54:55", "free", 5, NULL);
+INSERT INTO `vendors` (`id`, `store_name`, `slug`, `owner_name`, `email`, `phone`, `password_hash`, `logo_url`, `banner_url`, `description`, `bank_name`, `account_number`, `account_name`, `commission_rate`, `balance`, `status`, `created_at`, `subscription_tier`, `boost_credits`, `ai_credits`, `support_email`) VALUES
+(1, "Apex Audio & Tech Hub", "apex-audio-tech", "Emeka Okafor", "emeka@apexaudio.ng", "08039988776", "$2y$10$2cu9QonPYIoWTPM3Al5QfupmwnKmwmwjQ/Bkh9PB6w4bZjtvA7W.S", NULL, NULL, "Official authorized distributor of premium headphones, studio sound gear, and computing accessories in Nigeria.", "Access Bank", "0123456789", "Apex Audio Nigeria Ltd", 15, 0, "approved", "2026-11-07 13:54:55", "free", 5, 3, NULL),
+(2, "JLM Creative Studio & Digital Lab", "jlm-creative-studio", "John Luka", "creative@jlm.com.ng", "08012345678", "$2y$10$CCS6dSr86hZxhiWD1fjbiOQc9vPLZQkBsKzhte8.2jyxnNBrTmbvq", NULL, NULL, "High-availability livestream engineering manuals, UI systems, and full-stack software templates.", "GTBank", "0987654321", "John Luka Media Enterprise", 10, 125000, "approved", "2026-11-07 13:54:55", "free", 5, 3, NULL);
 
 -- --------------------------------------------------------
 -- Table structure for `products`
@@ -270,5 +271,26 @@ INSERT INTO `product_reviews` (`id`, `product_id`, `customer_name`, `rating`, `t
 (12, 8, "Oladipo Williams", 5, "Titanium Finish & 5x Zoom are Phenomenal", "Noticeably lighter in the pocket than the 14 Pro Max. The 5x telephoto optical zoom captures breathtaking low-light photography.", 1, "2026-11-07 15:52:38"),
 (13, 8, "Aisha Danjuma", 5, "Authentic Apple Unit with Full Warranty", "Verified the serial on Apple Check Coverage immediately. Fast, secure delivery in Abuja.", 1, "2026-11-07 15:52:38"),
 (14, 9, "Emeka Nnamdi", 5, "Smooth Pre-Order Allocation", "Placed the pre-order with the deposit option. Support team reached out on WhatsApp within 15 minutes to confirm delivery schedule.", 1, "2026-11-07 15:52:38");
+
+-- --------------------------------------------------------
+-- Table structure for `ai_credit_transactions`
+-- --------------------------------------------------------
+DROP TABLE IF EXISTS `ai_credit_transactions`;
+CREATE TABLE IF NOT EXISTS `ai_credit_transactions` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `vendor_id` INT UNSIGNED NOT NULL,
+  `action_type` VARCHAR(50) NOT NULL,
+  `credits_change` INT NOT NULL,
+  `amount_paid` DECIMAL(12, 2) DEFAULT 0.00,
+  `payment_reference` VARCHAR(100) NULL,
+  `prompt_summary` TEXT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_vendor_credits` (`vendor_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Dumping initial complimentary credit grants
+INSERT INTO `ai_credit_transactions` (`vendor_id`, `action_type`, `credits_change`, `amount_paid`, `payment_reference`, `prompt_summary`) VALUES
+(1, "signup_bonus", 3, 0.00, "BONUS-APEX-001", "Complimentary AI Studio onboarding credits"),
+(2, "signup_bonus", 3, 0.00, "BONUS-JLM-002", "Complimentary AI Studio onboarding credits");
 
 SET FOREIGN_KEY_CHECKS=1;

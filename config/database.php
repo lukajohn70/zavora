@@ -203,6 +203,18 @@ function zavora_ensure_schema(PDO $pdo) {
         created_at {$timeType} DEFAULT CURRENT_TIMESTAMP
     )");
 
+    // 9. Vendor AI Credit Transactions & Purchase Ledger (Paid Feature)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS ai_credit_transactions (
+        id {$autoInc},
+        vendor_id INT UNSIGNED NOT NULL,
+        action_type VARCHAR(50) NOT NULL,
+        credits_change INT NOT NULL,
+        amount_paid {$decType} DEFAULT 0,
+        payment_reference VARCHAR(100) NULL,
+        prompt_summary {$textType} NULL,
+        created_at {$timeType} DEFAULT CURRENT_TIMESTAMP
+    )");
+
     // Ensure variety, preorder, and boost columns exist on products
     $productCols = [
         "ALTER TABLE products ADD COLUMN vendor_id INT UNSIGNED NULL",
@@ -236,6 +248,7 @@ function zavora_ensure_schema(PDO $pdo) {
     $vendorCols = [
         "ALTER TABLE vendors ADD COLUMN subscription_tier VARCHAR(50) DEFAULT 'free'",
         "ALTER TABLE vendors ADD COLUMN boost_credits INT DEFAULT 5",
+        "ALTER TABLE vendors ADD COLUMN ai_credits INT DEFAULT 3",
         "ALTER TABLE vendors ADD COLUMN support_email VARCHAR(150) NULL",
     ];
     foreach ($vendorCols as $sql) {

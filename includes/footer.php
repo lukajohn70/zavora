@@ -25,7 +25,7 @@
         
         <!-- Brand Info -->
         <div class="col-span-2">
-          <img src="<?php echo zavora_asset('assets/images/logo-white.svg'); ?>" alt="ZAVORA" class="h-10 w-auto mb-4" />
+          <img src="<?php echo zavora_asset('assets/images/logo-white.svg'); ?>" alt="ZAVORA" class="h-8 sm:h-9 w-auto mb-4 block" />
           <p class="text-gray-400 text-sm leading-relaxed mb-4 max-w-sm">
             ZAVORA is a premier multi-category marketplace. Discover physical merchandise, production-ready digital downloads, and world-class online courses in one seamless checkout experience.
           </p>

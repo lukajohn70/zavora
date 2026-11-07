@@ -115,12 +115,12 @@ require_once __DIR__ . '/../includes/header.php';
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Business Email *</label>
-          <input type="email" name="email" required placeholder="store@domain.com"
+          <input type="email" name="email" required placeholder="Email address"
                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-[#1B2299] focus:outline-none">
         </div>
         <div>
           <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">Account Password *</label>
-          <input type="password" name="password" required placeholder="••••••••"
+          <input type="password" name="password" required placeholder="Create password"
                  class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-[#1B2299] focus:outline-none">
         </div>
       </div>

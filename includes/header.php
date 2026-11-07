@@ -98,8 +98,8 @@ $pageTitle = isset($title) ? $title . ' — ZAVORA Marketplace' : 'ZAVORA — Ev
     <div class="container mx-auto px-4 lg:px-8 py-3.5 flex items-center justify-between gap-4 sm:gap-8">
       
       <!-- Brand Logo -->
-      <a href="<?php echo zavora_asset('index.php'); ?>" class="flex-shrink-0 flex items-center gap-2">
-        <img src="<?php echo zavora_asset('assets/images/logo.svg'); ?>" alt="ZAVORA" class="h-9 sm:h-10 w-auto" />
+      <a href="<?php echo zavora_asset('index.php'); ?>" class="flex-shrink-0 flex items-center hover:opacity-95 transition-opacity">
+        <img src="<?php echo zavora_asset('assets/images/logo.svg'); ?>" alt="ZAVORA" class="h-8 sm:h-9 w-auto block" />
       </a>
 
       <!-- Large Center Search Bar -->

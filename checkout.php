@@ -160,7 +160,7 @@ require_once __DIR__ . '/includes/header.php';
   <div class="mb-8 text-center sm:text-left">
     <div class="inline-flex items-center gap-1.5 text-xs font-bold text-[#16865B] bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full mb-2">
       <i class="fas fa-lock text-[10px]"></i>
-      <span>Paystack Verified 256-Bit SSL Checkout</span>
+      <span>256-Bit SSL Secure Checkout</span>
     </div>
     <h1 class="text-3xl font-black font-display text-gray-900">Checkout</h1>
     <p class="text-sm text-gray-500 mt-1">Complete your order details below.</p>
@@ -273,7 +273,7 @@ require_once __DIR__ . '/includes/header.php';
               <i class="fas fa-credit-card"></i>
             </span>
             <div>
-              <span class="text-xs font-bold text-gray-900 block">Paystack Verified Gateway</span>
+              <span class="text-xs font-bold text-gray-900 block">Paystack Gateway</span>
               <span class="text-[11px] text-gray-500">Pay with Card, Bank Transfer, USSD, or Apple Pay</span>
             </div>
           </div>

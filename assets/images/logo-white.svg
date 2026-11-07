@@ -1,20 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 50" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 175 36" fill="none">
   <defs>
-    <linearGradient id="logoWhiteGlyph" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="zvZGlyphWhite" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#E4306D" />
       <stop offset="100%" stop-color="#F7DE7A" />
     </linearGradient>
   </defs>
-  <!-- Symbol -->
-  <g transform="translate(0, 5)">
-    <rect width="40" height="40" rx="10" fill="#1B2299" />
-    <path d="M10 12h20l-12 10h12v5H10l12-10H10v-5z" fill="url(#logoWhiteGlyph)" />
-    <circle cx="30" cy="12" r="2.5" fill="#F7DE7A" />
+
+  <!-- Modern Geometric Monogram Icon -->
+  <g transform="translate(0, 2)">
+    <rect width="32" height="32" rx="8" fill="#1B2299" />
+    <!-- Dynamic Z-Prism -->
+    <path d="M8 9h16l-9.5 8.5H24v4.5H8l9.5-8.5H8V9z" fill="url(#zvZGlyphWhite)" />
+    <!-- Pulse Accent Dot -->
+    <circle cx="23" cy="9.5" r="2" fill="#F7DE7A" />
   </g>
-  <!-- Brand Wordmark -->
-  <text x="52" y="32" font-family="'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif" font-weight="900" font-size="24" fill="#FFFFFF" letter-spacing="1.5">ZAVORA</text>
-  <!-- Micro endorsement badge -->
-  <g transform="translate(53, 36)">
-    <text font-family="'Inter', sans-serif" font-weight="700" font-size="7.5" fill="#F7DE7A" letter-spacing="1">A JLM PRODUCT</text>
-  </g>
+
+  <!-- Brand Wordmark (White) -->
+  <text x="42" y="22" 
+        font-family="-apple-system, BlinkMacSystemFont, 'Plus Jakarta Sans', 'Inter', sans-serif" 
+        font-weight="900" 
+        font-size="20" 
+        fill="#FFFFFF" 
+        letter-spacing="1.2">ZAVORA</text>
+
+  <!-- Micro Category Subtitle -->
+  <text x="43" y="31" 
+        font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" 
+        font-weight="800" 
+        font-size="6.5" 
+        fill="#F7DE7A" 
+        letter-spacing="2.2">MARKETPLACE</text>
 </svg>
