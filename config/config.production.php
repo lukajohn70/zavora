@@ -12,7 +12,7 @@ return [
         'name'        => 'ZAVORA',
         'env'         => 'production',
         'debug'       => false,
-        'url'         => 'https://zavora.com.ng',
+        'url'         => 'https://zavora.jlm.com.ng',
         'currency'    => 'NGN',
         'currency_symbol' => '₦',
         'commission_rate' => 0.15, // 15% marketplace fee

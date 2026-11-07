@@ -50,7 +50,7 @@ flowchart TD
 | Pillar | Directory | Local Development URL | Production Target | Engine |
 | :--- | :--- | :--- | :--- | :--- |
 | **Pillar 1: JLM Corporate** | `/jlm` | `http://localhost/jlm/` | `https://jlm.com.ng` | Native PHP 7.4 / MySQL |
-| **Pillar 2: ZAVORA Marketplace** | `/zavora` | `http://localhost/zavora/` | `https://zavora.com.ng` | Native PHP 7.4 / Dual PDO (MySQL + SQLite) |
+| **Pillar 2: ZAVORA Marketplace** | `/zavora` | `http://localhost/zavora/` | `https://zavora.jlm.com.ng` | Native PHP 7.4 / Dual PDO (MySQL + SQLite) |
 | **Pillar 3: Learnerium LMS** | `/learnerium` | `http://localhost/learnerium/public/` | `https://learnerium.jlm.com.ng` | Laravel 9/10 / MySQL |
 | **Pillar 4: LMS Multi-Tenant SaaS** | `/lms` | `http://localhost/lms/dist/index.html` | `https://lms.jlm.com.ng` | React 18 + Vite / REST API PHP |
 
