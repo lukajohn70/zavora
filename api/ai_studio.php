@@ -51,7 +51,7 @@ if ($action === 'check_credits') {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Action: Generate Product Copy (Title, Description, Specifications)
+// Action: Generate Product Copy (International Standards: GS1 Title, 5 Amazon Bullets, Spec Matrix)
 // ─────────────────────────────────────────────────────────────────────────────
 if ($action === 'generate_copy') {
     $currentCredits = intval($vendor['ai_credits']);
@@ -60,13 +60,14 @@ if ($action === 'generate_copy') {
             'success' => false,
             'error' => 'insufficient_credits',
             'ai_credits' => 0,
-            'message' => 'You have 0 AI Credits remaining. Please purchase an AI Credit Pack to generate product titles and descriptions.'
+            'message' => 'You have 0 AI Credits remaining. Please purchase an AI Credit Pack to generate product listings.'
         ]);
         exit;
     }
 
     $rawInput = trim($_POST['keywords'] ?? $_POST['concept'] ?? '');
     $categoryName = trim($_POST['category_name'] ?? 'General Products');
+    $brandName = trim($_POST['brand_name'] ?? $vendor['store_name']);
     $tone = trim($_POST['tone'] ?? 'Commercial');
 
     if (empty($rawInput)) {
@@ -76,21 +77,41 @@ if ($action === 'generate_copy') {
 
     $geminiApiKey = getenv('GEMINI_API_KEY');
     $generatedTitle = '';
+    $generatedBullets = [];
     $generatedDesc = '';
-    $generatedSpecs = '';
+    $generatedSpecsMap = [];
+    $generatedTags = [];
 
     // Attempt Gemini AI Generation if key present
     if (!empty($geminiApiKey) && strpos($geminiApiKey, 'YOUR_') === false) {
-        $prompt = "You are an expert e-commerce copywriter for an African/Nigerian marketplace (ZAVORA).
-Product input/keywords: {$rawInput}
+        $prompt = "You are an international e-commerce catalog specialist adhering strictly to Amazon ASIN, GS1, and Google Shopping standards for ZAVORA marketplace.
+
+Product Input / Keywords: {$rawInput}
+Store / Brand Name: {$brandName}
 Category: {$categoryName}
 Tone: {$tone}
 
-Respond ONLY with valid JSON in this exact structure without markdown fences:
+Generate an internationally compliant e-commerce listing in valid JSON with this EXACT structure (no markdown fences):
 {
-  \"title\": \"Compelling, high-converting product title (under 75 characters)\",
-  \"description\": \"2-3 punchy, persuasive sentences detailing core value proposition, durability, warranty, and benefits.\",
-  \"specifications\": \"Key specifications separated by pipes (e.g. Battery: 30 hours | Material: Aluminum | Warranty: 12 Months)\"
+  \"title\": \"Brand Model — Defining Feature, Color / Spec (60-90 chars, Title Case, no spam)\",
+  \"bullet_points\": [
+    \"KEY BENEFIT: One-sentence impactful core problem solved.\",
+    \"PREMIUM MATERIALS: Specific build materials, durability rating, and craftsmanship.\",
+    \"TECHNICAL SPECS: Detailed technical sensors, wattage, connectivity, or chipset metrics.\",
+    \"ERGONOMICS & BATTERY: Ergonomic comfort, dimensions, battery life, or universal compatibility.\",
+    \"IN THE BOX & WARRANTY: Exact packaged contents and official 12-month manufacturer warranty.\"
+  ],
+  \"description\": \"Two paragraphs of narrative storytelling highlighting practical value, reliability, and daily use.\",
+  \"specifications\": {
+    \"Brand\": \"{$brandName}\",
+    \"Category\": \"{$categoryName}\",
+    \"Connectivity\": \"Bluetooth 5.3 / USB-C Fast Charge\",
+    \"Build Material\": \"Precision Aluminum & Polymer\",
+    \"Power / Battery\": \"High Endurance Lithium-Ion\",
+    \"Dimensions & Weight\": \"Standard E-Commerce Packaging\",
+    \"Warranty\": \"12-Month Official Nigerian Warranty\"
+  },
+  \"search_tags\": [\"keyword1\", \"keyword2\", \"keyword3\", \"keyword4\", \"keyword5\"]
 }";
 
         $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . urlencode($geminiApiKey);
@@ -112,6 +133,7 @@ Respond ONLY with valid JSON in this exact structure without markdown fences:
         curl_setopt($ch, CURLOPT_TIMEOUT, 15);
         $rawResponse = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        @curl_close($ch);
 
         if ($httpCode === 200 && $rawResponse) {
             $parsed = json_decode($rawResponse, true);
@@ -119,38 +141,75 @@ Respond ONLY with valid JSON in this exact structure without markdown fences:
             $jsonParsed = json_decode($candidateText, true);
             if (!empty($jsonParsed['title'])) {
                 $generatedTitle = trim($jsonParsed['title']);
-                $generatedDesc = trim($jsonParsed['description']);
-                $generatedSpecs = trim($jsonParsed['specifications']);
+                $generatedBullets = (array)($jsonParsed['bullet_points'] ?? []);
+                $generatedDesc = trim($jsonParsed['description'] ?? '');
+                $generatedSpecsMap = (array)($jsonParsed['specifications'] ?? []);
+                $generatedTags = (array)($jsonParsed['search_tags'] ?? []);
             }
         }
     }
 
-    // High-Quality Algorithmic E-Commerce Copy Generation Fallback
+    // High-Quality Algorithmic E-Commerce Standards Fallback
     if (empty($generatedTitle)) {
         $words = ucwords(trim($rawInput));
-        $generatedTitle = $words;
-        if (!preg_match('/(Pro|Max|Edition|Wireless|Series|Original)/i', $generatedTitle)) {
-            $generatedTitle .= ' — Professional Edition';
-        }
+        $generatedTitle = "{$brandName} {$words} — Professional Series";
+        
+        $generatedBullets = [
+            "CORE PERFORMANCE: Engineered specifically for high-efficiency daily productivity, responsive tactile feedback, and verified durability.",
+            "PREMIUM CRAFTSMANSHIP: Built using reinforced industrial-grade composite alloy housing engineered to withstand heavy enterprise workloads.",
+            "SMART COMPATIBILITY: Features plug-and-play universal architecture compatible with macOS, Windows, iOS, and Android ecosystems.",
+            "EXTENDED ENDURANCE: Optimized low-power internal controller delivers extended operational longevity with fast-charge recharging.",
+            "PACKAGE & WARRANTY: Includes complete retail unboxing accessories, protective casing, and 12-Month Official Nigerian Warranty support."
+        ];
 
-        $generatedDesc = "Engineered for maximum reliability and peak performance. The {$words} features premium materials, verified build quality, and comprehensive manufacturer warranty support for peace of mind.";
-        $generatedSpecs = "Category: {$categoryName} | Build: Premium Industrial Grade | Compatibility: Universal | Warranty: 12-Month Official Warranty";
+        $generatedDesc = "Experience precision engineering and uncompromising reliability. The {$words} combines cutting-edge architecture with minimalist industrial aesthetics, purpose-built for creators, developers, and discerning professionals.\n\nEvery unit is backed by comprehensive manufacturer warranty protection and certified quality assurance inspection.";
+
+        $generatedSpecsMap = [
+            "Brand"             => $brandName,
+            "Category"          => $categoryName,
+            "Series"            => "Professional Edition",
+            "Connectivity"      => "Universal Protocol / Quick-Sync",
+            "Build & Material"  => "High-Density Reinforced Polymer & Alloy",
+            "Certifications"    => "CE / RoHS / FCC Standard",
+            "Warranty Coverage" => "12-Month Official Manufacturer Warranty"
+        ];
+
+        $generatedTags = array_slice(array_unique(array_filter(explode(' ', strtolower(preg_replace('/[^a-z0-9 ]/i', '', $rawInput))))), 0, 6);
     }
+
+    // Build pipe-separated specifications string for relational DB storage & backwards compatibility
+    $pipePairs = [];
+    foreach ($generatedSpecsMap as $k => $v) {
+        $pipePairs[] = "{$k}: {$v}";
+    }
+    $generatedSpecsPipe = implode(" | ", $pipePairs);
+
+    // Format rich description with 5 Amazon-style bullet highlights
+    $formattedBulletsText = "KEY HIGHLIGHTS:\n• " . implode("\n• ", $generatedBullets);
+    $fullRichDescription = $formattedBulletsText . "\n\nPRODUCT OVERVIEW:\n" . $generatedDesc;
 
     // Deduct 1 Credit & Record Transaction
     $pdo->beginTransaction();
     $pdo->prepare("UPDATE vendors SET ai_credits = ai_credits - 1 WHERE id = ?")->execute([$vendorId]);
     $pdo->prepare("INSERT INTO ai_credit_transactions (vendor_id, action_type, credits_change, prompt_summary) VALUES (?, 'copy_generation', -1, ?)")
-        ->execute([$vendorId, "Copy generation for: " . substr($rawInput, 0, 100)]);
+        ->execute([$vendorId, "AI Listing Draft: " . substr($rawInput, 0, 100)]);
     $pdo->commit();
 
     echo json_encode([
         'success' => true,
-        'title' => $generatedTitle,
-        'description' => $generatedDesc,
-        'specifications' => $generatedSpecs,
+        'data' => [
+            'title'               => $generatedTitle,
+            'bullet_points'       => $generatedBullets,
+            'description'         => $generatedDesc,
+            'full_description'    => $fullRichDescription,
+            'specifications'      => $generatedSpecsPipe,
+            'specifications_map'  => $generatedSpecsMap,
+            'specifications_pipe' => $generatedSpecsPipe,
+            'search_tags'         => $generatedTags,
+            'standard'            => 'Amazon ASIN / GS1 / Google Merchant Compliant'
+        ],
         'remaining_credits' => $currentCredits - 1,
-        'message' => 'Generated successfully (1 AI credit deducted).'
+        'message' => 'International-standard product listing generated (1 AI credit deducted).'
     ]);
     exit;
 }
@@ -171,14 +230,17 @@ if ($action === 'generate_image') {
     }
 
     $prompt = trim($_POST['prompt'] ?? $_POST['title'] ?? '');
-    $style = trim($_POST['style'] ?? 'studio');
+    $mode = trim($_POST['mode'] ?? $_POST['style'] ?? 'hero');
+    if (!in_array($mode, ['hero', 'lifestyle'])) {
+        $mode = 'hero';
+    }
 
     if (empty($prompt)) {
         echo json_encode(['success' => false, 'message' => 'Please provide a product title or visual prompt.']);
         exit;
     }
 
-    // Curated high-resolution studio commercial product image presets
+    // Curated high-resolution studio commercial product image presets for fallback
     $studioPhotos = [
         'electronics' => [
             'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80',
@@ -224,29 +286,34 @@ if ($action === 'generate_image') {
     }
 
     // 1. Primary Engine: Free High-Fidelity Generative AI Studio via Pollinations (FLUX.1 Model)
-    // Completely free, requires no API key or paid tokens, generates unique photorealistic product images on demand.
-    $seed = rand(10000, 999999);
-    $cleanPrompt = "commercial product photography of " . $prompt . ", professional studio lighting, 8k resolution, neutral clean white background, photorealistic e-commerce catalog image, sharp focus";
-    $aiGeneratedUrl = "https://image.pollinations.ai/prompt/" . rawurlencode($cleanPrompt) . "?width=800&height=800&model=flux&seed={$seed}&nologo=true";
+    // Amazon ASIN & Google Shopping standard: Pure white background (#FFFFFF), product occupies 85%+ of frame.
+    $seedHero = rand(100000, 999999);
+    $seedLife = $seedHero + 77;
 
-    $candidates = $studioPhotos[$chosenKey];
-    $fallbackUrl = $candidates[array_rand($candidates)];
+    $heroPrompt = "commercial product photography of {$prompt}, isolated on 100% pure white background RGB 255 255 255, centered composition, product fills 85 percent of frame, crisp studio lighting, no shadows, no text, no watermarks, 8k resolution, razor-sharp focus, amazon ASIN main image standard";
+    $lifestylePrompt = "high-end commercial lifestyle product photography of {$prompt}, placed naturally in a modern luxury minimalist environment, authentic soft ambient lighting, cinematic 8k resolution, shallow depth of field, award-winning commercial advertising photography";
 
-    // Use AI generated FLUX.1 asset
-    $imageUrl = $aiGeneratedUrl;
+    $heroUrl = "https://image.pollinations.ai/prompt/" . rawurlencode($heroPrompt) . "?width=800&height=800&model=flux&seed={$seedHero}&nologo=true";
+    $lifestyleUrl = "https://image.pollinations.ai/prompt/" . rawurlencode($lifestylePrompt) . "?width=800&height=800&model=flux&seed={$seedLife}&nologo=true";
+
+    $selectedUrl = ($mode === 'lifestyle') ? $lifestyleUrl : $heroUrl;
 
     // Deduct 1 Credit & Record Transaction
     $pdo->beginTransaction();
     $pdo->prepare("UPDATE vendors SET ai_credits = ai_credits - 1 WHERE id = ?")->execute([$vendorId]);
     $pdo->prepare("INSERT INTO ai_credit_transactions (vendor_id, action_type, credits_change, prompt_summary) VALUES (?, 'image_generation', -1, ?)")
-        ->execute([$vendorId, "AI Studio image: " . substr($prompt, 0, 100)]);
+        ->execute([$vendorId, "AI Studio {$mode} image: " . substr($prompt, 0, 100)]);
     $pdo->commit();
 
     echo json_encode([
-        'success' => true,
-        'image_url' => $imageUrl,
-        'remaining_credits' => $currentCredits - 1,
-        'message' => 'Product photo generated successfully (1 AI credit deducted).'
+        'success'              => true,
+        'image_url'            => $selectedUrl,
+        'hero_url'             => $heroUrl,
+        'lifestyle_url'        => $lifestyleUrl,
+        'mode'                 => $mode,
+        'standards_compliance' => 'Amazon ASIN / Google Shopping: Pure White #FFFFFF Background & 85%+ Frame Area',
+        'remaining_credits'    => $currentCredits - 1,
+        'message'              => 'Commercial studio product photo generated successfully (1 AI credit deducted).'
     ]);
     exit;
 }

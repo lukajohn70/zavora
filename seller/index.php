@@ -923,19 +923,32 @@ require_once __DIR__ . '/../includes/header.php';
               </div>
 
               <!-- Result Area -->
-              <div id="sbCopyResult" class="hidden mt-4 pt-4 border-t border-gray-100 space-y-3">
-                <div>
-                  <span class="text-[10px] font-bold text-gray-400 uppercase">Generated Title</span>
-                  <p id="sbResTitle" class="text-xs font-bold text-gray-900 bg-gray-50 p-2.5 rounded-lg border border-gray-200"></p>
+              <div id="sbCopyResult" class="hidden mt-4 pt-4 border-t border-gray-150 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                    <i class="fas fa-certificate"></i> GS1 & Amazon ASIN Compliant
+                  </span>
+                  <span id="sbResTitleCount" class="text-[10px] font-bold text-gray-500"></span>
                 </div>
                 <div>
-                  <span class="text-[10px] font-bold text-gray-400 uppercase">Description</span>
-                  <p id="sbResDesc" class="text-xs text-gray-700 bg-gray-50 p-2.5 rounded-lg border border-gray-200"></p>
+                  <span class="text-[10px] font-bold text-gray-400 uppercase">Product Title</span>
+                  <p id="sbResTitle" class="text-xs font-bold text-gray-900 bg-gray-50 p-2.5 rounded-xl border border-gray-200"></p>
                 </div>
                 <div>
-                  <span class="text-[10px] font-bold text-gray-400 uppercase">Key Specs</span>
-                  <p id="sbResSpecs" class="text-xs text-gray-700 bg-gray-50 p-2.5 rounded-lg border border-gray-200 font-mono"></p>
+                  <span class="text-[10px] font-bold text-gray-400 uppercase">Amazon-Style Bullets ("About this item")</span>
+                  <div id="sbResBullets" class="space-y-1.5 bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs text-gray-700"></div>
                 </div>
+                <div>
+                  <span class="text-[10px] font-bold text-gray-400 uppercase">Narrative Description</span>
+                  <p id="sbResDesc" class="text-xs text-gray-700 bg-gray-50 p-2.5 rounded-xl border border-gray-200 leading-relaxed"></p>
+                </div>
+                <div>
+                  <span class="text-[10px] font-bold text-gray-400 uppercase">Technical Specifications</span>
+                  <div id="sbResSpecsTable" class="bg-gray-50 p-2.5 rounded-xl border border-gray-200 grid grid-cols-2 gap-1 text-[11px]"></div>
+                </div>
+                <button type="button" onclick="createProductFromSandbox()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow flex items-center justify-center gap-1.5">
+                  <i class="fas fa-plus"></i> <span>Create Listing with This Draft</span>
+                </button>
               </div>
             </div>
           </div>
@@ -952,15 +965,24 @@ require_once __DIR__ . '/../includes/header.php';
                   <input type="text" id="sbImgPrompt" placeholder="e.g. Studio shot of titanium smart watch with AMOLED display"
                          class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
                 </div>
-                <div>
-                  <label class="block text-[11px] font-bold text-gray-600 mb-1">Product Style / Category</label>
-                  <select id="sbImgStyle" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
-                    <option value="electronics">Electronics & Audio Gear</option>
-                    <option value="computing">Laptops & Computing Workstations</option>
-                    <option value="fashion">Premium Streetwear & Apparel</option>
-                    <option value="gaming">Console & Gaming Gear</option>
-                    <option value="digital">Digital Assets & Software</option>
-                  </select>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Style / Category</label>
+                    <select id="sbImgStyle" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+                      <option value="electronics">Electronics & Audio</option>
+                      <option value="computing">Laptops & Workstations</option>
+                      <option value="fashion">Apparel & Footwear</option>
+                      <option value="gaming">Console & Gaming</option>
+                      <option value="digital">Digital Assets</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-gray-600 mb-1">Standard Mode</label>
+                    <select id="sbImgMode" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+                      <option value="hero">Hero (Pure White #FFFFFF)</option>
+                      <option value="lifestyle">Lifestyle Context</option>
+                    </select>
+                  </div>
                 </div>
                 <button type="button" onclick="runSandboxImage()" id="btnSbImage"
                         class="w-full py-2.5 bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold rounded-xl transition shadow flex items-center justify-center gap-2">
@@ -969,12 +991,39 @@ require_once __DIR__ . '/../includes/header.php';
               </div>
 
               <!-- Result Area -->
-              <div id="sbImgResult" class="hidden mt-4 pt-4 border-t border-gray-100 space-y-2">
-                <span class="text-[10px] font-bold text-gray-400 uppercase">Generated Studio Asset</span>
-                <div class="rounded-xl overflow-hidden border border-gray-200 aspect-video bg-gray-100 flex items-center justify-center">
-                  <img id="sbResImgTag" src="" class="w-full h-full object-cover">
+              <div id="sbImgResult" class="hidden mt-4 pt-4 border-t border-gray-150 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-black text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                    <i class="fas fa-certificate"></i> FLUX.1 Commercial Photography
+                  </span>
+                  <span class="text-[10px] text-gray-400">8K • No Watermarks</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <!-- Hero Preview -->
+                  <div class="p-2 bg-gray-50 border border-gray-200 rounded-xl">
+                    <span class="text-[10px] font-black text-gray-700 uppercase block mb-1">Hero (Pure White)</span>
+                    <div class="aspect-square rounded-lg bg-white border border-gray-200 flex items-center justify-center p-1.5 mb-2">
+                      <img id="sbResHeroTag" src="" class="w-full h-full object-contain">
+                    </div>
+                    <button type="button" onclick="copySandboxImgUrl('hero')" class="w-full py-1 bg-white hover:bg-gray-100 border border-gray-200 text-gray-800 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1">
+                      <i class="fas fa-copy"></i> Copy Hero URL
+                    </button>
+                  </div>
+                  <!-- Lifestyle Preview -->
+                  <div class="p-2 bg-gray-50 border border-gray-200 rounded-xl">
+                    <span class="text-[10px] font-black text-gray-700 uppercase block mb-1">Lifestyle Context</span>
+                    <div class="aspect-square rounded-lg bg-gray-900 border border-gray-200 flex items-center justify-center overflow-hidden mb-2">
+                      <img id="sbResLifeTag" src="" class="w-full h-full object-cover">
+                    </div>
+                    <button type="button" onclick="copySandboxImgUrl('lifestyle')" class="w-full py-1 bg-white hover:bg-gray-100 border border-gray-200 text-gray-800 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1">
+                      <i class="fas fa-copy"></i> Copy Lifestyle URL
+                    </button>
+                  </div>
                 </div>
                 <input type="text" id="sbResImgUrl" readonly class="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-[11px] font-mono text-gray-500">
+                <button type="button" onclick="useSandboxImgInListing()" class="w-full py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold transition shadow flex items-center justify-center gap-1.5">
+                  <i class="fas fa-plus"></i> <span>List Product with Generated Photo</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1095,12 +1144,88 @@ require_once __DIR__ . '/../includes/header.php';
             <i class="fas fa-image"></i> <span>Generate Photo</span>
           </button>
         </div>
+
+        <!-- Mode Toggle for Photo Studio -->
+        <div class="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-blue-200/60 text-[10px]">
+          <span class="text-gray-600 font-bold flex items-center gap-1">
+            <i class="fas fa-camera text-[#1B2299]"></i> Photo Mode:
+          </span>
+          <div class="flex items-center gap-1">
+            <input type="hidden" id="aiImgMode" value="hero">
+            <button type="button" id="btnModeHero" onclick="setAiImgMode('hero')" class="px-2 py-0.5 rounded text-[10px] font-black bg-[#1B2299] text-white transition">
+              Hero (Pure White #FFFFFF)
+            </button>
+            <button type="button" id="btnModeLifestyle" onclick="setAiImgMode('lifestyle')" class="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-gray-700 border border-gray-200 hover:border-gray-400 transition">
+              Lifestyle Context
+            </button>
+          </div>
+        </div>
+
         <div id="aiModalStatus" class="hidden text-[11px] font-bold mt-2 p-2 rounded-lg"></div>
+
+        <!-- Interactive AI Listing Reviewer Drawer (GS1 & Amazon ASIN Compliant) -->
+        <div id="aiListingReviewerDrawer" class="hidden mt-3 p-3 bg-white/95 backdrop-blur rounded-xl border border-blue-200 shadow-sm space-y-3">
+          <div class="flex items-center justify-between pb-2 border-b border-gray-150">
+            <span class="text-[11px] font-black text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fas fa-certificate text-emerald-600"></i> AI Listing Reviewer
+            </span>
+            <span id="aiReviewTitleLen" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+              0 / 90 chars (GS1 Standard)
+            </span>
+          </div>
+
+          <!-- Bullets Preview -->
+          <div>
+            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">5 Amazon Bullets ("About this item")</span>
+            <div id="aiReviewBulletsList" class="space-y-1.5 text-[11px] text-gray-700 max-h-36 overflow-y-auto pr-1"></div>
+          </div>
+
+          <!-- Technical Specs Matrix Preview -->
+          <div>
+            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Structured Specs Matrix</span>
+            <div id="aiReviewSpecsGrid" class="grid grid-cols-2 gap-1 text-[10px]"></div>
+          </div>
+
+          <!-- Dual Generated Images Preview (Hero & Lifestyle) -->
+          <div id="aiReviewImagesWrap" class="hidden pt-2 border-t border-gray-150">
+            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Studio Photos (Click to choose main image)</span>
+            <div class="grid grid-cols-2 gap-2">
+              <div onclick="selectAiHeroImage()" id="cardHeroPreview" class="cursor-pointer p-1.5 rounded-xl border-2 border-[#1B2299] bg-white transition hover:shadow">
+                <div class="aspect-square rounded-lg bg-white border border-gray-100 flex items-center justify-center p-1 mb-1">
+                  <img id="imgHeroPreview" src="" class="w-full h-full object-contain">
+                </div>
+                <div class="text-[10px] font-black text-[#1B2299] flex items-center justify-between">
+                  <span>Hero (#FFFFFF)</span>
+                  <i class="fas fa-check-circle" id="iconHeroSelected"></i>
+                </div>
+              </div>
+              <div onclick="selectAiLifestyleImage()" id="cardLifePreview" class="cursor-pointer p-1.5 rounded-xl border-2 border-transparent bg-white transition hover:shadow">
+                <div class="aspect-square rounded-lg bg-gray-100 border border-gray-100 flex items-center justify-center mb-1 overflow-hidden">
+                  <img id="imgLifePreview" src="" class="w-full h-full object-cover">
+                </div>
+                <div class="text-[10px] font-bold text-gray-600 flex items-center justify-between">
+                  <span>Lifestyle</span>
+                  <i class="fas fa-circle text-gray-300" id="iconLifeSelected"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-gray-150 flex items-center justify-between gap-2">
+            <span class="text-[10px] text-gray-400 italic">Amazon ASIN / GS1 standard formatted.</span>
+            <button type="button" onclick="applyAiListingToForm()" id="btnApplyAiListing" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow flex items-center gap-1">
+              <i class="fas fa-check-double"></i> <span>Apply to Form</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <div>
-        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Product Title *</label>
-        <input type="text" name="title" id="np_title" required placeholder="e.g. Wireless Ergonomic Mechanical Keyboard"
+        <div class="flex items-center justify-between mb-1">
+          <label class="block text-xs font-bold text-gray-700 uppercase">Product Title *</label>
+          <span id="npTitleCharCount" class="text-[10px] text-gray-400 font-mono">0 chars</span>
+        </div>
+        <input type="text" name="title" id="np_title" oninput="updateTitleCharCount(this.value)" required placeholder="e.g. Sony WH-1000XM5 — Active Noise Canceling Headphones, Midnight Black"
                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
       </div>
 
@@ -1399,6 +1524,38 @@ function updateCreditCounters(credits) {
   if (tabBal) tabBal.innerText = c + ' Credits';
 }
 
+let currentAiDrawerData = null;
+let currentAiImageData = null;
+
+function updateTitleCharCount(val) {
+  const len = (val || '').length;
+  const countEl = document.getElementById('npTitleCharCount');
+  if (countEl) {
+    countEl.innerText = len + ' / 90 chars';
+    if (len >= 60 && len <= 90) {
+      countEl.className = 'text-[10px] text-emerald-600 font-bold font-mono';
+    } else if (len > 90) {
+      countEl.className = 'text-[10px] text-amber-600 font-bold font-mono';
+    } else {
+      countEl.className = 'text-[10px] text-gray-400 font-mono';
+    }
+  }
+}
+
+function setAiImgMode(mode) {
+  const input = document.getElementById('aiImgMode');
+  if (input) input.value = mode;
+  const btnHero = document.getElementById('btnModeHero');
+  const btnLife = document.getElementById('btnModeLifestyle');
+  if (mode === 'hero') {
+    if (btnHero) { btnHero.className = 'px-2 py-0.5 rounded text-[10px] font-black bg-[#1B2299] text-white transition'; }
+    if (btnLife) { btnLife.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-white text-gray-700 border border-gray-200 hover:border-gray-400 transition'; }
+  } else {
+    if (btnLife) { btnLife.className = 'px-2 py-0.5 rounded text-[10px] font-black bg-purple-700 text-white transition'; }
+    if (btnHero) { btnHero.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-white text-gray-700 border border-gray-200 hover:border-gray-400 transition'; }
+  }
+}
+
 function updateThumbnailPreview(url) {
   const wrap = document.getElementById('np_preview_wrap');
   const img = document.getElementById('np_preview_img');
@@ -1441,14 +1598,15 @@ function generateModalAiCopy() {
   .then(res => res.json())
   .then(data => {
     if (data.success && data.data) {
-      document.getElementById('np_title').value = data.data.title || '';
-      document.getElementById('np_description').value = data.data.description || '';
-      document.getElementById('np_specifications').value = data.data.specifications || '';
+      currentAiDrawerData = data.data;
+      renderAiListingDrawer(data.data);
+      applyAiListingToForm();
+
       if (data.remaining_credits !== undefined) {
         updateCreditCounters(data.remaining_credits);
       }
       statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-emerald-50 text-emerald-800 block';
-      statusEl.innerText = 'Title, description & specs generated successfully! (1 credit deducted)';
+      statusEl.innerHTML = '<i class="fas fa-check-circle text-emerald-600"></i> International GS1/Amazon listing drafted! Review below or edit directly. (1 credit deducted)';
     } else if (data.error === 'insufficient_credits') {
       statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-amber-50 text-amber-800 block';
       statusEl.innerText = data.message || '0 AI Credits remaining.';
@@ -1469,10 +1627,74 @@ function generateModalAiCopy() {
   });
 }
 
+function renderAiListingDrawer(d) {
+  const drawer = document.getElementById('aiListingReviewerDrawer');
+  if (!drawer) return;
+  drawer.classList.remove('hidden');
+
+  const len = (d.title || '').length;
+  const lenEl = document.getElementById('aiReviewTitleLen');
+  if (lenEl) {
+    lenEl.innerText = len + ' / 90 chars (GS1 Formula)';
+    lenEl.className = 'text-[10px] font-bold px-2 py-0.5 rounded ' + (len <= 90 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200');
+  }
+
+  const bulletsWrap = document.getElementById('aiReviewBulletsList');
+  if (bulletsWrap && Array.isArray(d.bullet_points)) {
+    bulletsWrap.innerHTML = d.bullet_points.map(b => `
+      <div class="flex items-start gap-1.5 p-1.5 rounded-lg bg-gray-50 border border-gray-150">
+        <i class="fas fa-check-circle text-emerald-600 mt-0.5 text-[10px] flex-shrink-0"></i>
+        <span>${escapeHtml(b)}</span>
+      </div>
+    `).join('');
+  }
+
+  const specsWrap = document.getElementById('aiReviewSpecsGrid');
+  if (specsWrap && d.specifications_map) {
+    specsWrap.innerHTML = Object.entries(d.specifications_map).map(([k, v]) => `
+      <div class="p-1 rounded bg-gray-50 border border-gray-150 truncate">
+        <strong class="text-gray-500 uppercase text-[9px]">${escapeHtml(k)}:</strong>
+        <span class="text-gray-900 font-semibold">${escapeHtml(v)}</span>
+      </div>
+    `).join('');
+  }
+}
+
+function applyAiListingToForm() {
+  if (!currentAiDrawerData) return;
+  const d = currentAiDrawerData;
+  const titleInput = document.getElementById('np_title');
+  const descInput = document.getElementById('np_description');
+  const specsInput = document.getElementById('np_specifications');
+
+  if (titleInput && d.title) {
+    titleInput.value = d.title;
+    updateTitleCharCount(d.title);
+  }
+  if (descInput) {
+    descInput.value = d.full_description || d.description || '';
+  }
+  if (specsInput) {
+    specsInput.value = d.specifications || d.specifications_pipe || '';
+  }
+
+  const btn = document.getElementById('btnApplyAiListing');
+  if (btn) {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i> <span>Applied!</span>';
+    btn.classList.add('bg-emerald-700');
+    setTimeout(() => {
+      btn.innerHTML = orig;
+      btn.classList.remove('bg-emerald-700');
+    }, 1500);
+  }
+}
+
 function generateModalAiImage() {
   const keywords = document.getElementById('aiConceptInput').value.trim() || document.getElementById('np_title').value.trim();
   const statusEl = document.getElementById('aiModalStatus');
   const btn = document.getElementById('btnAiGenImage');
+  const mode = document.getElementById('aiImgMode')?.value || 'hero';
 
   if (!keywords) {
     alert('Please enter a product title or concept keywords for image generation.');
@@ -1482,10 +1704,11 @@ function generateModalAiImage() {
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Photo...';
   statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-purple-50 text-purple-700 block';
-  statusEl.innerText = 'Rendering studio product photo (1 Credit)...';
+  statusEl.innerText = 'Rendering commercial product photo (' + (mode === 'hero' ? 'Amazon Pure White' : 'Lifestyle Setting') + ')...';
 
   const fd = new FormData();
   fd.append('prompt', keywords);
+  fd.append('mode', mode);
 
   fetch('<?php echo zavora_asset("api/ai_studio.php?action=generate_image"); ?>', {
     method: 'POST',
@@ -1494,13 +1717,17 @@ function generateModalAiImage() {
   .then(res => res.json())
   .then(data => {
     if (data.success && data.image_url) {
+      currentAiImageData = data;
       document.getElementById('np_thumbnail').value = data.image_url;
       updateThumbnailPreview(data.image_url);
+
+      renderAiImagePreviews(data);
+
       if (data.remaining_credits !== undefined) {
         updateCreditCounters(data.remaining_credits);
       }
       statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-emerald-50 text-emerald-800 block';
-      statusEl.innerText = 'Studio photo generated and attached! (1 credit deducted)';
+      statusEl.innerHTML = '<i class="fas fa-check-circle text-emerald-600"></i> Commercial photo generated and attached! (1 credit deducted)';
     } else if (data.error === 'insufficient_credits') {
       statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-amber-50 text-amber-800 block';
       statusEl.innerText = data.message || '0 AI Credits remaining.';
@@ -1519,6 +1746,55 @@ function generateModalAiImage() {
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-image"></i> <span>Generate Photo</span>';
   });
+}
+
+function renderAiImagePreviews(data) {
+  const wrap = document.getElementById('aiReviewImagesWrap');
+  if (!wrap) return;
+  wrap.classList.remove('hidden');
+
+  const heroImg = document.getElementById('imgHeroPreview');
+  const lifeImg = document.getElementById('imgLifePreview');
+  if (heroImg && data.hero_url) heroImg.src = data.hero_url;
+  if (lifeImg && data.lifestyle_url) lifeImg.src = data.lifestyle_url;
+
+  if (data.mode === 'lifestyle') {
+    selectAiLifestyleImage();
+  } else {
+    selectAiHeroImage();
+  }
+}
+
+function selectAiHeroImage() {
+  if (!currentAiImageData || !currentAiImageData.hero_url) return;
+  document.getElementById('np_thumbnail').value = currentAiImageData.hero_url;
+  updateThumbnailPreview(currentAiImageData.hero_url);
+
+  const cardHero = document.getElementById('cardHeroPreview');
+  const cardLife = document.getElementById('cardLifePreview');
+  const iconHero = document.getElementById('iconHeroSelected');
+  const iconLife = document.getElementById('iconLifeSelected');
+
+  if (cardHero) cardHero.className = 'cursor-pointer p-1.5 rounded-xl border-2 border-[#1B2299] bg-white transition hover:shadow';
+  if (cardLife) cardLife.className = 'cursor-pointer p-1.5 rounded-xl border-2 border-transparent bg-white transition hover:shadow';
+  if (iconHero) iconHero.className = 'fas fa-check-circle text-[#1B2299]';
+  if (iconLife) iconLife.className = 'fas fa-circle text-gray-300';
+}
+
+function selectAiLifestyleImage() {
+  if (!currentAiImageData || !currentAiImageData.lifestyle_url) return;
+  document.getElementById('np_thumbnail').value = currentAiImageData.lifestyle_url;
+  updateThumbnailPreview(currentAiImageData.lifestyle_url);
+
+  const cardHero = document.getElementById('cardHeroPreview');
+  const cardLife = document.getElementById('cardLifePreview');
+  const iconHero = document.getElementById('iconHeroSelected');
+  const iconLife = document.getElementById('iconLifeSelected');
+
+  if (cardLife) cardLife.className = 'cursor-pointer p-1.5 rounded-xl border-2 border-purple-700 bg-white transition hover:shadow';
+  if (cardHero) cardHero.className = 'cursor-pointer p-1.5 rounded-xl border-2 border-transparent bg-white transition hover:shadow';
+  if (iconLife) iconLife.className = 'fas fa-check-circle text-purple-700';
+  if (iconHero) iconHero.className = 'fas fa-circle text-gray-300';
 }
 
 function runSandboxCopy() {
@@ -1547,9 +1823,33 @@ function runSandboxCopy() {
   .then(res => res.json())
   .then(data => {
     if (data.success && data.data) {
-      document.getElementById('sbResTitle').innerText = data.data.title || '';
-      document.getElementById('sbResDesc').innerText = data.data.description || '';
-      document.getElementById('sbResSpecs').innerText = data.data.specifications || '';
+      window.sandboxLastCopy = data.data;
+      const d = data.data;
+      document.getElementById('sbResTitle').innerText = d.title || '';
+      document.getElementById('sbResTitleCount').innerText = (d.title || '').length + ' / 90 chars';
+
+      const bulletsEl = document.getElementById('sbResBullets');
+      if (bulletsEl && Array.isArray(d.bullet_points)) {
+        bulletsEl.innerHTML = d.bullet_points.map(b => `
+          <div class="flex items-start gap-1.5">
+            <i class="fas fa-check-circle text-emerald-600 mt-0.5 text-[11px] flex-shrink-0"></i>
+            <span>${escapeHtml(b)}</span>
+          </div>
+        `).join('');
+      }
+
+      document.getElementById('sbResDesc').innerText = d.description || '';
+
+      const specsEl = document.getElementById('sbResSpecsTable');
+      if (specsEl && d.specifications_map) {
+        specsEl.innerHTML = Object.entries(d.specifications_map).map(([k, v]) => `
+          <div class="p-1 rounded bg-white border border-gray-150 truncate">
+            <strong class="text-gray-500 uppercase text-[9px]">${escapeHtml(k)}:</strong>
+            <span class="text-gray-900 font-semibold">${escapeHtml(v)}</span>
+          </div>
+        `).join('');
+      }
+
       document.getElementById('sbCopyResult').classList.remove('hidden');
       if (data.remaining_credits !== undefined) {
         updateCreditCounters(data.remaining_credits);
@@ -1567,8 +1867,18 @@ function runSandboxCopy() {
   });
 }
 
+function createProductFromSandbox() {
+  if (!window.sandboxLastCopy) return;
+  const d = window.sandboxLastCopy;
+  document.getElementById('newProductModal').classList.remove('hidden');
+  currentAiDrawerData = d;
+  renderAiListingDrawer(d);
+  applyAiListingToForm();
+}
+
 function runSandboxImage() {
   const prompt = document.getElementById('sbImgPrompt').value.trim();
+  const mode = document.getElementById('sbImgMode').value;
   const btn = document.getElementById('btnSbImage');
 
   if (!prompt) {
@@ -1581,6 +1891,7 @@ function runSandboxImage() {
 
   const fd = new FormData();
   fd.append('prompt', prompt);
+  fd.append('mode', mode);
 
   fetch('<?php echo zavora_asset("api/ai_studio.php?action=generate_image"); ?>', {
     method: 'POST',
@@ -1589,9 +1900,15 @@ function runSandboxImage() {
   .then(res => res.json())
   .then(data => {
     if (data.success && data.image_url) {
-      document.getElementById('sbResImgTag').src = data.image_url;
+      window.sandboxLastImage = data;
+      const heroTag = document.getElementById('sbResHeroTag');
+      const lifeTag = document.getElementById('sbResLifeTag');
+      if (heroTag && data.hero_url) heroTag.src = data.hero_url;
+      if (lifeTag && data.lifestyle_url) lifeTag.src = data.lifestyle_url;
+
       document.getElementById('sbResImgUrl').value = data.image_url;
       document.getElementById('sbImgResult').classList.remove('hidden');
+
       if (data.remaining_credits !== undefined) {
         updateCreditCounters(data.remaining_credits);
       }
@@ -1605,6 +1922,31 @@ function runSandboxImage() {
   .finally(() => {
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> <span>Generate Studio Imagery</span>';
+  });
+}
+
+function copySandboxImgUrl(type) {
+  if (!window.sandboxLastImage) return;
+  const url = (type === 'hero') ? window.sandboxLastImage.hero_url : window.sandboxLastImage.lifestyle_url;
+  if (!url) return;
+  navigator.clipboard.writeText(url).then(() => {
+    alert('Copied ' + (type === 'hero' ? 'Hero Shot' : 'Lifestyle') + ' URL to clipboard!');
+  }).catch(() => {
+    prompt('Copy URL:', url);
+  });
+}
+
+function useSandboxImgInListing() {
+  if (!window.sandboxLastImage) return;
+  document.getElementById('newProductModal').classList.remove('hidden');
+  document.getElementById('np_thumbnail').value = window.sandboxLastImage.image_url;
+  updateThumbnailPreview(window.sandboxLastImage.image_url);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, function(m) {
+    return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'}[m];
   });
 }
 

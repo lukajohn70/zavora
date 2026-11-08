@@ -61,6 +61,50 @@ $reviewCount = count($reviews) ?: (int)($product['reviews_count'] ?? 0);
 // Parse variant attributes schema
 $attributeGroups = !empty($product['variant_attributes']) ? json_decode($product['variant_attributes'], true) : [];
 
+// Parse Description for Amazon-standard "About this item" highlights
+$rawDesc = $product['description'] ?? '';
+$highlights = [];
+$narrativeDesc = $rawDesc;
+
+if (preg_match('/KEY HIGHLIGHTS:\s*(.*?)(?=(?:PRODUCT OVERVIEW:|$))/si', $rawDesc, $matchHighlights)) {
+    $bulletBlock = $matchHighlights[1];
+    $lines = explode("\n", $bulletBlock);
+    foreach ($lines as $line) {
+        $cleanLine = trim(ltrim(trim($line), "•-* \t"));
+        if (!empty($cleanLine)) {
+            $highlights[] = $cleanLine;
+        }
+    }
+    if (preg_match('/PRODUCT OVERVIEW:\s*(.*)/si', $rawDesc, $matchOverview)) {
+        $narrativeDesc = trim($matchOverview[1]);
+    } else {
+        $narrativeDesc = trim(str_replace($matchHighlights[0], '', $rawDesc));
+    }
+}
+
+// Parse Specifications into Structured Key-Value Dictionary
+$parsedSpecs = [];
+$rawSpecs = trim($product['specifications'] ?? '');
+if (!empty($rawSpecs)) {
+    $jsonDecoded = json_decode($rawSpecs, true);
+    if (is_array($jsonDecoded)) {
+        $parsedSpecs = $jsonDecoded;
+    } else {
+        $parts = (strpos($rawSpecs, '|') !== false) ? explode('|', $rawSpecs) : explode("\n", $rawSpecs);
+        foreach ($parts as $p) {
+            $p = trim($p);
+            if (empty($p)) continue;
+            if (strpos($p, ':') !== false) {
+                [$k, $v] = explode(':', $p, 2);
+                $parsedSpecs[trim($k)] = trim($v);
+            } elseif (strpos($p, '—') !== false) {
+                [$k, $v] = explode('—', $p, 2);
+                $parsedSpecs[trim($k)] = trim($v);
+            }
+        }
+    }
+}
+
 $title = $product['title'];
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -84,9 +128,9 @@ require_once __DIR__ . '/includes/header.php';
     
     <!-- Left: Product Image Gallery (5 Cols) -->
     <div class="lg:col-span-5">
-      <div class="relative rounded-2xl overflow-hidden aspect-square bg-gray-100 border border-gray-200 shadow-inner">
+      <div class="relative rounded-2xl overflow-hidden aspect-square bg-white border border-gray-200 shadow-inner flex items-center justify-center p-3">
         <img id="main-product-img" src="<?php echo htmlspecialchars($product['thumbnail']); ?>" alt="<?php echo htmlspecialchars($product['title']); ?>" 
-             class="w-full h-full object-cover">
+             class="w-full h-full object-contain">
         
         <?php if (!empty($product['is_boosted'])): ?>
           <span class="absolute top-4 left-4 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-black rounded-lg shadow-md uppercase tracking-wider flex items-center gap-1.5">
@@ -222,9 +266,43 @@ require_once __DIR__ . '/includes/header.php';
         </div>
       </div>
 
-      <!-- Description -->
-      <div class="text-sm text-gray-600 leading-relaxed mb-6 space-y-3">
-        <p><?php echo nl2br(htmlspecialchars($product['description'])); ?></p>
+      <!-- Description & Amazon ASIN-Style "About this item" Highlights -->
+      <div class="mb-6 space-y-4">
+        <?php if (!empty($highlights)): ?>
+          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-sm">
+            <h3 class="text-xs font-black uppercase tracking-wider text-gray-900 mb-3 flex items-center gap-2">
+              <i class="fas fa-list-check text-[#1B2299]"></i> About this item
+            </h3>
+            <ul class="space-y-2.5 text-xs text-gray-700 leading-relaxed">
+              <?php foreach ($highlights as $h): ?>
+                <?php
+                  $prefix = '';
+                  $body = $h;
+                  if (strpos($h, ':') !== false) {
+                      [$prefix, $body] = explode(':', $h, 2);
+                      $prefix = trim($prefix) . ':';
+                      $body = trim($body);
+                  }
+                ?>
+                <li class="flex items-start gap-2.5">
+                  <i class="fas fa-check-circle text-emerald-600 mt-0.5 text-xs flex-shrink-0"></i>
+                  <span>
+                    <?php if (!empty($prefix)): ?>
+                      <strong class="font-extrabold text-gray-900"><?php echo htmlspecialchars($prefix); ?></strong>
+                    <?php endif; ?>
+                    <?php echo htmlspecialchars($body); ?>
+                  </span>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+          </div>
+        <?php endif; ?>
+
+        <?php if (!empty($narrativeDesc)): ?>
+          <div class="text-xs sm:text-sm text-gray-600 leading-relaxed space-y-2">
+            <p><?php echo nl2br(htmlspecialchars($narrativeDesc)); ?></p>
+          </div>
+        <?php endif; ?>
       </div>
 
       <!-- Purchase Form with Dynamic Variations -->
@@ -301,8 +379,35 @@ require_once __DIR__ . '/includes/header.php';
         </div>
       </form>
 
-      <!-- Specifications -->
-      <?php if (!empty($product['specifications'])): ?>
+      <!-- Structured Technical Specifications (International Standard Two-Column Alternating Matrix) -->
+      <?php if (!empty($parsedSpecs)): ?>
+        <div class="mt-8 pt-6 border-t border-gray-200">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-xs font-black uppercase tracking-wider text-gray-900 flex items-center gap-2">
+              <i class="fas fa-microchip text-[#1B2299]"></i> Technical Specifications
+            </h3>
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+              <i class="fas fa-certificate text-emerald-500"></i> Verified Metrics
+            </span>
+          </div>
+          <div class="overflow-hidden rounded-2xl border border-gray-200 shadow-sm bg-white">
+            <table class="w-full text-left text-xs">
+              <tbody class="divide-y divide-gray-150">
+                <?php $sCount = 0; foreach ($parsedSpecs as $sKey => $sVal): $sCount++; ?>
+                  <tr class="<?php echo ($sCount % 2 === 1) ? 'bg-slate-50/70' : 'bg-white'; ?> transition-colors hover:bg-indigo-50/30">
+                    <td class="py-2.5 px-4 font-bold text-gray-600 w-2/5 border-r border-gray-150 text-[11px] uppercase tracking-wider">
+                      <?php echo htmlspecialchars($sKey); ?>
+                    </td>
+                    <td class="py-2.5 px-4 font-semibold text-gray-900">
+                      <?php echo htmlspecialchars($sVal); ?>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <?php elseif (!empty($product['specifications'])): ?>
         <div class="mt-8 pt-6 border-t border-gray-150">
           <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Technical Specifications</h3>
           <div class="p-4 rounded-xl bg-slate-50 border border-gray-150 text-xs text-gray-700 font-medium leading-relaxed">
