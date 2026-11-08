@@ -18,28 +18,43 @@ error_reporting(E_ALL);
 
 $isCli = (PHP_SAPI === 'cli');
 
-// 1. Load Database Credentials from .env if present
-$envFile = __DIR__ . '/.env';
-$dbHost = '127.0.0.1';
+// 1. Discover Database Credentials from local .env or sibling cPanel apps
+$candidateEnvFiles = [
+    __DIR__ . '/.env',
+    __DIR__ . '/../.env',
+    '/home/gwylvxeo/learnerium.jlm.com.ng/.env',
+    '/home/gwylvxeo/public_html/.env',
+    dirname(__DIR__) . '/learnerium.jlm.com.ng/.env',
+    dirname(__DIR__) . '/public_html/.env',
+];
+
+$dbHost = 'localhost';
 $dbPort = '3306';
 $dbName = '';
 $dbUser = '';
 $dbPass = '';
+$loadedFromEnv = false;
 
-if (file_exists($envFile)) {
-    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if (empty($line) || $line[0] === '#') continue;
-        if (strpos($line, '=') !== false) {
-            list($k, $v) = explode('=', $line, 2);
-            $k = trim($k);
-            $v = trim($v, " \t\n\r\0\x0B\"'");
-            if ($k === 'DB_HOST') $dbHost = $v;
-            if ($k === 'DB_PORT') $dbPort = $v;
-            if ($k === 'DB_DATABASE') $dbName = $v;
-            if ($k === 'DB_USERNAME') $dbUser = $v;
-            if ($k === 'DB_PASSWORD') $dbPass = $v;
+foreach ($candidateEnvFiles as $ef) {
+    if (file_exists($ef) && is_readable($ef)) {
+        $lines = @file($ef, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line) || $line[0] === '#') continue;
+            if (strpos($line, '=') !== false) {
+                list($k, $v) = explode('=', $line, 2);
+                $k = trim($k);
+                $v = trim($v, " \t\n\r\0\x0B\"'");
+                if (($k === 'DB_HOST' || $k === 'ZAVORA_DB_HOST') && empty($dbHost)) $dbHost = $v;
+                if (($k === 'DB_PORT' || $k === 'ZAVORA_DB_PORT') && empty($dbPort)) $dbPort = $v;
+                if (($k === 'DB_DATABASE' || $k === 'ZAVORA_DB_NAME' || $k === 'DB_NAME') && empty($dbName)) $dbName = $v;
+                if (($k === 'DB_USERNAME' || $k === 'ZAVORA_DB_USER' || $k === 'DB_USER') && empty($dbUser)) $dbUser = $v;
+                if (($k === 'DB_PASSWORD' || $k === 'ZAVORA_DB_PASS' || $k === 'DB_PASS') && empty($dbPass)) $dbPass = $v;
+            }
+        }
+        if (!empty($dbName) && !empty($dbUser)) {
+            $loadedFromEnv = true;
+            break;
         }
     }
 }
@@ -210,6 +225,30 @@ if ($runMigration) {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
             $migrationLogs[] = ["success", "Verified table `vendor_payouts` exists."];
 
+            // ── STEP 8b: Auto-Generate .env File so Storefront is permanently configured ──
+            $envPath = __DIR__ . '/.env';
+            if (!file_exists($envPath) || !empty($_POST['db_name'])) {
+                $envData = "# ZAVORA Marketplace Production Environment\n"
+                    . "APP_ENV=production\n"
+                    . "APP_DEBUG=false\n"
+                    . "ZAVORA_SITE_URL=https://zavora.jlm.com.ng\n\n"
+                    . "DB_HOST={$dbHost}\n"
+                    . "DB_PORT={$dbPort}\n"
+                    . "DB_DATABASE={$dbName}\n"
+                    . "DB_USERNAME={$dbUser}\n"
+                    . "DB_PASSWORD={$dbPass}\n\n"
+                    . "ZAVORA_DB_HOST={$dbHost}\n"
+                    . "ZAVORA_DB_PORT={$dbPort}\n"
+                    . "ZAVORA_DB_NAME={$dbName}\n"
+                    . "ZAVORA_DB_USER={$dbUser}\n"
+                    . "ZAVORA_DB_PASS={$dbPass}\n\n"
+                    . "LEARNERIUM_URL=https://learnerium.jlm.com.ng\n"
+                    . "JLM_CORPORATE_URL=https://jlm.com.ng\n"
+                    . "ECOSYSTEM_API_SECRET=eco_sec_jlm_zavora_01a2c11beee84a1bb6e5ce40a29769f4\n";
+                @file_put_contents($envPath, $envData);
+                $migrationLogs[] = ["success", "Generated production `.env` file with live database credentials."];
+            }
+
             $migrationSuccess = true;
 
             // ── STEP 9: SELF-DESTRUCT MECHANISM ─────────────────────────────
@@ -327,14 +366,14 @@ if ($isCli) {
         <div class="p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl mb-6 text-xs text-rose-300 flex items-center gap-3">
           <i class="fas fa-triangle-exclamation text-rose-400 text-lg"></i>
           <div>
-            <strong>Database Error:</strong> <?php echo htmlspecialchars($connectionError); ?>
+            <strong>Database Connection Failed:</strong> <?php echo htmlspecialchars($connectionError); ?>
           </div>
         </div>
       <?php endif; ?>
 
-      <div class="p-4 bg-blue-500/10 border border-blue-500/30 rounded-2xl mb-6 text-xs text-blue-200">
+      <div class="p-4 bg-blue-500/10 border border-blue-500/30 rounded-2xl mb-4 text-xs text-blue-200">
         <p class="font-bold flex items-center gap-2 mb-1">
-          <i class="fas fa-info-circle text-blue-400"></i> What this migration will do:
+          <i class="fas fa-circle-info text-blue-400"></i> What this migration will do:
         </p>
         <ul class="list-disc list-inside space-y-1 text-gray-300 text-[11px] pl-1">
           <li>Create <code>system_settings</code> table and configure 5 free AI vendor trials</li>
@@ -342,8 +381,21 @@ if ($isCli) {
           <li>Add <code>ai_credits</code> and <code>boost_credits</code> to vendors</li>
           <li>Add product variety, preorder, and search boost columns to <code>products</code></li>
           <li>Add multi-vendor settlement and variant tracking to <code>order_items</code></li>
+          <li><strong>Auto-configure:</strong> Automatically creates your live <code>.env</code> file.</li>
           <li><strong>Self-destruct:</strong> Automatically deletes this file upon completion.</li>
         </ul>
+      </div>
+
+      <div class="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl mb-6 text-xs text-amber-200">
+        <p class="font-bold flex items-center gap-2 mb-1 text-amber-300">
+          <i class="fas fa-shield-halved"></i> Why is this asking for database credentials?
+        </p>
+        <p class="text-gray-300 text-[11px] leading-relaxed">
+          For security, live production database passwords are <strong>never stored on GitHub or in git repositories</strong>.
+          The grey text below is just placeholder examples.
+          Please enter the MySQL database name, database user, and password you created in your <strong>cPanel MySQL Database Wizard</strong>.
+          Clicking <em>Run Migration</em> will apply the database updates <strong>and save your <code>.env</code> file automatically</strong>!
+        </p>
       </div>
 
       <form method="POST" class="space-y-4">
@@ -352,12 +404,12 @@ if ($isCli) {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-bold text-gray-300 mb-1">MySQL Host</label>
-            <input type="text" name="db_host" value="<?php echo htmlspecialchars($dbHost); ?>" required
+            <input type="text" name="db_host" value="<?php echo htmlspecialchars($dbHost ?: 'localhost'); ?>" required
                    class="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
           </div>
           <div>
             <label class="block text-xs font-bold text-gray-300 mb-1">MySQL Port</label>
-            <input type="text" name="db_port" value="<?php echo htmlspecialchars($dbPort); ?>" required
+            <input type="text" name="db_port" value="<?php echo htmlspecialchars($dbPort ?: '3306'); ?>" required
                    class="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
           </div>
         </div>
@@ -365,17 +417,17 @@ if ($isCli) {
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label class="block text-xs font-bold text-gray-300 mb-1">Database Name *</label>
-            <input type="text" name="db_name" value="<?php echo htmlspecialchars($dbName); ?>" required placeholder="gwylvxeo_zavora"
+            <input type="text" name="db_name" value="<?php echo htmlspecialchars($dbName); ?>" required placeholder="e.g. gwylvxeo_zavora"
                    class="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
           </div>
           <div>
             <label class="block text-xs font-bold text-gray-300 mb-1">Database User *</label>
-            <input type="text" name="db_user" value="<?php echo htmlspecialchars($dbUser); ?>" required placeholder="gwylvxeo_user"
+            <input type="text" name="db_user" value="<?php echo htmlspecialchars($dbUser); ?>" required placeholder="e.g. gwylvxeo_user"
                    class="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
           </div>
           <div>
             <label class="block text-xs font-bold text-gray-300 mb-1">Database Password</label>
-            <input type="password" name="db_pass" value="<?php echo htmlspecialchars($dbPass); ?>" placeholder="••••••••"
+            <input type="password" name="db_pass" value="<?php echo htmlspecialchars($dbPass); ?>" placeholder="Enter database password"
                    class="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
           </div>
         </div>

@@ -11,11 +11,13 @@ function zavora_get_db() {
         return $pdo;
     }
 
-    $dbHost = getenv('ZAVORA_DB_HOST') ?: '127.0.0.1';
-    $dbPort = getenv('ZAVORA_DB_PORT') ?: 3306;
-    $dbName = getenv('ZAVORA_DB_NAME') ?: 'zavora_db';
-    $dbUser = getenv('ZAVORA_DB_USER') ?: 'root';
-    $dbPass = getenv('ZAVORA_DB_PASS') !== false ? getenv('ZAVORA_DB_PASS') : 'root';
+    $dbHost = getenv('ZAVORA_DB_HOST') ?: (getenv('DB_HOST') ?: '127.0.0.1');
+    $dbPort = getenv('ZAVORA_DB_PORT') ?: (getenv('DB_PORT') ?: 3306);
+    $dbName = getenv('ZAVORA_DB_NAME') ?: (getenv('DB_DATABASE') ?: (getenv('DB_NAME') ?: 'zavora_db'));
+    $dbUser = getenv('ZAVORA_DB_USER') ?: (getenv('DB_USERNAME') ?: (getenv('DB_USER') ?: 'root'));
+    $dbPass = getenv('ZAVORA_DB_PASS') !== false 
+        ? getenv('ZAVORA_DB_PASS') 
+        : (getenv('DB_PASSWORD') !== false ? getenv('DB_PASSWORD') : 'root');
     $dbSocket = '/Applications/MAMP/tmp/mysql/mysql.sock';
 
     // Try MySQL connections
