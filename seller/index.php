@@ -453,11 +453,18 @@ require_once __DIR__ . '/../includes/header.php';
           <h2 class="text-lg font-black text-[#0B132B] font-display">Product & Inventory Manager</h2>
           <p class="text-xs text-gray-500">Configure variety options, set preorders, boost visibility, and adjust stock in real-time.</p>
         </div>
-        <a href="<?php echo zavora_asset('seller/product-create.php'); ?>"
-           class="px-4 py-2.5 bg-[#1B2299] hover:bg-[#0B132B] text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2">
-          <i class="fas fa-plus"></i>
-          <span>Add New Product</span>
-        </a>
+        <div class="flex items-center gap-2">
+          <a href="<?php echo zavora_asset('seller/ai-studio.php'); ?>"
+             class="px-4 py-2.5 bg-gradient-to-r from-indigo-600 via-[#1B2299] to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white rounded-xl text-xs font-black transition-all shadow-md flex items-center gap-2">
+            <i class="fas fa-sparkles text-amber-300"></i>
+            <span>AI Chat Studio</span>
+          </a>
+          <a href="<?php echo zavora_asset('seller/product-create.php'); ?>"
+             class="px-4 py-2.5 bg-[#1B2299] hover:bg-[#0B132B] text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2">
+            <i class="fas fa-plus"></i>
+            <span>Add New Product</span>
+          </a>
+        </div>
       </div>
 
       <div class="overflow-x-auto border border-gray-200 rounded-2xl">
@@ -818,6 +825,31 @@ require_once __DIR__ . '/../includes/header.php';
             <i class="fas fa-plus-circle"></i> Top Up Credits
           </button>
         </div>
+      </div>
+
+      <!-- Launch Full Conversational AI Studio Banner -->
+      <div class="mb-10 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 border border-indigo-900/60 text-white flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-2xl">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#1B2299] via-indigo-500 to-purple-500 flex items-center justify-center text-white text-2xl shadow-xl shadow-indigo-500/30 flex-shrink-0">
+            <i class="fas fa-sparkles text-amber-300"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase tracking-wider">Gemini 1.5 + FLUX.1</span>
+              <span class="text-xs text-indigo-300 font-bold">• Full Studio Canvas</span>
+            </div>
+            <h3 class="text-xl font-black text-white font-display">Conversational AI Merchant Studio (Chat & Canvas)</h3>
+            <p class="text-xs text-slate-300 mt-1 max-w-xl leading-relaxed">
+              Chat naturally with the AI like ChatGPT or Gemini. Architect international-standard GS1 listings, generate 4-photo studio galleries, optimize Naira pricing, and publish directly to your catalog.
+            </p>
+          </div>
+        </div>
+        <a href="<?php echo zavora_asset('seller/ai-studio.php'); ?>" 
+           class="px-6 py-3.5 bg-gradient-to-r from-indigo-500 via-[#1B2299] to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-black text-xs rounded-2xl shadow-xl hover:shadow-2xl transition flex items-center justify-center gap-2.5 whitespace-nowrap">
+          <i class="fas fa-comments text-sm"></i>
+          <span>Launch AI Chat Studio</span>
+          <i class="fas fa-arrow-right text-xs"></i>
+        </a>
       </div>
 
       <!-- Pricing Packs Cards -->
