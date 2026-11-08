@@ -229,91 +229,158 @@ if ($action === 'generate_image') {
         exit;
     }
 
-    $prompt = trim($_POST['prompt'] ?? $_POST['title'] ?? '');
-    $mode = trim($_POST['mode'] ?? $_POST['style'] ?? 'hero');
-    if (!in_array($mode, ['hero', 'lifestyle'])) {
+    $title = trim($_POST['title'] ?? $_POST['prompt'] ?? '');
+    $brand = trim($_POST['brand'] ?? $vendor['store_name'] ?? '');
+    $category = trim($_POST['category'] ?? $_POST['category_name'] ?? '');
+    $color = trim($_POST['color'] ?? $_POST['variant_colors'] ?? '');
+    $material = trim($_POST['material'] ?? $_POST['variant_specs'] ?? '');
+    $specs = trim($_POST['specs'] ?? $_POST['specifications'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+    $mode = trim($_POST['mode'] ?? 'hero');
+    if (!in_array($mode, ['hero', 'lifestyle', 'online'])) {
         $mode = 'hero';
     }
 
-    if (empty($prompt)) {
-        echo json_encode(['success' => false, 'message' => 'Please provide a product title or visual prompt.']);
+    if (empty($title)) {
+        echo json_encode(['success' => false, 'message' => 'Please provide a product title or name for image generation.']);
         exit;
     }
 
-    // Curated high-resolution studio commercial product image presets for fallback
-    $studioPhotos = [
-        'electronics' => [
-            'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&auto=format&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&auto=format&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1572536147248-ac59a8abfa4b?w=800&auto=format&fit=crop&q=80'
-        ],
-        'computing' => [
-            'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=800&auto=format&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?w=800&auto=format&fit=crop&q=80'
-        ],
-        'phone' => [
-            'https://images.unsplash.com/photo-1591337676887-a217a6970a8a?w=800&auto=format&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&auto=format&fit=crop&q=80'
-        ],
-        'fashion' => [
-            'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=800&auto=format&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&auto=format&fit=crop&q=80'
-        ],
-        'gaming' => [
-            'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=800&auto=format&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1612287232230-6b3a2a6b4122?w=800&auto=format&fit=crop&q=80'
-        ],
-        'digital' => [
-            'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80',
-            'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&auto=format&fit=crop&q=80'
-        ]
-    ];
-
-    $chosenKey = 'electronics';
-    $lower = strtolower($prompt);
-    if (strpos($lower, 'macbook') !== false || strpos($lower, 'laptop') !== false || strpos($lower, 'pc') !== false) {
-        $chosenKey = 'computing';
-    } elseif (strpos($lower, 'iphone') !== false || strpos($lower, 'phone') !== false || strpos($lower, 'samsung') !== false) {
-        $chosenKey = 'phone';
-    } elseif (strpos($lower, 'shirt') !== false || strpos($lower, 'hoodie') !== false || strpos($lower, 'wear') !== false) {
-        $chosenKey = 'fashion';
-    } elseif (strpos($lower, 'playstation') !== false || strpos($lower, 'game') !== false || strpos($lower, 'ps5') !== false) {
-        $chosenKey = 'gaming';
-    } elseif (strpos($lower, 'ui') !== false || strpos($lower, 'kit') !== false || strpos($lower, 'code') !== false) {
-        $chosenKey = 'digital';
+    // Synthesize a descriptive, realistic product subject using all available metadata
+    $subjectParts = [];
+    if (!empty($brand) && stripos($title, $brand) === false) {
+        $subjectParts[] = $brand;
     }
+    $subjectParts[] = $title;
+    if (!empty($color) && stripos($title, $color) === false) {
+        $subjectParts[] = "in {$color}";
+    }
+    if (!empty($material) && stripos($title, $material) === false) {
+        $subjectParts[] = "crafted from {$material}";
+    }
+    if (!empty($category) && stripos($title, $category) === false) {
+        $subjectParts[] = "({$category})";
+    }
+    $fullSubject = implode(' ', $subjectParts);
 
-    // 1. Primary Engine: Free High-Fidelity Generative AI Studio via Pollinations (FLUX.1 Model)
-    // Amazon ASIN & Google Shopping standard: Pure white background (#FFFFFF), product occupies 85%+ of frame.
+    // 1. FLUX.1 Pure White Studio Hero (#FFFFFF, 85%+ fill, razor-sharp focus)
     $seedHero = rand(100000, 999999);
-    $seedLife = $seedHero + 77;
-
-    $heroPrompt = "commercial product photography of {$prompt}, isolated on 100% pure white background RGB 255 255 255, centered composition, product fills 85 percent of frame, crisp studio lighting, no shadows, no text, no watermarks, 8k resolution, razor-sharp focus, amazon ASIN main image standard";
-    $lifestylePrompt = "high-end commercial lifestyle product photography of {$prompt}, placed naturally in a modern luxury minimalist environment, authentic soft ambient lighting, cinematic 8k resolution, shallow depth of field, award-winning commercial advertising photography";
-
+    $heroPrompt = "commercial product catalog photography of {$fullSubject}, isolated on 100% pure solid white background RGB 255 255 255, centered front 3/4 angle, product fills 85 percent of the frame, professional softbox studio lighting, sharp crisp focus, ultra-detailed material textures, no cast shadows, no text, no watermarks, 8k resolution, canon eos r5 e-commerce studio shot";
     $heroUrl = "https://image.pollinations.ai/prompt/" . rawurlencode($heroPrompt) . "?width=800&height=800&model=flux&seed={$seedHero}&nologo=true";
+
+    // 2. FLUX.1 Lifestyle In-Context Shot
+    $seedLife = $seedHero + 77;
+    $lifestylePrompt = "high-end commercial lifestyle advertising photography of {$fullSubject}, placed naturally in a luxury modern architectural environment, soft natural daylight illumination, cinematic 8k resolution, shallow depth of field, authentic commercial catalog quality";
     $lifestyleUrl = "https://image.pollinations.ai/prompt/" . rawurlencode($lifestylePrompt) . "?width=800&height=800&model=flux&seed={$seedLife}&nologo=true";
 
-    $selectedUrl = ($mode === 'lifestyle') ? $lifestyleUrl : $heroUrl;
+    // 3. FLUX.1 Detail / Alternate Perspective
+    $seedAlt = $seedHero + 144;
+    $altPrompt = "commercial product detail close-up photography of {$fullSubject}, dramatic studio rim lighting, pristine finish, high-definition textures, sharp focus, 8k resolution, neutral clean backdrop";
+    $altUrl = "https://image.pollinations.ai/prompt/" . rawurlencode($altPrompt) . "?width=800&height=800&model=flux&seed={$seedAlt}&nologo=true";
+
+    // 4. Smart Online Sourcing via Openverse (Authentic verified photographed products)
+    $sourcedPhotos = [];
+    $cleanSearch = preg_replace('/[^a-zA-Z0-9 ]/', ' ', $title);
+    $searchWords = array_slice(array_filter(explode(' ', $cleanSearch)), 0, 3);
+    if (!empty($searchWords)) {
+        $searchQuery = implode(' ', $searchWords);
+        $searchUrl = "https://api.openverse.org/v1/images/?q=" . urlencode($searchQuery) . "&page_size=3";
+        $ch = curl_init($searchUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'ZavoraECommerce/1.0');
+        $res = curl_exec($ch);
+        $http = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        @curl_close($ch);
+
+        if ($http === 200 && $res) {
+            $apiData = json_decode($res, true);
+            if (!empty($apiData['results'])) {
+                foreach ($apiData['results'] as $r) {
+                    if (!empty($r['url'])) {
+                        $sourcedPhotos[] = [
+                            'url' => $r['url'],
+                            'title' => $r['title'] ?? 'Real Sourced Product Match',
+                            'provider' => $r['provider'] ?? 'Open Catalog'
+                        ];
+                    }
+                }
+            }
+        }
+    }
+
+    // Assemble Curated Matches Grid
+    $matches = [];
+    $matches[] = [
+        'id'    => 'hero',
+        'type'  => 'ai_hero',
+        'title' => 'AI Studio Hero (Pure White #FFFFFF • 85%+ fill)',
+        'url'   => $heroUrl,
+        'badge' => 'Amazon ASIN Standard'
+    ];
+    $matches[] = [
+        'id'    => 'lifestyle',
+        'type'  => 'ai_lifestyle',
+        'title' => 'AI Lifestyle (In-Context Setting)',
+        'url'   => $lifestyleUrl,
+        'badge' => 'Commercial Context'
+    ];
+
+    if (!empty($sourcedPhotos[0])) {
+        $matches[] = [
+            'id'    => 'online_1',
+            'type'  => 'online_sourced',
+            'title' => 'Online Real Match (' . htmlspecialchars($sourcedPhotos[0]['title']) . ')',
+            'url'   => $sourcedPhotos[0]['url'],
+            'badge' => 'Real Photographed (' . ucfirst($sourcedPhotos[0]['provider']) . ')'
+        ];
+    }
+    if (!empty($sourcedPhotos[1])) {
+        $matches[] = [
+            'id'    => 'online_2',
+            'type'  => 'online_sourced',
+            'title' => 'Online Real Match 2 (' . htmlspecialchars($sourcedPhotos[1]['title']) . ')',
+            'url'   => $sourcedPhotos[1]['url'],
+            'badge' => 'Real Photographed (' . ucfirst($sourcedPhotos[1]['provider']) . ')'
+        ];
+    }
+    // If fewer than 2 online photos were found, fill with alternative angle
+    if (count($matches) < 4) {
+        $matches[] = [
+            'id'    => 'alt_studio',
+            'type'  => 'ai_alt',
+            'title' => 'AI Studio Detail Shot',
+            'url'   => $altUrl,
+            'badge' => 'Texture & Detail'
+        ];
+    }
+
+    // Determine primary URL based on requested mode
+    $primaryUrl = $heroUrl;
+    if ($mode === 'lifestyle') {
+        $primaryUrl = $lifestyleUrl;
+    } elseif ($mode === 'online' && !empty($sourcedPhotos[0]['url'])) {
+        $primaryUrl = $sourcedPhotos[0]['url'];
+    }
 
     // Deduct 1 Credit & Record Transaction
     $pdo->beginTransaction();
     $pdo->prepare("UPDATE vendors SET ai_credits = ai_credits - 1 WHERE id = ?")->execute([$vendorId]);
     $pdo->prepare("INSERT INTO ai_credit_transactions (vendor_id, action_type, credits_change, prompt_summary) VALUES (?, 'image_generation', -1, ?)")
-        ->execute([$vendorId, "AI Studio {$mode} image: " . substr($prompt, 0, 100)]);
+        ->execute([$vendorId, "AI Studio {$mode} image for: " . substr($fullSubject, 0, 100)]);
     $pdo->commit();
 
     echo json_encode([
         'success'              => true,
-        'image_url'            => $selectedUrl,
+        'image_url'            => $primaryUrl,
         'hero_url'             => $heroUrl,
         'lifestyle_url'        => $lifestyleUrl,
+        'matches'              => $matches,
         'mode'                 => $mode,
+        'subject'              => $fullSubject,
         'standards_compliance' => 'Amazon ASIN / Google Shopping: Pure White #FFFFFF Background & 85%+ Frame Area',
         'remaining_credits'    => $currentCredits - 1,
-        'message'              => 'Commercial studio product photo generated successfully (1 AI credit deducted).'
+        'message'              => 'Realistic product photography generated and sourced matching your exact product details (1 AI credit deducted).'
     ]);
     exit;
 }

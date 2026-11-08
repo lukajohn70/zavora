@@ -453,11 +453,11 @@ require_once __DIR__ . '/../includes/header.php';
           <h2 class="text-lg font-black text-[#0B132B] font-display">Product & Inventory Manager</h2>
           <p class="text-xs text-gray-500">Configure variety options, set preorders, boost visibility, and adjust stock in real-time.</p>
         </div>
-        <button onclick="document.getElementById('newProductModal').classList.remove('hidden')"
-                class="px-4 py-2.5 bg-[#1B2299] hover:bg-[#0B132B] text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2">
+        <a href="<?php echo zavora_asset('seller/product-create.php'); ?>"
+           class="px-4 py-2.5 bg-[#1B2299] hover:bg-[#0B132B] text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2">
           <i class="fas fa-plus"></i>
           <span>Add New Product</span>
-        </button>
+        </a>
       </div>
 
       <div class="overflow-x-auto border border-gray-200 rounded-2xl">
@@ -475,7 +475,18 @@ require_once __DIR__ . '/../includes/header.php';
           <tbody class="divide-y divide-gray-100">
             <?php if (empty($vendorProducts)): ?>
               <tr>
-                <td colspan="6" class="p-8 text-center text-gray-400 italic">No products added yet. Click "Add New Product" to list your first item.</td>
+                <td colspan="6" class="p-10 text-center text-gray-400">
+                  <div class="w-12 h-12 rounded-2xl bg-blue-50 text-[#1B2299] flex items-center justify-center mx-auto mb-3 text-lg">
+                    <i class="fas fa-box-open"></i>
+                  </div>
+                  <p class="font-bold text-gray-700 text-sm mb-1">No products listed in your store yet</p>
+                  <p class="text-xs text-gray-400 mb-4">Use the full-page enterprise AI studio to draft, generate photography, and list your first item.</p>
+                  <a href="<?php echo zavora_asset('seller/product-create.php'); ?>" 
+                     class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-extrabold rounded-xl shadow transition">
+                    <i class="fas fa-sparkles"></i>
+                    <span>List Product with AI Studio</span>
+                  </a>
+                </td>
               </tr>
             <?php else: ?>
               <?php foreach ($vendorProducts as $prod): ?>
@@ -1869,11 +1880,8 @@ function runSandboxCopy() {
 
 function createProductFromSandbox() {
   if (!window.sandboxLastCopy) return;
-  const d = window.sandboxLastCopy;
-  document.getElementById('newProductModal').classList.remove('hidden');
-  currentAiDrawerData = d;
-  renderAiListingDrawer(d);
-  applyAiListingToForm();
+  sessionStorage.setItem('zavora_prefill_draft', JSON.stringify(window.sandboxLastCopy));
+  window.location.href = '<?php echo zavora_asset("seller/product-create.php?prefill=1"); ?>';
 }
 
 function runSandboxImage() {
@@ -1938,9 +1946,8 @@ function copySandboxImgUrl(type) {
 
 function useSandboxImgInListing() {
   if (!window.sandboxLastImage) return;
-  document.getElementById('newProductModal').classList.remove('hidden');
-  document.getElementById('np_thumbnail').value = window.sandboxLastImage.image_url;
-  updateThumbnailPreview(window.sandboxLastImage.image_url);
+  sessionStorage.setItem('zavora_prefill_image', window.sandboxLastImage.image_url);
+  window.location.href = '<?php echo zavora_asset("seller/product-create.php?prefill=1"); ?>';
 }
 
 function escapeHtml(str) {
