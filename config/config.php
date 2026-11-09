@@ -4,7 +4,20 @@
  */
 
 if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    if (!headers_sent()) {
+        ini_set('session.cookie_httponly', '1');
+        ini_set('session.use_only_cookies', '1');
+        @session_set_cookie_params([
+            'lifetime' => 0,
+            'path'     => '/',
+            'secure'   => $isHttps,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+    @session_start();
 }
 
 // ── Environment File Loader (.env) ──────────────────────────────────────────
@@ -301,3 +314,176 @@ function zavora_get_academy_courses($perPage = 12) {
         ]
     ];
 }
+
+// ── Session Control & Role-Based Access Guards ──────────────────────────────
+
+/**
+ * Check if the active session belongs to an authenticated administrator.
+ * Enforces a 2-hour inactivity timeout.
+ *
+ * @return array|false Admin user array on success, false otherwise.
+ */
+function zavora_admin_auth() {
+    if (empty($_SESSION['zavora_admin_logged_in']) || empty($_SESSION['zavora_admin_id'])) {
+        return false;
+    }
+
+    $timeout = 7200; // 2 hours inactivity limit
+    $lastActivity = (int)($_SESSION['zavora_admin_last_activity'] ?? 0);
+    if ($lastActivity > 0 && (time() - $lastActivity) > $timeout) {
+        zavora_admin_logout();
+        return false;
+    }
+
+    // Refresh last activity
+    $_SESSION['zavora_admin_last_activity'] = time();
+
+    try {
+        $pdo = zavora_get_db();
+        $stmt = $pdo->prepare("SELECT id, username, email, full_name, role, is_active FROM admin_users WHERE id = ? AND is_active = 1");
+        $stmt->execute([(int)$_SESSION['zavora_admin_id']]);
+        $admin = $stmt->fetch();
+        if (!$admin) {
+            zavora_admin_logout();
+            return false;
+        }
+        return $admin;
+    } catch (\Throwable $e) {
+        // Fallback for valid session if DB transient error
+        return [
+            'id'        => $_SESSION['zavora_admin_id'],
+            'username'  => $_SESSION['zavora_admin_user'] ?? 'admin',
+            'email'     => $_SESSION['zavora_admin_email'] ?? 'admin@jlm.com.ng',
+            'role'      => 'superadmin',
+            'is_active' => 1
+        ];
+    }
+}
+
+/**
+ * Strict Admin Gatekeeper: requires valid admin session or halts and redirects to admin/login.php.
+ *
+ * @return array Authenticated admin record.
+ */
+function zavora_admin_require_auth() {
+    $admin = zavora_admin_auth();
+    if (!$admin) {
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        $redirectParam = !empty($uri) ? '?redirect=' . urlencode($uri) : '';
+        header('Location: ' . zavora_asset('admin/login.php' . $redirectParam));
+        exit;
+    }
+    return $admin;
+}
+
+/**
+ * Safe Admin Logout: clears admin session and regenerates session ID.
+ */
+function zavora_admin_logout() {
+    unset(
+        $_SESSION['zavora_admin_logged_in'],
+        $_SESSION['zavora_admin_id'],
+        $_SESSION['zavora_admin_user'],
+        $_SESSION['zavora_admin_email'],
+        $_SESSION['zavora_admin_last_activity'],
+        $_SESSION['zavora_admin_ip']
+    );
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        @session_regenerate_id(true);
+    }
+}
+
+/**
+ * Check if the active session belongs to an approved, active Vendor.
+ * Enforces a 4-hour inactivity timeout.
+ *
+ * @return array|false Vendor record on success, false otherwise.
+ */
+function zavora_vendor_auth() {
+    $vendorId = $_SESSION['zavora_vendor_id'] ?? null;
+    if (!$vendorId) {
+        return false;
+    }
+
+    $timeout = 14400; // 4 hours inactivity limit
+    $lastActivity = (int)($_SESSION['zavora_vendor_last_activity'] ?? 0);
+    if ($lastActivity > 0 && (time() - $lastActivity) > $timeout) {
+        zavora_vendor_logout();
+        return false;
+    }
+
+    try {
+        $pdo = zavora_get_db();
+        $stmt = $pdo->prepare("SELECT * FROM vendors WHERE id = ?");
+        $stmt->execute([(int)$vendorId]);
+        $vendor = $stmt->fetch();
+        if (!$vendor || $vendor['status'] === 'suspended') {
+            zavora_vendor_logout();
+            return false;
+        }
+
+        $_SESSION['zavora_vendor_last_activity'] = time();
+        return $vendor;
+    } catch (\Throwable $e) {
+        return false;
+    }
+}
+
+/**
+ * Strict Vendor Gatekeeper: requires valid vendor session or redirects to seller/login.php.
+ *
+ * @return array Authenticated vendor record.
+ */
+function zavora_vendor_require_auth() {
+    $vendor = zavora_vendor_auth();
+    if (!$vendor) {
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        $redirectParam = !empty($uri) ? '?redirect=' . urlencode($uri) : '';
+        header('Location: ' . zavora_asset('seller/login.php' . $redirectParam));
+        exit;
+    }
+    return $vendor;
+}
+
+/**
+ * Safe Vendor Logout: clears merchant session and regenerates session ID.
+ */
+function zavora_vendor_logout() {
+    unset(
+        $_SESSION['zavora_vendor_id'],
+        $_SESSION['zavora_vendor_name'],
+        $_SESSION['zavora_vendor_last_activity']
+    );
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        @session_regenerate_id(true);
+    }
+}
+
+/**
+ * Check if the customer has an active authenticated session.
+ *
+ * @return string|false Customer email if authenticated, false otherwise.
+ */
+function zavora_customer_auth() {
+    $email = $_SESSION['zavora_customer_email'] ?? null;
+    if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
+    return strtolower(trim($email));
+}
+
+/**
+ * Safe Customer Logout.
+ */
+function zavora_customer_logout() {
+    unset(
+        $_SESSION['zavora_customer_email'],
+        $_SESSION['zavora_customer_otp'],
+        $_SESSION['zavora_customer_otp_time'],
+        $_SESSION['zavora_customer_otp_email']
+    );
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        @session_regenerate_id(true);
+    }
+}
+

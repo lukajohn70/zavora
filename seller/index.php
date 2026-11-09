@@ -1,22 +1,14 @@
 <?php
 require_once __DIR__ . '/../config/config.php';
 
+// 1. Enforce Strict Vendor Session Control Guard
+$vendor = zavora_vendor_require_auth();
+$vendorId = (int)$vendor['id'];
 $pdo = zavora_get_db();
 
-// 1. Enforce Vendor Authentication
-$vendorId = $_SESSION['zavora_vendor_id'] ?? null;
-if (!$vendorId) {
-    header('Location: ' . zavora_asset('seller/login.php'));
-    exit;
-}
-
-// Fetch Vendor Record
-$stmt = $pdo->prepare("SELECT * FROM vendors WHERE id = ?");
-$stmt->execute([$vendorId]);
-$vendor = $stmt->fetch();
-if (!$vendor) {
-    unset($_SESSION['zavora_vendor_id']);
-    header('Location: ' . zavora_asset('seller/login.php'));
+if (isset($_GET['action']) && $_GET['action'] === 'logout') {
+    zavora_vendor_logout();
+    header('Location: ' . zavora_asset('seller/login.php?logged_out=1'));
     exit;
 }
 
@@ -50,9 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'signout') {
-        unset($_SESSION['zavora_vendor_id']);
-        unset($_SESSION['zavora_vendor_name']);
-        header('Location: ' . zavora_asset('seller/login.php'));
+        zavora_vendor_logout();
+        header('Location: ' . zavora_asset('seller/login.php?logged_out=1'));
         exit;
     }
 

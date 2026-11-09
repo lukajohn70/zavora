@@ -312,4 +312,24 @@ INSERT INTO `system_settings` (`setting_key`, `setting_value`, `description`) VA
 ("learnerium_online_url", "https://learnerium.jlm.com.ng", "Canonical online Learnerium LMS portal URL"),
 ("ai_image_provider", "pollinations_flux", "Active AI image generation provider (Pollinations FLUX.1)");
 
+-- --------------------------------------------------------
+-- Table structure for `admin_users`
+-- --------------------------------------------------------
+DROP TABLE IF EXISTS `admin_users`;
+CREATE TABLE IF NOT EXISTS `admin_users` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `username` VARCHAR(100) NOT NULL UNIQUE,
+  `email` VARCHAR(150) NOT NULL UNIQUE,
+  `password_hash` VARCHAR(255) NOT NULL,
+  `full_name` VARCHAR(150) NULL,
+  `role` VARCHAR(50) DEFAULT 'superadmin',
+  `is_active` TINYINT(1) DEFAULT 1,
+  `last_login` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Default Superadmin User (Default initial password: Admin@Zavora2026! or configurable via .env)
+INSERT INTO `admin_users` (`id`, `username`, `email`, `password_hash`, `full_name`, `role`, `is_active`) VALUES
+(1, "admin", "admin@jlm.com.ng", "$2y$10$wE0v7x5bZ.OQ6WkQJ4vW8OnHq3L/wZ4gKx4f2F7eP6X0bT5v7YkUq", "JLM Operations Director", "superadmin", 1);
+
 SET FOREIGN_KEY_CHECKS=1;

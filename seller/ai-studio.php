@@ -14,20 +14,9 @@
 require_once __DIR__ . '/../config/config.php';
 $pdo = zavora_get_db();
 
-// 1. Authenticate Vendor
-$vendorId = $_SESSION['zavora_vendor_id'] ?? null;
-if (!$vendorId) {
-    header('Location: ' . zavora_asset('seller/login.php'));
-    exit;
-}
-
-$vStmt = $pdo->prepare("SELECT * FROM vendors WHERE id = ?");
-$vStmt->execute([$vendorId]);
-$vendor = $vStmt->fetch();
-if (!$vendor) {
-    header('Location: ' . zavora_asset('seller/login.php'));
-    exit;
-}
+// 1. Enforce Strict Vendor Session Control Guard
+$vendor = zavora_vendor_require_auth();
+$vendorId = (int)$vendor['id'];
 
 // 2. Fetch Categories
 $catsStmt = $pdo->query("SELECT id, name, slug FROM categories ORDER BY name ASC");

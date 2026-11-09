@@ -62,8 +62,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             $vendorId = $pdo->lastInsertId();
-            $_SESSION['zavora_vendor_id'] = $vendorId;
+            @session_regenerate_id(true);
+            $_SESSION['zavora_vendor_id'] = (int)$vendorId;
             $_SESSION['zavora_vendor_name'] = $storeName;
+            $_SESSION['zavora_vendor_last_activity'] = time();
 
             // Log complimentary onboarding trial transaction
             try {

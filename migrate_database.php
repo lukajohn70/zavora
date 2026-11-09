@@ -18,6 +18,26 @@ error_reporting(E_ALL);
 
 $isCli = (PHP_SAPI === 'cli');
 
+// Enforce Session Control & Authorization Guard for Browser Access
+if (!$isCli) {
+    if (file_exists(__DIR__ . '/config/config.php')) {
+        require_once __DIR__ . '/config/config.php';
+        $providedKey = $_GET['secret'] ?? ($_GET['token'] ?? ($_SERVER['HTTP_X_ECOSYSTEM_KEY'] ?? ''));
+        $expectedKey = defined('ECOSYSTEM_API_SECRET') ? ECOSYSTEM_API_SECRET : '';
+        $isAdmin = function_exists('zavora_admin_auth') && zavora_admin_auth();
+        $isKeyValid = !empty($expectedKey) && !empty($providedKey) && hash_equals($expectedKey, $providedKey);
+
+        if (!$isAdmin && !$isKeyValid) {
+            http_response_code(403);
+            die('<!DOCTYPE html><html><body style="font-family:sans-serif;padding:50px;text-align:center;background:#0B132B;color:#fff;">' .
+                '<h2 style="color:#E4306D;">403 Forbidden — Administrator Session Required</h2>' .
+                '<p style="color:#aaa;">You must be logged into the ZAVORA Operations Console to run online database migrations.</p>' .
+                '<a href="' . (function_exists('zavora_asset') ? zavora_asset('admin/login.php') : '/admin/login.php') . '" style="display:inline-block;margin-top:20px;padding:12px 24px;background:#1B2299;color:#fff;border-radius:12px;text-decoration:none;font-weight:bold;">Sign In to Admin Console</a>' .
+                '</body></html>');
+        }
+    }
+}
+
 // 1. Discover Database Credentials from local .env or sibling cPanel apps
 $candidateEnvFiles = [
     __DIR__ . '/.env',

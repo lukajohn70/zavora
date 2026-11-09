@@ -1,6 +1,9 @@
 <?php
 require_once __DIR__ . '/../config/config.php';
 
+// 1. Enforce Strict Admin Session Control Guard
+$adminUser = zavora_admin_require_auth();
+
 $pdo = zavora_get_db();
 $flashMessage = '';
 $flashType = 'info';
@@ -118,6 +121,10 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
     <div class="flex items-center gap-3">
+      <div class="hidden lg:flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-700">
+        <i class="fas fa-shield-halved text-[#1B2299]"></i>
+        <span><?php echo htmlspecialchars($adminUser['email'] ?? 'admin@jlm.com.ng'); ?></span>
+      </div>
       <a href="<?php echo htmlspecialchars(LEARNERIUM_URL); ?>" target="_blank" rel="noopener"
          class="px-4 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-xl text-xs font-bold border border-purple-200 transition-colors flex items-center gap-1.5">
         <i class="fas fa-graduation-cap"></i>
@@ -128,6 +135,12 @@ require_once __DIR__ . '/../includes/header.php';
          class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5">
         <i class="fas fa-globe"></i>
         <span>JLM Corporate</span>
+      </a>
+      <a href="<?php echo zavora_asset('admin/login.php?action=logout'); ?>"
+         class="px-4 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-xl text-xs font-bold border border-rose-200 transition-colors flex items-center gap-1.5"
+         title="End administrative session and sign out">
+        <i class="fas fa-arrow-right-from-bracket"></i>
+        <span>Sign Out</span>
       </a>
     </div>
   </div>

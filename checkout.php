@@ -141,7 +141,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 3. Clear shopping cart
             zavora_clear_cart();
 
-            // 4. Redirect to order confirmation page
+            // 4. Authorize order in session & establish customer session
+            @session_regenerate_id(true);
+            $_SESSION['zavora_customer_email'] = $customerEmail;
+            if (!isset($_SESSION['zavora_recent_orders']) || !is_array($_SESSION['zavora_recent_orders'])) {
+                $_SESSION['zavora_recent_orders'] = [];
+            }
+            $_SESSION['zavora_recent_orders'][$orderNumber] = true;
+
+            // 5. Redirect to order confirmation page
             header('Location: ' . zavora_asset('order_confirmation.php?order=' . urlencode($orderNumber)));
             exit;
 

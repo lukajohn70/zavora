@@ -226,6 +226,30 @@ function zavora_ensure_schema(PDO $pdo) {
         updated_at {$timeType} DEFAULT CURRENT_TIMESTAMP
     )");
 
+    // 11. Admin Users Table (Enterprise Role-Based Access Control)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS admin_users (
+        id {$autoInc},
+        username VARCHAR(100) NOT NULL UNIQUE,
+        email VARCHAR(150) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        full_name VARCHAR(150) NULL,
+        role VARCHAR(50) DEFAULT 'superadmin',
+        is_active INT DEFAULT 1,
+        last_login {$timeType} NULL,
+        created_at {$timeType} DEFAULT CURRENT_TIMESTAMP
+    )");
+
+    // Seed default superadmin if empty
+    try {
+        $aCount = $pdo->query("SELECT COUNT(*) FROM admin_users")->fetchColumn();
+        if ($aCount == 0) {
+            $adminPass = getenv('ZAVORA_ADMIN_PASSWORD') ?: (getenv('ADMIN_PASSWORD') ?: 'Admin@Zavora2026!');
+            $adminHash = password_hash($adminPass, PASSWORD_DEFAULT);
+            $aStmt = $pdo->prepare("INSERT INTO admin_users (username, email, password_hash, full_name, role, is_active) VALUES (?, ?, ?, ?, 'superadmin', 1)");
+            $aStmt->execute(['admin', 'admin@jlm.com.ng', $adminHash, 'JLM Operations Director']);
+        }
+    } catch (\Throwable $e) {}
+
     // Seed default system settings if empty
     try {
         $sCount = $pdo->query("SELECT COUNT(*) FROM system_settings")->fetchColumn();

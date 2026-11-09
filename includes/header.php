@@ -3,6 +3,11 @@ require_once __DIR__ . '/../config/config.php';
 $cartTotals = zavora_cart_totals();
 $cartCount = $cartTotals['item_count'];
 $pageTitle = isset($title) ? $title . ' — ZAVORA Marketplace' : 'ZAVORA — Everything you need. One place.';
+
+// Check session states
+$activeCustomerEmail = zavora_customer_auth();
+$activeVendor = zavora_vendor_auth();
+$activeAdmin = zavora_admin_auth();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -78,10 +83,25 @@ $pageTitle = isset($title) ? $title . ' — ZAVORA Marketplace' : 'ZAVORA — Ev
         <span class="hidden md:inline text-gray-300">Fast Nationwide Delivery • Verified Digital Delivery • Academy LMS Integrated</span>
       </div>
       <div class="flex items-center gap-4 text-gray-300">
-        <a href="<?php echo zavora_asset('seller/index.php'); ?>" class="text-[#F7DE7A] hover:underline transition-colors inline-flex items-center gap-1 font-bold">
-          <i class="fas fa-shop text-[11px]"></i>
-          <span>Sell on ZAVORA</span>
-        </a>
+        <?php if ($activeAdmin): ?>
+          <a href="<?php echo zavora_asset('admin/index.php'); ?>" class="text-[#E4306D] hover:underline transition-colors inline-flex items-center gap-1 font-bold">
+            <i class="fas fa-shield-halved text-[11px]"></i>
+            <span>Admin Console</span>
+          </a>
+          <span class="text-white/20">|</span>
+        <?php endif; ?>
+
+        <?php if ($activeVendor): ?>
+          <a href="<?php echo zavora_asset('seller/index.php'); ?>" class="text-[#F7DE7A] hover:underline transition-colors inline-flex items-center gap-1 font-bold">
+            <i class="fas fa-store text-[11px]"></i>
+            <span><?php echo htmlspecialchars($activeVendor['store_name']); ?></span>
+          </a>
+        <?php else: ?>
+          <a href="<?php echo zavora_asset('seller/index.php'); ?>" class="text-[#F7DE7A] hover:underline transition-colors inline-flex items-center gap-1 font-bold">
+            <i class="fas fa-shop text-[11px]"></i>
+            <span>Sell on ZAVORA</span>
+          </a>
+        <?php endif; ?>
         <span class="text-white/20">|</span>
         <a href="<?php echo htmlspecialchars(JLM_CORPORATE_URL); ?>" target="_blank" rel="noopener" class="hover:text-[#F7DE7A] transition-colors inline-flex items-center gap-1 font-medium">
           <span>A JLM Company</span>
@@ -121,7 +141,14 @@ $pageTitle = isset($title) ? $title . ' — ZAVORA Marketplace' : 'ZAVORA — Ev
         <a href="<?php echo zavora_asset('account/index.php'); ?>" class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-700 hover:text-[#1B2299] hover:bg-gray-50 transition-colors">
           <i class="far fa-user text-lg"></i>
           <span class="hidden lg:inline text-xs font-bold leading-tight text-left">
-            Account<br><span class="text-[11px] font-normal text-gray-500">Sign In</span>
+            Account<br>
+            <span class="text-[11px] font-normal text-gray-500">
+              <?php if ($activeCustomerEmail): ?>
+                <span class="text-emerald-600 font-bold">Signed In</span>
+              <?php else: ?>
+                Sign In
+              <?php endif; ?>
+            </span>
           </span>
         </a>
 

@@ -24,6 +24,24 @@ if (!$order) {
     exit;
 }
 
+// Enforce Session Control & Order Ownership Verification
+$isAuthorized = false;
+$currentCustomerEmail = zavora_customer_auth();
+
+if ($currentCustomerEmail && strcasecmp($currentCustomerEmail, $order['customer_email']) === 0) {
+    $isAuthorized = true;
+} elseif (!empty($_SESSION['zavora_recent_orders'][$orderNumber])) {
+    $isAuthorized = true;
+} elseif (zavora_admin_auth()) {
+    $isAuthorized = true;
+}
+
+if (!$isAuthorized) {
+    // Redirect to customer account portal with order verification challenge
+    header('Location: ' . zavora_asset('account/index.php?order=' . urlencode($orderNumber) . '&verify=1'));
+    exit;
+}
+
 $title = "Order Confirmed — " . $order['order_number'];
 require_once __DIR__ . '/includes/header.php';
 ?>
