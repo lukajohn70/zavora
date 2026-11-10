@@ -51,7 +51,7 @@ if ($action === 'check_credits') {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Action: Generate Product Copy (International Standards: GS1 Title, 5 Amazon Bullets, Spec Matrix)
+// Action: Generate Product Copy (International Standards: Title, Key Features, Spec Matrix)
 // ─────────────────────────────────────────────────────────────────────────────
 if ($action === 'generate_copy') {
     $currentCredits = intval($vendor['ai_credits']);
@@ -84,7 +84,7 @@ if ($action === 'generate_copy') {
 
     // Attempt Gemini AI Generation if key present
     if (!empty($geminiApiKey) && strpos($geminiApiKey, 'YOUR_') === false) {
-        $prompt = "You are an international e-commerce catalog specialist adhering strictly to Amazon ASIN, GS1, and Google Shopping standards for ZAVORA marketplace.
+        $prompt = "You are an international e-commerce merchandising specialist adhering to premier online retail catalog standards (Jumia, Konga, Google Shopping, GS1) for ZAVORA marketplace.
 
 Product Input / Keywords: {$rawInput}
 Store / Brand Name: {$brandName}
@@ -93,7 +93,7 @@ Tone: {$tone}
 
 Generate an internationally compliant e-commerce listing in valid JSON with this EXACT structure (no markdown fences):
 {
-  \"title\": \"Brand Model — Defining Feature, Color / Spec (60-90 chars, Title Case, no spam)\",
+  \"title\": \"[Brand] + [Model] + [Defining Feature] + [Color/Spec] (under 90 chars, Title Case)\",
   \"bullet_points\": [
     \"KEY BENEFIT: One-sentence impactful core problem solved.\",
     \"PREMIUM MATERIALS: Specific build materials, durability rating, and craftsmanship.\",
@@ -109,7 +109,7 @@ Generate an internationally compliant e-commerce listing in valid JSON with this
     \"Build Material\": \"Precision Aluminum & Polymer\",
     \"Power / Battery\": \"High Endurance Lithium-Ion\",
     \"Dimensions & Weight\": \"Standard E-Commerce Packaging\",
-    \"Warranty\": \"12-Month Official Nigerian Warranty\"
+    \"Warranty\": \"12-Month Official Warranty\"
   },
   \"search_tags\": [\"keyword1\", \"keyword2\", \"keyword3\", \"keyword4\", \"keyword5\"]
 }";
@@ -184,7 +184,7 @@ Generate an internationally compliant e-commerce listing in valid JSON with this
     }
     $generatedSpecsPipe = implode(" | ", $pipePairs);
 
-    // Format rich description with 5 Amazon-style bullet highlights
+    // Format rich description with key feature bullet highlights
     $formattedBulletsText = "KEY HIGHLIGHTS:\n• " . implode("\n• ", $generatedBullets);
     $fullRichDescription = $formattedBulletsText . "\n\nPRODUCT OVERVIEW:\n" . $generatedDesc;
 
@@ -206,7 +206,7 @@ Generate an internationally compliant e-commerce listing in valid JSON with this
             'specifications_map'  => $generatedSpecsMap,
             'specifications_pipe' => $generatedSpecsPipe,
             'search_tags'         => $generatedTags,
-            'standard'            => 'Amazon ASIN / GS1 / Google Merchant Compliant'
+            'standard'            => 'Enterprise E-Commerce / Google Merchant Compliant'
         ],
         'remaining_credits' => $currentCredits - 1,
         'message' => 'International-standard product listing generated (1 AI credit deducted).'
@@ -316,7 +316,7 @@ if ($action === 'generate_image') {
         'type'  => 'ai_hero',
         'title' => 'AI Studio Hero (Pure White #FFFFFF • 85%+ fill)',
         'url'   => $heroUrl,
-        'badge' => 'Amazon ASIN Standard'
+        'badge' => 'Studio Catalog Standard'
     ];
     $matches[] = [
         'id'    => 'lifestyle',
@@ -378,7 +378,7 @@ if ($action === 'generate_image') {
         'matches'              => $matches,
         'mode'                 => $mode,
         'subject'              => $fullSubject,
-        'standards_compliance' => 'Amazon ASIN / Google Shopping: Pure White #FFFFFF Background & 85%+ Frame Area',
+        'standards_compliance' => 'Studio Standards: Pure White #FFFFFF Background & 85%+ Frame Area',
         'remaining_credits'    => $currentCredits - 1,
         'message'              => 'Realistic product photography generated and sourced matching your exact product details (1 AI credit deducted).'
     ]);
@@ -498,7 +498,7 @@ if ($action === 'chat') {
 
     // 1. Attempt Gemini 1.5 Flash Conversational Generation
     if (!empty($geminiApiKey) && strpos($geminiApiKey, 'YOUR_') === false) {
-        $prompt = "You are the ZAVORA AI Studio Copilot, an elite international e-commerce merchandising specialist (Amazon ASIN, GS1, Google Merchant Center standard) assisting a merchant on ZAVORA marketplace (Nigeria & Global).
+        $prompt = "You are the ZAVORA AI Studio Copilot, an elite international e-commerce merchandising specialist (Jumia, Konga, Google Merchant Center standard) assisting a merchant on ZAVORA marketplace (Nigeria & Global).
 You converse directly with the vendor like Gemini/ChatGPT. You are conversational, encouraging, sharp, and highly actionable.
 
 Current Product Canvas State: " . json_encode($canvasState) . "
@@ -509,10 +509,10 @@ Vendor's New Message: {$userMessage}
 
 Your task:
 1. Answer the vendor's message conversationally in 'assistant_reply'. Explain your merchandising decisions or answer questions about pricing, marketing, target audience, or specs.
-2. In 'badges', provide 2-4 short action tags of what you did (e.g. ['GS1 Title Formatted', '5 Amazon Bullets Refined', 'Spec Matrix Updated']).
+2. In 'badges', provide 2-4 short action tags of what you did (e.g. ['Title Formatted', 'Key Features Refined', 'Spec Matrix Updated']).
 3. In 'canvas_update', return the updated fields. Preserve existing fields from the canvas unless the user asks to modify them:
-   - title: GS1 SEO formula [Brand] + [Model] + [Defining Feature] + [Key Spec / Color] (60-90 chars, Title Case).
-   - bullet_points: Exactly 5 Amazon-standard bullets starting with 'CORE BENEFIT:', 'PREMIUM MATERIALS:', 'TECHNICAL SPECS:', 'ERGONOMICS & BATTERY:', 'PACKAGE & WARRANTY:'.
+   - title: High-converting catalog title [Brand] + [Model] + [Defining Feature] + [Key Spec / Color] (60-90 chars, Title Case).
+   - bullet_points: 5 high-impact key feature highlights with bold lead-ins.
    - narrative_description: 2 paragraphs of compelling catalog story.
    - specifications_map: Dictionary of key-value technical specs.
    - price: Recommended or updated selling price in Naira (number, e.g. 45000).
@@ -606,13 +606,13 @@ Return valid JSON strictly adhering to this schema (no markdown fences):
             $assistantReply = "I have reviewed competitive e-commerce pricing for {$title} in the Nigerian market. A competitive listing price is **₦" . number_format($price) . "** (with a compare-at price of ₦" . number_format($prevPrice) . " showing a 20% discount badge). I have updated the canvas pricing for you.";
             $badges = ['Price Benchmark Analyzed', 'Discount Badge Formatted'];
         } elseif (preg_match('/(photo|image|picture|shoot|shot)/i', $userMessage)) {
-            $assistantReply = "I've synthesized your product specifications and generated a new studio photography suite: a pure white Amazon-standard hero shot, an authentic lifestyle shot, and real-world photographed product matches. Review them in the Photo Gallery tab on the right!";
+            $assistantReply = "I've synthesized your product specifications and generated a new studio photography suite: a pure white commercial hero shot, an authentic lifestyle shot, and real-world photographed product matches. Review them in the Photo Gallery tab on the right!";
             $badges = ['FLUX.1 Hero Generated', 'Lifestyle Photo Sourced', 'Photo Gallery Updated'];
             $requiresPhotos = true;
             $photoSearchQuery = $title;
         } else {
-            $assistantReply = "I have drafted your complete international-standard listing for **{$title}**! On the right canvas, you'll find the GS1-compliant SEO title, 5 Amazon 'About this item' bullet points, technical specs matrix, and realistic product photography. You can ask me to refine any section or click **Publish to Storefront** when ready.";
-            $badges = ['GS1 Title Formatted', '5 Amazon Bullets Drafted', 'Specs Matrix Generated', '4 Photos Sourced'];
+            $assistantReply = "I have drafted your complete international-standard listing for **{$title}**! On the right canvas, you'll find the conversion-optimized title, key feature highlights, technical specs matrix, and realistic product photography. You can ask me to refine any section or click **Publish to Storefront** when ready.";
+            $badges = ['Catalog Title Formatted', 'Key Features Drafted', 'Specs Matrix Generated', '4 Photos Sourced'];
             $requiresPhotos = true;
             $photoSearchQuery = $title;
         }
@@ -675,7 +675,7 @@ Return valid JSON strictly adhering to this schema (no markdown fences):
             'type'  => 'ai_hero',
             'title' => 'AI Studio Hero (Pure White #FFFFFF • 85%+ fill)',
             'url'   => $heroUrl,
-            'badge' => 'Amazon ASIN Standard'
+            'badge' => 'Studio Catalog Standard'
         ];
         $photoMatches[] = [
             'id'    => 'lifestyle',

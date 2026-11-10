@@ -4,8 +4,10 @@
  *
  * Includes:
  * - GS1 Formula E-Commerce Title Validator
- * - 5 Amazon-Standard "About this item" Bullet Points Editor
+ * - Key Features & Highlights Editor (Jumia / Konga Standard)
+ * - Quill Rich Text WYSIWYG Product Description Editor
  * - Structured Two-Column Technical Specification Matrix
+ * - What's In The Box Package Contents Editor
  * - Multi-Angle AI Studio Photography & Online Sourcing Gallery
  * - Product Variety / Variants Matrix Generator
  * - Pre-Order Allocation Engine
@@ -37,16 +39,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
     $thumbnail = trim($_POST['thumbnail'] ?? '');
     $narrativeDesc = trim($_POST['narrative_description'] ?? $_POST['description'] ?? '');
 
-    // Collect 5 Amazon Bullets
-    $bullet1 = trim($_POST['bullet_1'] ?? '');
-    $bullet2 = trim($_POST['bullet_2'] ?? '');
-    $bullet3 = trim($_POST['bullet_3'] ?? '');
-    $bullet4 = trim($_POST['bullet_4'] ?? '');
-    $bullet5 = trim($_POST['bullet_5'] ?? '');
-
-    $bullets = array_filter([$bullet1, $bullet2, $bullet3, $bullet4, $bullet5]);
-    if (!empty($bullets)) {
-        $formattedBullets = "KEY HIGHLIGHTS:\n• " . implode("\n• ", $bullets);
+    // Collect Key Features & Highlights
+    $rawFeatures = $_POST['key_features'] ?? [];
+    if (!is_array($rawFeatures)) $rawFeatures = [];
+    for ($b = 1; $b <= 5; $b++) {
+        if (!empty($_POST["bullet_{$b}"])) {
+            $rawFeatures[] = trim($_POST["bullet_{$b}"]);
+        }
+    }
+    $features = array_values(array_filter(array_map('trim', $rawFeatures)));
+    if (!empty($features)) {
+        $formattedBullets = "KEY HIGHLIGHTS:\n• " . implode("\n• ", $features);
         $fullDescription = $formattedBullets . "\n\nPRODUCT OVERVIEW:\n" . $narrativeDesc;
     } else {
         $fullDescription = $narrativeDesc;
@@ -64,6 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
                 $specsPairs[] = "{$k}: {$v}";
             }
         }
+    }
+    // What's in the box
+    $boxContents = trim($_POST['box_contents'] ?? '');
+    if (!empty($boxContents)) {
+        $specsPairs[] = "What's in the box: {$boxContents}";
     }
     $specsString = !empty($specsPairs) ? implode(' | ', $specsPairs) : trim($_POST['raw_specifications'] ?? '');
 
@@ -154,6 +162,10 @@ $title = 'List New Product — ZAVORA Vendor Central';
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
+<!-- Quill Rich Text WYSIWYG Editor Styles & Scripts -->
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+
 <div class="min-h-screen bg-slate-50/60 pb-20">
 
   <!-- Sticky Enterprise Top Bar -->
@@ -172,7 +184,7 @@ require_once __DIR__ . '/../includes/header.php';
           </div>
           <h1 class="text-lg font-black text-gray-900 font-display flex items-center gap-2">
             <span>List a New Product</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-[#1B2299] uppercase tracking-wider">GS1 & Amazon ASIN Suite</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-[#1B2299] uppercase tracking-wider">Enterprise Catalog Suite</span>
           </h1>
         </div>
       </div>
@@ -358,58 +370,62 @@ require_once __DIR__ . '/../includes/header.php';
           </div>
         </div>
 
-        <!-- CARD 5: AMAZON-STANDARD 5 BULLET HIGHLIGHTS ("ABOUT THIS ITEM") -->
+        <!-- CARD 5: KEY FEATURES & HIGHLIGHTS -->
         <div class="bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-8 shadow-sm space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-gray-100">
             <div>
               <h3 class="text-sm font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                <i class="fas fa-list-check text-[#1B2299]"></i> 5 Amazon Bullets ("About this item")
+                <i class="fas fa-list-check text-[#1B2299]"></i> Key Features & Highlights
               </h3>
-              <p class="text-[11px] text-gray-400">Essential benefit drivers displayed directly above the Add to Cart button on your storefront.</p>
+              <p class="text-[11px] text-gray-400">Essential customer benefit drivers shown prominently beside the product gallery.</p>
             </div>
-            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Amazon Standard</span>
+            <button type="button" onclick="addKeyFeatureRow()" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-gray-800 text-[11px] font-bold rounded-lg transition flex items-center gap-1">
+              <i class="fas fa-plus"></i> Add Feature
+            </button>
           </div>
 
-          <div class="space-y-3">
-            <div>
-              <label class="block text-[11px] font-extrabold text-gray-700 uppercase mb-1">1. Core Benefit & Problem Solved</label>
-              <input type="text" name="bullet_1" id="bullet_1" placeholder="CORE BENEFIT: Industry-leading active noise canceling with dual noise sensor technology."
-                     class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+          <div id="keyFeaturesContainer" class="space-y-2.5">
+            <div class="flex items-center gap-2 feature-row">
+              <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 text-xs font-bold">✓</span>
+              <input type="text" name="key_features[]" placeholder="e.g. 7,500mAh Massive Battery: Up to 3 full days of heavy usage with 33W fast charging."
+                     class="flex-1 px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+              <button type="button" onclick="removeKeyFeatureRow(this)" class="text-gray-300 hover:text-rose-500 transition px-1"><i class="fas fa-trash-can text-xs"></i></button>
             </div>
-            <div>
-              <label class="block text-[11px] font-extrabold text-gray-700 uppercase mb-1">2. Engineered Craftsmanship & Materials</label>
-              <input type="text" name="bullet_2" id="bullet_2" placeholder="PREMIUM MATERIALS: Precision soft-fit synthetic leather and lightweight rigid composite headband."
-                     class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+            <div class="flex items-center gap-2 feature-row">
+              <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 text-xs font-bold">✓</span>
+              <input type="text" name="key_features[]" placeholder="e.g. 6.78-inch FHD+ 120Hz Display: Ultra-smooth scrolling and vivid sunlight visibility."
+                     class="flex-1 px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+              <button type="button" onclick="removeKeyFeatureRow(this)" class="text-gray-300 hover:text-rose-500 transition px-1"><i class="fas fa-trash-can text-xs"></i></button>
             </div>
-            <div>
-              <label class="block text-[11px] font-extrabold text-gray-700 uppercase mb-1">3. Technical Precision & Sensors</label>
-              <input type="text" name="bullet_3" id="bullet_3" placeholder="TECHNICAL SPECS: Custom V1 integrated processor, 30mm carbon fiber driver unit, LDAC support."
-                     class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-[11px] font-extrabold text-gray-700 uppercase mb-1">4. Ergonomics, Battery & Compatibility</label>
-              <input type="text" name="bullet_4" id="bullet_4" placeholder="BATTERY & COMFORT: Up to 30 hours battery life with USB-PD quick charge (3 min charge for 3 hours play)."
-                     class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-[11px] font-extrabold text-gray-700 uppercase mb-1">5. In The Box & Official Warranty</label>
-              <input type="text" name="bullet_5" id="bullet_5" placeholder="IN THE BOX & WARRANTY: Includes carrying case, USB-C cable, audio cable, and 12-Month Official Warranty."
-                     class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+            <div class="flex items-center gap-2 feature-row">
+              <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 text-xs font-bold">✓</span>
+              <input type="text" name="key_features[]" placeholder="e.g. 50MP AI Ultra-Clear Main Camera: Crisp low-light photography and 2K video recording."
+                     class="flex-1 px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+              <button type="button" onclick="removeKeyFeatureRow(this)" class="text-gray-300 hover:text-rose-500 transition px-1"><i class="fas fa-trash-can text-xs"></i></button>
             </div>
           </div>
         </div>
 
-        <!-- CARD 6: NARRATIVE DESCRIPTION -->
-        <div class="bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-8 shadow-sm space-y-3">
+        <!-- CARD 6: RICH TEXT PRODUCT DESCRIPTION (QUILL WYSIWYG) -->
+        <div class="bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-8 shadow-sm space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-gray-100">
-            <h3 class="text-sm font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
-              <i class="fas fa-align-left text-[#1B2299]"></i> Narrative Product Story
-            </h3>
-            <span class="text-[10px] font-bold text-gray-400">Storytelling & SEO</span>
+            <div>
+              <h3 class="text-sm font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                <i class="fas fa-pen-nib text-[#1B2299]"></i> Product Details & Description
+              </h3>
+              <p class="text-[11px] text-gray-400">Professional rich text editor with formatting, headings, and bullet points.</p>
+            </div>
+            <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">Quill WYSIWYG</span>
           </div>
-          <textarea name="narrative_description" id="full_narrative" rows="4"
-                    placeholder="Provide a detailed, immersive product narrative describing performance, craftsmanship, and daily experience..."
-                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs leading-relaxed focus:bg-white focus:outline-none"></textarea>
+
+          <!-- Quill Container -->
+          <div class="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-2xs">
+            <div id="quill-editor" class="min-h-[220px] text-sm text-gray-800 leading-relaxed p-4"></div>
+          </div>
+          <input type="hidden" name="narrative_description" id="full_narrative">
+          <p class="text-[11px] text-gray-400 flex items-center gap-1.5">
+            <i class="fas fa-info-circle text-[#1B2299]"></i> Formatted text, bold points, subheadings, and lists will render cleanly on your storefront product page.
+          </p>
         </div>
 
         <!-- CARD 7: STRUCTURED TECHNICAL SPECIFICATIONS MATRIX -->
@@ -438,6 +454,23 @@ require_once __DIR__ . '/../includes/header.php';
               <input type="text" name="spec_vals[]" value="12-Month Official Warranty" placeholder="Value" class="col-span-6 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 font-semibold focus:bg-white focus:outline-none">
               <button type="button" onclick="removeSpecRow(this)" class="col-span-1 text-gray-300 hover:text-rose-500 transition"><i class="fas fa-trash-can text-xs"></i></button>
             </div>
+          </div>
+        </div>
+
+        <!-- CARD 8: WHAT'S IN THE BOX -->
+        <div class="bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-8 shadow-sm space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div>
+              <h3 class="text-sm font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                <i class="fas fa-box-open text-[#1B2299]"></i> What's In The Box
+              </h3>
+              <p class="text-[11px] text-gray-400">List all included accessories, manuals, and contents in the package.</p>
+            </div>
+            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Package Contents</span>
+          </div>
+          <div>
+            <input type="text" name="box_contents" id="box_contents" placeholder="e.g. 1x Smartphone, 1x Power Adapter, 1x USB-C Cable, 1x Protective Case, 1x Warranty Card"
+                   class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:bg-white focus:outline-none">
           </div>
         </div>
 
@@ -635,6 +668,46 @@ require_once __DIR__ . '/../includes/header.php';
 <script>
 let currentPhotoStudioMode = 'hero';
 let currentPhotoMatches = [];
+let quillEditor = null;
+
+// Initialize Quill WYSIWYG Editor on Load
+document.addEventListener('DOMContentLoaded', function() {
+  if (document.getElementById('quill-editor')) {
+    quillEditor = new Quill('#quill-editor', {
+      theme: 'snow',
+      placeholder: 'Compose a professional, compelling product description with styled headings, bullet points, and key details...',
+      modules: {
+        toolbar: [
+          [{ 'header': [2, 3, 4, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          ['blockquote', 'link'],
+          ['clean']
+        ]
+      }
+    });
+  }
+});
+
+// Key Features Dynamic Rows
+function addKeyFeatureRow(val = '') {
+  const container = document.getElementById('keyFeaturesContainer');
+  if (!container) return;
+  const div = document.createElement('div');
+  div.className = 'flex items-center gap-2 feature-row';
+  div.innerHTML = `
+    <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 text-xs font-bold">✓</span>
+    <input type="text" name="key_features[]" value="${escapeHtml(val)}" placeholder="Highlight feature bullet (e.g. Battery, Display, Camera)..."
+           class="flex-1 px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none">
+    <button type="button" onclick="removeKeyFeatureRow(this)" class="text-gray-300 hover:text-rose-500 transition px-1"><i class="fas fa-trash-can text-xs"></i></button>
+  `;
+  container.appendChild(div);
+}
+
+function removeKeyFeatureRow(btn) {
+  const row = btn.closest('.feature-row');
+  if (row) row.remove();
+}
 
 // 1. GS1 Title Length Validator
 function onTitleChanged(val) {
@@ -648,7 +721,7 @@ function onTitleChanged(val) {
 
   if (len >= 60 && len <= 90) {
     counter.className = 'text-[11px] font-mono font-bold text-emerald-600';
-    pill.innerText = '✓ GS1 & Amazon ASIN Compliant';
+    pill.innerText = '✓ GS1 Catalog Compliant';
     pill.className = 'text-[10px] font-bold text-emerald-600';
   } else if (len > 90) {
     counter.className = 'text-[11px] font-mono font-bold text-amber-600';
@@ -805,17 +878,23 @@ function runAiCopyGeneration() {
       document.getElementById('full_title').value = d.title || '';
       onTitleChanged(d.title || '');
 
-      // Populate 5 Bullets
-      if (Array.isArray(d.bullet_points)) {
-        if (d.bullet_points[0]) document.getElementById('bullet_1').value = d.bullet_points[0];
-        if (d.bullet_points[1]) document.getElementById('bullet_2').value = d.bullet_points[1];
-        if (d.bullet_points[2]) document.getElementById('bullet_3').value = d.bullet_points[2];
-        if (d.bullet_points[3]) document.getElementById('bullet_4').value = d.bullet_points[3];
-        if (d.bullet_points[4]) document.getElementById('bullet_4').value = d.bullet_points[4];
+      // Populate Key Features & Highlights
+      if (Array.isArray(d.bullet_points) && d.bullet_points.length > 0) {
+        const kfContainer = document.getElementById('keyFeaturesContainer');
+        kfContainer.innerHTML = '';
+        d.bullet_points.forEach(bp => addKeyFeatureRow(bp));
       }
 
-      // Populate Narrative Story
+      // Populate Rich Text Narrative into Quill Editor
+      if (quillEditor && d.description) {
+        quillEditor.root.innerHTML = d.description;
+      }
       document.getElementById('full_narrative').value = d.description || '';
+
+      // Populate What's in the Box
+      if (d.in_the_box && document.getElementById('box_contents')) {
+        document.getElementById('box_contents').value = d.in_the_box;
+      }
 
       // Populate Specifications Matrix
       if (d.specifications_map && typeof d.specifications_map === 'object') {
@@ -832,7 +911,7 @@ function runAiCopyGeneration() {
       }
 
       statusEl.className = 'text-[11px] font-bold p-2.5 rounded-xl bg-emerald-500/20 text-emerald-200 block';
-      statusEl.innerHTML = '<i class="fas fa-check-circle text-emerald-400"></i> International GS1/Amazon listing drafted! Review the populated fields.';
+      statusEl.innerHTML = '<i class="fas fa-check-circle text-emerald-400"></i> International GS1 listing drafted! Review the populated fields.';
     } else if (data.error === 'insufficient_credits') {
       statusEl.className = 'text-[11px] font-bold p-2.5 rounded-xl bg-amber-500/20 text-amber-200 block';
       statusEl.innerText = data.message || '0 AI Credits remaining.';
@@ -988,6 +1067,11 @@ function submitProductForm() {
     return;
   }
 
+  // Sync Quill Rich Text HTML into hidden form input before submission
+  if (quillEditor) {
+    document.getElementById('full_narrative').value = quillEditor.root.innerHTML;
+  }
+
   document.getElementById('mainProductForm').submit();
 }
 
@@ -1008,15 +1092,20 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('full_title').value = d.title;
         onTitleChanged(d.title);
       }
-      if (Array.isArray(d.bullet_points)) {
-        if (d.bullet_points[0]) document.getElementById('bullet_1').value = d.bullet_points[0];
-        if (d.bullet_points[1]) document.getElementById('bullet_2').value = d.bullet_points[1];
-        if (d.bullet_points[2]) document.getElementById('bullet_3').value = d.bullet_points[2];
-        if (d.bullet_points[3]) document.getElementById('bullet_4').value = d.bullet_points[3];
-        if (d.bullet_points[4]) document.getElementById('bullet_5').value = d.bullet_points[4];
+      if (Array.isArray(d.bullet_points) && d.bullet_points.length > 0) {
+        const kfContainer = document.getElementById('keyFeaturesContainer');
+        kfContainer.innerHTML = '';
+        d.bullet_points.forEach(bp => addKeyFeatureRow(bp));
       }
       if (d.description) {
         document.getElementById('full_narrative').value = d.description;
+        // Wait a tick for Quill to initialize if needed
+        setTimeout(() => {
+          if (quillEditor) quillEditor.root.innerHTML = d.description;
+        }, 50);
+      }
+      if (d.in_the_box && document.getElementById('box_contents')) {
+        document.getElementById('box_contents').value = d.in_the_box;
       }
       if (d.specifications_map && typeof d.specifications_map === 'object') {
         const container = document.getElementById('specRowsContainer');

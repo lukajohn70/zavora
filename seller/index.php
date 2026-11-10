@@ -544,11 +544,18 @@ require_once __DIR__ . '/../includes/header.php';
                     <?php endif; ?>
                   </td>
                   <td class="p-3 text-right">
-                    <a href="<?php echo zavora_asset('product.php?id=' . $prod['id']); ?>" target="_blank"
-                       class="text-[#1B2299] hover:underline font-bold text-xs inline-flex items-center gap-1">
-                      <span>View</span>
-                      <i class="fas fa-arrow-up-right-from-square text-[9px]"></i>
-                    </a>
+                    <div class="flex items-center justify-end gap-2">
+                      <a href="<?php echo zavora_asset('seller/product-edit.php?id=' . $prod['id']); ?>"
+                         class="px-3 py-1.5 bg-[#1B2299] hover:bg-[#0B132B] text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                        <i class="fas fa-pen-to-square"></i>
+                        <span>Edit</span>
+                      </a>
+                      <a href="<?php echo zavora_asset('product.php?id=' . $prod['id']); ?>" target="_blank"
+                         class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                        <span>View</span>
+                        <i class="fas fa-arrow-up-right-from-square text-[9px]"></i>
+                      </a>
+                    </div>
                   </td>
                 </tr>
               <?php endforeach; ?>
@@ -960,7 +967,7 @@ require_once __DIR__ . '/../includes/header.php';
               <div id="sbCopyResult" class="hidden mt-4 pt-4 border-t border-gray-150 space-y-3">
                 <div class="flex items-center justify-between">
                   <span class="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-                    <i class="fas fa-certificate"></i> GS1 & Amazon ASIN Compliant
+                    <i class="fas fa-certificate"></i> Enterprise E-Commerce Standard
                   </span>
                   <span id="sbResTitleCount" class="text-[10px] font-bold text-gray-500"></span>
                 </div>
@@ -969,7 +976,7 @@ require_once __DIR__ . '/../includes/header.php';
                   <p id="sbResTitle" class="text-xs font-bold text-gray-900 bg-gray-50 p-2.5 rounded-xl border border-gray-200"></p>
                 </div>
                 <div>
-                  <span class="text-[10px] font-bold text-gray-400 uppercase">Amazon-Style Bullets ("About this item")</span>
+                  <span class="text-[10px] font-bold text-gray-400 uppercase">Key Features & Highlights</span>
                   <div id="sbResBullets" class="space-y-1.5 bg-gray-50 p-3 rounded-xl border border-gray-200 text-xs text-gray-700"></div>
                 </div>
                 <div>
@@ -1197,20 +1204,20 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div id="aiModalStatus" class="hidden text-[11px] font-bold mt-2 p-2 rounded-lg"></div>
 
-        <!-- Interactive AI Listing Reviewer Drawer (GS1 & Amazon ASIN Compliant) -->
+        <!-- Interactive AI Listing Reviewer Drawer (Enterprise Standard) -->
         <div id="aiListingReviewerDrawer" class="hidden mt-3 p-3 bg-white/95 backdrop-blur rounded-xl border border-blue-200 shadow-sm space-y-3">
           <div class="flex items-center justify-between pb-2 border-b border-gray-150">
             <span class="text-[11px] font-black text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
               <i class="fas fa-certificate text-emerald-600"></i> AI Listing Reviewer
             </span>
             <span id="aiReviewTitleLen" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-              0 / 90 chars (GS1 Standard)
+              0 / 90 chars (Catalog Formula)
             </span>
           </div>
 
           <!-- Bullets Preview -->
           <div>
-            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">5 Amazon Bullets ("About this item")</span>
+            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Key Product Features & Highlights</span>
             <div id="aiReviewBulletsList" class="space-y-1.5 text-[11px] text-gray-700 max-h-36 overflow-y-auto pr-1"></div>
           </div>
 
@@ -1246,7 +1253,7 @@ require_once __DIR__ . '/../includes/header.php';
           </div>
 
           <div class="pt-2 border-t border-gray-150 flex items-center justify-between gap-2">
-            <span class="text-[10px] text-gray-400 italic">Amazon ASIN / GS1 standard formatted.</span>
+            <span class="text-[10px] text-gray-400 italic">Enterprise catalog standard formatted.</span>
             <button type="button" onclick="applyAiListingToForm()" id="btnApplyAiListing" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow flex items-center gap-1">
               <i class="fas fa-check-double"></i> <span>Apply to Form</span>
             </button>
@@ -1640,7 +1647,7 @@ function generateModalAiCopy() {
         updateCreditCounters(data.remaining_credits);
       }
       statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-emerald-50 text-emerald-800 block';
-      statusEl.innerHTML = '<i class="fas fa-check-circle text-emerald-600"></i> International GS1/Amazon listing drafted! Review below or edit directly. (1 credit deducted)';
+      statusEl.innerHTML = '<i class="fas fa-check-circle text-emerald-600"></i> Enterprise product listing drafted! Review below or edit directly. (1 credit deducted)';
     } else if (data.error === 'insufficient_credits') {
       statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-amber-50 text-amber-800 block';
       statusEl.innerText = data.message || '0 AI Credits remaining.';
@@ -1738,7 +1745,7 @@ function generateModalAiImage() {
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Photo...';
   statusEl.className = 'text-[11px] font-bold mt-2 p-2 rounded-lg bg-purple-50 text-purple-700 block';
-  statusEl.innerText = 'Rendering commercial product photo (' + (mode === 'hero' ? 'Amazon Pure White' : 'Lifestyle Setting') + ')...';
+  statusEl.innerText = 'Rendering commercial product photo (' + (mode === 'hero' ? 'Studio Pure White' : 'Lifestyle Setting') + ')...';
 
   const fd = new FormData();
   fd.append('prompt', keywords);

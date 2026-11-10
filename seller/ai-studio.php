@@ -254,20 +254,20 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
           </div>
 
-          <!-- 5 Amazon Bullets Card ("About this item") -->
+          <!-- Key Features & Highlights Card -->
           <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
             <div class="flex items-center justify-between pb-2 border-b border-slate-800">
               <h4 class="text-xs font-black uppercase tracking-wider text-slate-200 flex items-center gap-2">
-                <i class="fas fa-list-check text-indigo-400"></i> Amazon "About this item" 5 Bullets
+                <i class="fas fa-list-check text-indigo-400"></i> Key Features & Highlights
               </h4>
               <span class="text-[10px] font-bold text-emerald-400">Conversion Standard</span>
             </div>
             <div class="space-y-2" id="canvasBulletsContainer">
-              <input type="text" id="cv_bullet_1" placeholder="Bullet 1: CORE BENEFIT..." class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none">
-              <input type="text" id="cv_bullet_2" placeholder="Bullet 2: PREMIUM MATERIALS..." class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none">
-              <input type="text" id="cv_bullet_3" placeholder="Bullet 3: TECHNICAL SPECS..." class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none">
-              <input type="text" id="cv_bullet_4" placeholder="Bullet 4: ERGONOMICS & BATTERY..." class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none">
-              <input type="text" id="cv_bullet_5" placeholder="Bullet 5: IN THE BOX & WARRANTY..." class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none">
+              <input type="text" id="cv_bullet_1" placeholder="Feature 1: CORE BENEFIT..." class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none">
+              <input type="text" id="cv_bullet_2" placeholder="Feature 2: PREMIUM MATERIALS..." class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none">
+              <input type="text" id="cv_bullet_3" placeholder="Feature 3: TECHNICAL SPECS..." class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none">
+              <input type="text" id="cv_bullet_4" placeholder="Feature 4: PERFORMANCE & BATTERY..." class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none">
+              <input type="text" id="cv_bullet_5" placeholder="Feature 5: IN THE BOX & WARRANTY..." class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-200 focus:outline-none">
             </div>
           </div>
 
@@ -421,7 +421,7 @@ let currentCanvasState = {
       type: 'ai_hero',
       title: 'Studio Hero (Pure White #FFFFFF • 85%+ fill)',
       url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800',
-      badge: 'Amazon ASIN Standard'
+      badge: 'Catalog Studio Standard'
     },
     {
       id: 'lifestyle',

@@ -1,4 +1,14 @@
 <?php
+/**
+ * ZAVORA Storefront — Professional Product Details & Commerce Suite
+ *
+ * Designed to international e-commerce standards (Jumia & Konga Gold Standard):
+ * - Top Fold: High-Resolution Product Showcase, Dynamic Variants, Live Stock & Pricing
+ * - Main Column: Key Features & Highlights, Rich-Text WYSIWYG Narrative, Technical Specs Matrix, What's In The Box
+ * - Sticky Sidebar: Nationwide Door Delivery & Returns, 100% Genuine Guarantee, Verified Merchant Profile
+ * - Merchant In-Place Management: Quick "Edit Product" shortcut for authorized vendors & admins
+ */
+
 require_once __DIR__ . '/config/config.php';
 
 $pdo = zavora_get_db();
@@ -18,6 +28,15 @@ $product = $stmt->fetch();
 if (!$product) {
     header('Location: ' . zavora_asset('shop.php'));
     exit;
+}
+
+// Check Vendor / Admin Authentication for In-Place Listing Management
+$currentVendor = zavora_vendor_auth();
+$canEditProduct = false;
+if (!empty($_SESSION['admin_logged_in'])) {
+    $canEditProduct = true;
+} elseif ($currentVendor && (int)$currentVendor['id'] === (int)$product['vendor_id']) {
+    $canEditProduct = true;
 }
 
 // Fetch Product Variants if applicable
@@ -61,7 +80,7 @@ $reviewCount = count($reviews) ?: (int)($product['reviews_count'] ?? 0);
 // Parse variant attributes schema
 $attributeGroups = !empty($product['variant_attributes']) ? json_decode($product['variant_attributes'], true) : [];
 
-// Parse Description for Amazon-standard "About this item" highlights
+// Parse Description for Key Highlights and Rich Narrative
 $rawDesc = $product['description'] ?? '';
 $highlights = [];
 $narrativeDesc = $rawDesc;
@@ -82,8 +101,17 @@ if (preg_match('/KEY HIGHLIGHTS:\s*(.*?)(?=(?:PRODUCT OVERVIEW:|$))/si', $rawDes
     }
 }
 
-// Parse Specifications into Structured Key-Value Dictionary
+// Prepare Safe Rich Text HTML for Narrative Description (Preserving Quill WYSIWYG tags)
+$isRichHtml = (strip_tags($narrativeDesc) !== $narrativeDesc);
+if ($isRichHtml) {
+    $sanitizedNarrative = strip_tags($narrativeDesc, '<p><br><strong><b><em><i><u><h2><h3><h4><h5><h6><ul><ol><li><span><div><table><thead><tbody><tr><th><td><a><img><blockquote>');
+} else {
+    $sanitizedNarrative = nl2br(htmlspecialchars($narrativeDesc));
+}
+
+// Parse Specifications into Structured Key-Value Dictionary & Extract Box Contents
 $parsedSpecs = [];
+$boxContents = '';
 $rawSpecs = trim($product['specifications'] ?? '');
 if (!empty($rawSpecs)) {
     $jsonDecoded = json_decode($rawSpecs, true);
@@ -96,10 +124,22 @@ if (!empty($rawSpecs)) {
             if (empty($p)) continue;
             if (strpos($p, ':') !== false) {
                 [$k, $v] = explode(':', $p, 2);
-                $parsedSpecs[trim($k)] = trim($v);
+                $k = trim($k);
+                $v = trim($v);
+                if (stripos($k, "what's in the box") !== false || stripos($k, "in the box") !== false || stripos($k, "package contents") !== false) {
+                    $boxContents = $v;
+                } else {
+                    $parsedSpecs[$k] = $v;
+                }
             } elseif (strpos($p, '—') !== false) {
                 [$k, $v] = explode('—', $p, 2);
-                $parsedSpecs[trim($k)] = trim($v);
+                $k = trim($k);
+                $v = trim($v);
+                if (stripos($k, "what's in the box") !== false || stripos($k, "in the box") !== false || stripos($k, "package contents") !== false) {
+                    $boxContents = $v;
+                } else {
+                    $parsedSpecs[$k] = $v;
+                }
             }
         }
     }
@@ -109,22 +149,35 @@ $title = $product['title'];
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="container mx-auto px-4 lg:px-8 py-8 sm:py-12">
-  
-  <!-- Breadcrumbs -->
-  <div class="flex items-center gap-2 text-xs text-gray-400 mb-8">
-    <a href="<?php echo zavora_asset('index.php'); ?>" class="hover:text-gray-600">Home</a>
-    <span>/</span>
-    <a href="<?php echo zavora_asset('shop.php'); ?>" class="hover:text-gray-600">Shop</a>
-    <span>/</span>
-    <a href="<?php echo zavora_asset('shop.php?category=' . urlencode($product['category_slug'] ?? '')); ?>" class="hover:text-gray-600 capitalize">
-      <?php echo htmlspecialchars($product['category_name'] ?? 'Products'); ?>
-    </a>
-    <span>/</span>
-    <span class="text-gray-800 font-bold truncate max-w-xs"><?php echo htmlspecialchars($product['title']); ?></span>
+<div class="container mx-auto px-4 lg:px-8 py-6 sm:py-10">
+
+  <!-- Breadcrumbs & Merchant Quick Action Banner -->
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <div class="flex items-center gap-2 text-xs text-gray-400">
+      <a href="<?php echo zavora_asset('index.php'); ?>" class="hover:text-gray-600">Home</a>
+      <span>/</span>
+      <a href="<?php echo zavora_asset('shop.php'); ?>" class="hover:text-gray-600">Shop</a>
+      <span>/</span>
+      <a href="<?php echo zavora_asset('shop.php?category=' . urlencode($product['category_slug'] ?? '')); ?>" class="hover:text-gray-600 capitalize">
+        <?php echo htmlspecialchars($product['category_name'] ?? 'Products'); ?>
+      </a>
+      <span>/</span>
+      <span class="text-gray-800 font-bold truncate max-w-xs"><?php echo htmlspecialchars($product['title']); ?></span>
+    </div>
+
+    <?php if ($canEditProduct): ?>
+      <a href="<?php echo zavora_asset('seller/product-edit.php?id=' . $product['id']); ?>" 
+         class="px-3.5 py-1.5 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-black rounded-xl shadow transition flex items-center gap-1.5">
+        <i class="fas fa-pen-to-square"></i>
+        <span>Edit This Product</span>
+      </a>
+    <?php endif; ?>
   </div>
 
-  <div class="grid lg:grid-cols-12 gap-12 items-start bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-10 shadow-sm">
+  <!-- ════════════════════════════════════════════════════════════════════════
+       TOP HERO: PRODUCT SHOWCASE & PURCHASE CONTROLS
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-10 shadow-sm">
     
     <!-- Left: Product Image Gallery (5 Cols) -->
     <div class="lg:col-span-5">
@@ -153,30 +206,11 @@ require_once __DIR__ . '/includes/header.php';
           <?php elseif ($product['type'] === 'course'): ?>
             <i class="fas fa-graduation-cap text-indigo-600"></i> Video LMS Course
           <?php else: ?>
-            <i class="fas fa-truck text-[#1B2299]"></i> Physical Delivery (Nigeria)
+            <i class="fas fa-truck text-[#1B2299]"></i> Physical Delivery Across Nigeria
           <?php endif; ?>
         </span>
         <span id="product-sku-display" class="text-gray-400 font-mono">SKU: <?php echo htmlspecialchars($product['sku']); ?></span>
       </div>
-
-      <!-- Verified Seller Info Card -->
-      <?php if (!empty($product['vendor_store_name'])): ?>
-        <div class="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-[#1B2299] text-white flex items-center justify-center font-bold text-sm">
-              <i class="fas fa-store"></i>
-            </div>
-            <div>
-              <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Sold & Fulfilled by</p>
-              <h4 class="text-sm font-black text-gray-900"><?php echo htmlspecialchars($product['vendor_store_name']); ?></h4>
-            </div>
-          </div>
-          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-            <i class="fas fa-check-circle"></i> Verified Seller
-          </span>
-        </div>
-      <?php endif; ?>
-
     </div>
 
     <!-- Right: Product Details & Purchase Controls (7 Cols) -->
@@ -208,11 +242,11 @@ require_once __DIR__ . '/includes/header.php';
           <div>
             <h4 class="text-sm font-black text-indigo-950">Official Pre-Order Product</h4>
             <p class="text-xs text-indigo-800 mt-0.5 leading-relaxed">
-              Expected Release / Ship Date: <strong><?php echo htmlspecialchars($product['preorder_release_date'] ?: 'December 2026'); ?></strong>.
+              Expected Release / Ship Date: <strong><?php echo htmlspecialchars($product['preorder_release_date'] ?: 'Upcoming Release'); ?></strong>.
               <?php if (!empty($product['preorder_deposit'])): ?>
                 Minimum deposit required to secure initial allocation: <strong><?php echo zavora_format_price($product['preorder_deposit']); ?></strong>.
               <?php else: ?>
-                Your order reserves your unit directly from the verified vendor.
+                Your pre-order reserves your unit directly from the verified vendor.
               <?php endif; ?>
             </p>
           </div>
@@ -225,7 +259,7 @@ require_once __DIR__ . '/includes/header.php';
           <span id="product-price-display" class="text-3xl font-black text-[#1B2299]">
             <?php echo zavora_format_price($product['price']); ?>
           </span>
-          <?php if ($product['previous_price']): ?>
+          <?php if ($product['previous_price'] && $product['previous_price'] > $product['price']): ?>
             <span class="text-base text-gray-400 line-through"><?php echo zavora_format_price($product['previous_price']); ?></span>
             <span class="px-2.5 py-0.5 rounded-full bg-[#E4306D] text-white text-xs font-black uppercase">
               Save <?php echo round((($product['previous_price'] - $product['price']) / $product['previous_price']) * 100); ?>%
@@ -266,45 +300,6 @@ require_once __DIR__ . '/includes/header.php';
         </div>
       </div>
 
-      <!-- Description & Amazon ASIN-Style "About this item" Highlights -->
-      <div class="mb-6 space-y-4">
-        <?php if (!empty($highlights)): ?>
-          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-sm">
-            <h3 class="text-xs font-black uppercase tracking-wider text-gray-900 mb-3 flex items-center gap-2">
-              <i class="fas fa-list-check text-[#1B2299]"></i> About this item
-            </h3>
-            <ul class="space-y-2.5 text-xs text-gray-700 leading-relaxed">
-              <?php foreach ($highlights as $h): ?>
-                <?php
-                  $prefix = '';
-                  $body = $h;
-                  if (strpos($h, ':') !== false) {
-                      [$prefix, $body] = explode(':', $h, 2);
-                      $prefix = trim($prefix) . ':';
-                      $body = trim($body);
-                  }
-                ?>
-                <li class="flex items-start gap-2.5">
-                  <i class="fas fa-check-circle text-emerald-600 mt-0.5 text-xs flex-shrink-0"></i>
-                  <span>
-                    <?php if (!empty($prefix)): ?>
-                      <strong class="font-extrabold text-gray-900"><?php echo htmlspecialchars($prefix); ?></strong>
-                    <?php endif; ?>
-                    <?php echo htmlspecialchars($body); ?>
-                  </span>
-                </li>
-              <?php endforeach; ?>
-            </ul>
-          </div>
-        <?php endif; ?>
-
-        <?php if (!empty($narrativeDesc)): ?>
-          <div class="text-xs sm:text-sm text-gray-600 leading-relaxed space-y-2">
-            <p><?php echo nl2br(htmlspecialchars($narrativeDesc)); ?></p>
-          </div>
-        <?php endif; ?>
-      </div>
-
       <!-- Purchase Form with Dynamic Variations -->
       <form action="<?php echo zavora_asset('cart.php'); ?>" method="POST" id="purchase-form" class="space-y-6">
         <input type="hidden" name="action" value="add">
@@ -326,7 +321,6 @@ require_once __DIR__ . '/includes/header.php';
               <span class="text-xs text-gray-500"><?php echo count($variants); ?> options available</span>
             </div>
 
-            <!-- Variant Direct Cards Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <?php foreach ($variants as $idx => $v): ?>
                 <label class="variant-option-card cursor-pointer p-3.5 rounded-xl border-2 transition-all flex items-center justify-between gap-3 bg-white hover:border-[#1B2299] <?php echo $idx === 0 ? 'border-[#1B2299] bg-indigo-50/30' : 'border-gray-200'; ?>">
@@ -379,44 +373,7 @@ require_once __DIR__ . '/includes/header.php';
         </div>
       </form>
 
-      <!-- Structured Technical Specifications (International Standard Two-Column Alternating Matrix) -->
-      <?php if (!empty($parsedSpecs)): ?>
-        <div class="mt-8 pt-6 border-t border-gray-200">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-xs font-black uppercase tracking-wider text-gray-900 flex items-center gap-2">
-              <i class="fas fa-microchip text-[#1B2299]"></i> Technical Specifications
-            </h3>
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
-              <i class="fas fa-certificate text-emerald-500"></i> Verified Metrics
-            </span>
-          </div>
-          <div class="overflow-hidden rounded-2xl border border-gray-200 shadow-sm bg-white">
-            <table class="w-full text-left text-xs">
-              <tbody class="divide-y divide-gray-150">
-                <?php $sCount = 0; foreach ($parsedSpecs as $sKey => $sVal): $sCount++; ?>
-                  <tr class="<?php echo ($sCount % 2 === 1) ? 'bg-slate-50/70' : 'bg-white'; ?> transition-colors hover:bg-indigo-50/30">
-                    <td class="py-2.5 px-4 font-bold text-gray-600 w-2/5 border-r border-gray-150 text-[11px] uppercase tracking-wider">
-                      <?php echo htmlspecialchars($sKey); ?>
-                    </td>
-                    <td class="py-2.5 px-4 font-semibold text-gray-900">
-                      <?php echo htmlspecialchars($sVal); ?>
-                    </td>
-                  </tr>
-                <?php endforeach; ?>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      <?php elseif (!empty($product['specifications'])): ?>
-        <div class="mt-8 pt-6 border-t border-gray-150">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Technical Specifications</h3>
-          <div class="p-4 rounded-xl bg-slate-50 border border-gray-150 text-xs text-gray-700 font-medium leading-relaxed">
-            <?php echo htmlspecialchars($product['specifications']); ?>
-          </div>
-        </div>
-      <?php endif; ?>
-
-      <!-- Trust Features -->
+      <!-- Trust Assurance Badges -->
       <div class="mt-8 pt-6 border-t border-gray-150 grid grid-cols-2 gap-4 text-xs text-gray-500">
         <div class="flex items-center gap-2">
           <i class="fas fa-shield-halved text-[#16865B]"></i>
@@ -432,109 +389,356 @@ require_once __DIR__ . '/includes/header.php';
 
   </div>
 
-  <!-- Customer Reviews Section (100% Database Driven) -->
-  <div id="reviews" class="mt-12 bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-10 shadow-sm">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-gray-150">
-      <div>
-        <h2 class="text-2xl font-black font-display text-gray-900 mb-1">Customer Reviews</h2>
-        <p class="text-xs text-gray-500">Verified buyer ratings and authentic experience feedback.</p>
-      </div>
-      <div class="flex items-center gap-4">
-        <div class="text-center sm:text-right">
-          <div class="text-3xl font-black text-gray-900 leading-none"><?php echo number_format($avgRating, 1); ?></div>
-          <div class="flex items-center gap-1 text-xs text-amber-500 my-1 justify-center sm:justify-end">
-            <?php for ($s = 1; $s <= 5; $s++): ?>
-              <i class="fas fa-star <?php echo $s <= round($avgRating) ? 'text-amber-500' : 'text-gray-200'; ?>"></i>
-            <?php endfor; ?>
-          </div>
-          <div class="text-[11px] text-gray-400 font-medium">Based on <?php echo $reviewCount; ?> verified ratings</div>
-        </div>
-      </div>
-    </div>
+  <!-- ════════════════════════════════════════════════════════════════════════
+       LOWER SECTION: JUMIA / KONGA 2-COLUMN CATALOG DOSSIER
+       ════════════════════════════════════════════════════════════════════════ -->
+  <div class="mt-10 grid lg:grid-cols-12 gap-8 items-start">
 
-    <!-- Review Cards List -->
-    <div class="py-8 space-y-6">
-      <?php if (empty($reviews)): ?>
-        <div class="py-8 text-center text-gray-500 text-xs">
-          <p>No customer reviews yet. Be the first to share your experience with this product!</p>
+    <!-- Left Main Column (8 Cols): In-Depth Product Dossier -->
+    <div class="lg:col-span-8 space-y-8">
+
+      <!-- 1. KEY FEATURES & HIGHLIGHTS CARD -->
+      <?php if (!empty($highlights)): ?>
+        <div class="bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-8 shadow-sm">
+          <div class="flex items-center justify-between pb-4 mb-6 border-b border-gray-100">
+            <h2 class="text-base sm:text-lg font-black text-gray-900 uppercase tracking-wider flex items-center gap-2.5">
+              <i class="fas fa-list-check text-[#1B2299]"></i> Key Features & Highlights
+            </h2>
+            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full flex items-center gap-1">
+              <i class="fas fa-check-circle"></i> Verified Specifications
+            </span>
+          </div>
+
+          <ul class="space-y-3.5">
+            <?php foreach ($highlights as $h): ?>
+              <?php
+                $prefix = '';
+                $body = $h;
+                if (strpos($h, ':') !== false) {
+                    [$prefix, $body] = explode(':', $h, 2);
+                    $prefix = trim($prefix) . ':';
+                    $body = trim($body);
+                }
+              ?>
+              <li class="flex items-start gap-3 text-xs sm:text-sm text-gray-700 leading-relaxed">
+                <span class="w-5 h-5 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">✓</span>
+                <div>
+                  <?php if (!empty($prefix)): ?>
+                    <strong class="font-extrabold text-gray-900"><?php echo htmlspecialchars($prefix); ?></strong>
+                  <?php endif; ?>
+                  <span><?php echo htmlspecialchars($body); ?></span>
+                </div>
+              </li>
+            <?php endforeach; ?>
+          </ul>
         </div>
-      <?php else: ?>
-        <?php foreach ($reviews as $rev): ?>
-          <div class="p-5 rounded-2xl bg-gray-50 border border-gray-150 transition-colors">
-            <div class="flex items-start justify-between gap-4 mb-2">
-              <div>
-                <div class="flex items-center gap-2 mb-1">
-                  <span class="font-bold text-sm text-gray-900"><?php echo htmlspecialchars($rev['customer_name']); ?></span>
-                  <?php if (!empty($rev['is_verified_buyer'])): ?>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-                      <i class="fas fa-check-circle text-[9px]"></i> Verified Buyer
-                    </span>
-                  <?php endif; ?>
-                </div>
-                <div class="flex items-center gap-1 text-xs text-amber-500">
-                  <?php for ($s = 1; $s <= 5; $s++): ?>
-                    <i class="fas fa-star <?php echo $s <= $rev['rating'] ? 'text-amber-500' : 'text-gray-200'; ?> text-[11px]"></i>
-                  <?php endfor; ?>
-                  <?php if (!empty($rev['title'])): ?>
-                    <span class="text-xs font-bold text-gray-800 ml-1.5"><?php echo htmlspecialchars($rev['title']); ?></span>
-                  <?php endif; ?>
-                </div>
-              </div>
-              <span class="text-[11px] text-gray-400 font-mono">
-                <?php echo date('M j, Y', strtotime($rev['created_at'])); ?>
-              </span>
+      <?php endif; ?>
+
+      <!-- 2. PRODUCT DETAILS & OVERVIEW (RICH TEXT WYSIWYG CONTAINER) -->
+      <div class="bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-8 shadow-sm">
+        <div class="flex items-center justify-between pb-4 mb-6 border-b border-gray-100">
+          <h2 class="text-base sm:text-lg font-black text-gray-900 uppercase tracking-wider flex items-center gap-2.5">
+            <i class="fas fa-align-left text-[#1B2299]"></i> Product Details & Description
+          </h2>
+          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Full Overview</span>
+        </div>
+
+        <div class="prose prose-slate max-w-none text-gray-700 leading-relaxed text-xs sm:text-sm space-y-4">
+          <?php if (!empty($sanitizedNarrative)): ?>
+            <?php echo $sanitizedNarrative; ?>
+          <?php else: ?>
+            <p class="text-gray-400 italic">No additional description provided for this product.</p>
+          <?php endif; ?>
+        </div>
+      </div>
+
+      <!-- 3. TECHNICAL SPECIFICATIONS MATRIX -->
+      <?php if (!empty($parsedSpecs)): ?>
+        <div class="bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-8 shadow-sm">
+          <div class="flex items-center justify-between pb-4 mb-6 border-b border-gray-100">
+            <h2 class="text-base sm:text-lg font-black text-gray-900 uppercase tracking-wider flex items-center gap-2.5">
+              <i class="fas fa-microchip text-[#1B2299]"></i> Technical Specifications
+            </h2>
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+              <i class="fas fa-certificate text-emerald-500"></i> Verified Metrics
+            </span>
+          </div>
+
+          <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xs">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <tbody class="divide-y divide-gray-150">
+                <?php $sCount = 0; foreach ($parsedSpecs as $sKey => $sVal): $sCount++; ?>
+                  <tr class="<?php echo ($sCount % 2 === 1) ? 'bg-slate-50/70' : 'bg-white'; ?> transition-colors hover:bg-indigo-50/30">
+                    <td class="py-3 px-4 font-bold text-gray-600 w-2/5 border-r border-gray-150 text-[11px] sm:text-xs uppercase tracking-wider">
+                      <?php echo htmlspecialchars($sKey); ?>
+                    </td>
+                    <td class="py-3 px-4 font-semibold text-gray-900">
+                      <?php echo htmlspecialchars($sVal); ?>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <?php endif; ?>
+
+      <!-- 4. WHAT'S IN THE BOX CARD -->
+      <?php if (!empty($boxContents)): ?>
+        <div class="bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-8 shadow-sm">
+          <div class="flex items-center justify-between pb-4 mb-4 border-b border-gray-100">
+            <h2 class="text-base sm:text-lg font-black text-gray-900 uppercase tracking-wider flex items-center gap-2.5">
+              <i class="fas fa-box-open text-[#1B2299]"></i> What's In The Box
+            </h2>
+            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+              Package Contents
+            </span>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-start gap-3">
+            <div class="w-8 h-8 rounded-xl bg-white border border-gray-200 text-gray-700 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+              <i class="fas fa-boxes-packing text-xs text-[#1B2299]"></i>
             </div>
-            <p class="text-xs text-gray-700 leading-relaxed mt-2">
-              <?php echo nl2br(htmlspecialchars($rev['comment'])); ?>
+            <p class="text-xs sm:text-sm font-semibold text-gray-800 leading-relaxed pt-1">
+              <?php echo htmlspecialchars($boxContents); ?>
             </p>
           </div>
-        <?php endforeach; ?>
+        </div>
       <?php endif; ?>
+
+      <!-- 5. CUSTOMER REVIEWS & RATINGS SECTION -->
+      <div id="reviews" class="bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-8 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-gray-150">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-black font-display text-gray-900 mb-1">Customer Reviews & Ratings</h2>
+            <p class="text-xs text-gray-500">Verified buyer feedback and authentic ratings.</p>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="text-center sm:text-right">
+              <div class="text-3xl font-black text-gray-900 leading-none"><?php echo number_format($avgRating, 1); ?></div>
+              <div class="flex items-center gap-1 text-xs text-amber-500 my-1 justify-center sm:justify-end">
+                <?php for ($s = 1; $s <= 5; $s++): ?>
+                  <i class="fas fa-star <?php echo $s <= round($avgRating) ? 'text-amber-500' : 'text-gray-200'; ?>"></i>
+                <?php endfor; ?>
+              </div>
+              <div class="text-[11px] text-gray-400 font-medium">Based on <?php echo $reviewCount; ?> verified ratings</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review Cards List -->
+        <div class="py-6 space-y-4">
+          <?php if (empty($reviews)): ?>
+            <div class="py-8 text-center text-gray-500 text-xs">
+              <p>No customer reviews yet. Be the first to share your experience with this product!</p>
+            </div>
+          <?php else: ?>
+            <?php foreach ($reviews as $rev): ?>
+              <div class="p-5 rounded-2xl bg-gray-50 border border-gray-150 transition-colors">
+                <div class="flex items-start justify-between gap-4 mb-2">
+                  <div>
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="font-bold text-sm text-gray-900"><?php echo htmlspecialchars($rev['customer_name']); ?></span>
+                      <?php if (!empty($rev['is_verified_buyer'])): ?>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                          <i class="fas fa-check-circle text-[9px]"></i> Verified Buyer
+                        </span>
+                      <?php endif; ?>
+                    </div>
+                    <div class="flex items-center gap-1 text-xs text-amber-500">
+                      <?php for ($s = 1; $s <= 5; $s++): ?>
+                        <i class="fas fa-star <?php echo $s <= $rev['rating'] ? 'text-amber-500' : 'text-gray-200'; ?> text-[11px]"></i>
+                      <?php endfor; ?>
+                      <?php if (!empty($rev['title'])): ?>
+                        <span class="text-xs font-bold text-gray-800 ml-1.5"><?php echo htmlspecialchars($rev['title']); ?></span>
+                      <?php endif; ?>
+                    </div>
+                  </div>
+                  <span class="text-[11px] text-gray-400 font-mono">
+                    <?php echo date('M j, Y', strtotime($rev['created_at'])); ?>
+                  </span>
+                </div>
+                <p class="text-xs text-gray-700 leading-relaxed mt-2">
+                  <?php echo nl2br(htmlspecialchars($rev['comment'])); ?>
+                </p>
+              </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </div>
+
+        <!-- Write a Review Form -->
+        <div class="pt-6 border-t border-gray-150">
+          <h3 class="text-sm font-black uppercase tracking-wider text-gray-900 mb-4">Write a Customer Review</h3>
+          <form action="<?php echo zavora_asset('product.php?id=' . $id); ?>" method="POST" class="space-y-4 max-w-xl">
+            <input type="hidden" name="action" value="submit_review">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Your Full Name</label>
+                <input type="text" name="customer_name" required placeholder="Full Name"
+                       class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Rating</label>
+                <select name="rating" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
+                  <option value="5">★★★★★ (5 - Excellent)</option>
+                  <option value="4">★★★★☆ (4 - Very Good)</option>
+                  <option value="3">★★★☆☆ (3 - Average)</option>
+                  <option value="2">★★☆☆☆ (2 - Below Expectations)</option>
+                  <option value="1">★☆☆☆☆ (1 - Poor)</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Review Headline</label>
+              <input type="text" name="review_title" placeholder="Summary of your experience"
+                     class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Your Feedback</label>
+              <textarea name="comment" rows="3" required placeholder="Detailed review of packaging, functionality, delivery, or build quality..."
+                        class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]"></textarea>
+            </div>
+
+            <button type="submit" class="px-6 py-2.5 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-bold rounded-xl transition-all shadow-sm">
+              Submit Review
+            </button>
+          </form>
+        </div>
+
+      </div>
+
     </div>
 
-    <!-- Write a Review Form -->
-    <div class="pt-8 border-t border-gray-150">
-      <h3 class="text-base font-bold text-gray-900 mb-4">Write a Customer Review</h3>
-      <form action="<?php echo zavora_asset('product.php?id=' . $id); ?>" method="POST" class="space-y-4 max-w-xl">
-        <input type="hidden" name="action" value="submit_review">
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Your Full Name</label>
-            <input type="text" name="customer_name" required placeholder="Full Name"
-                   class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
+    <!-- Right Sticky Column (4 Cols): Delivery, Warranty & Seller Profile -->
+    <div class="lg:col-span-4 space-y-6">
+
+      <!-- DELIVERY & SHIPPING CARD -->
+      <div class="bg-white rounded-3xl border border-gray-200/90 p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+          <h3 class="text-xs font-black uppercase tracking-wider text-gray-900 flex items-center gap-2">
+            <i class="fas fa-truck-fast text-[#1B2299]"></i> Delivery & Returns
+          </h3>
+          <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Express Available</span>
+        </div>
+
+        <div class="space-y-3.5 text-xs">
+          <div class="flex items-start gap-3">
+            <div class="w-7 h-7 rounded-lg bg-indigo-50 text-[#1B2299] flex items-center justify-center flex-shrink-0 text-xs">
+              <i class="fas fa-location-dot"></i>
+            </div>
+            <div>
+              <h5 class="font-extrabold text-gray-900">Door Delivery Across Nigeria</h5>
+              <p class="text-gray-500 text-[11px] mt-0.5">Delivery within 24-72 hours across Lagos, Abuja, Port Harcourt, and 36 states.</p>
+            </div>
           </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Rating</label>
-            <select name="rating" class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
-              <option value="5">★★★★★ (5 - Excellent)</option>
-              <option value="4">★★★★☆ (4 - Very Good)</option>
-              <option value="3">★★★☆☆ (3 - Average)</option>
-              <option value="2">★★☆☆☆ (2 - Below Expectations)</option>
-              <option value="1">★☆☆☆☆ (1 - Poor)</option>
-            </select>
+
+          <div class="flex items-start gap-3">
+            <div class="w-7 h-7 rounded-lg bg-indigo-50 text-[#1B2299] flex items-center justify-center flex-shrink-0 text-xs">
+              <i class="fas fa-box"></i>
+            </div>
+            <div>
+              <h5 class="font-extrabold text-gray-900">Pickup Stations</h5>
+              <p class="text-gray-500 text-[11px] mt-0.5">Collect your package from 150+ verified pickup hubs nationwide.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 text-xs">
+              <i class="fas fa-rotate-left"></i>
+            </div>
+            <div>
+              <h5 class="font-extrabold text-gray-900">7-Day Free Returns</h5>
+              <p class="text-gray-500 text-[11px] mt-0.5">Hassle-free replacement or full refund on defective items.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 text-xs">
+              <i class="fas fa-shield-check"></i>
+            </div>
+            <div>
+              <h5 class="font-extrabold text-gray-900">100% Genuine Guaranteed</h5>
+              <p class="text-gray-500 text-[11px] mt-0.5">Every unit is sourced directly from certified brands and authorized distributors.</p>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div>
-          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Review Headline</label>
-          <input type="text" name="review_title" placeholder="Summary of your experience"
-                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]">
+      <!-- VERIFIED SELLER INFORMATION CARD -->
+      <?php if (!empty($product['vendor_store_name'])): ?>
+        <div class="bg-white rounded-3xl border border-gray-200/90 p-6 shadow-sm space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+            <h3 class="text-xs font-black uppercase tracking-wider text-gray-900 flex items-center gap-2">
+              <i class="fas fa-store text-[#1B2299]"></i> Seller Information
+            </h3>
+            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <i class="fas fa-check-circle"></i> Verified
+            </span>
+          </div>
+
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-[#1B2299] text-white flex items-center justify-center font-bold text-base shadow-sm">
+                <i class="fas fa-store"></i>
+              </div>
+              <div>
+                <h4 class="text-sm font-black text-gray-900"><?php echo htmlspecialchars($product['vendor_store_name']); ?></h4>
+                <p class="text-[11px] text-gray-400">Authorized Merchant Partner</p>
+              </div>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-2xl grid grid-cols-2 gap-2 text-center">
+              <div>
+                <span class="text-xs font-black text-emerald-600">98%</span>
+                <span class="text-[10px] text-gray-400 block font-semibold">Seller Score</span>
+              </div>
+              <div>
+                <span class="text-xs font-black text-indigo-700">99.4%</span>
+                <span class="text-[10px] text-gray-400 block font-semibold">On-Time Dispatch</span>
+              </div>
+            </div>
+
+            <?php if (!empty($product['vendor_slug'])): ?>
+              <a href="<?php echo zavora_asset('shop.php?vendor=' . urlencode($product['vendor_slug'])); ?>" 
+                 class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5">
+                <span>Visit Seller Store</span>
+                <i class="fas fa-arrow-right text-[10px]"></i>
+              </a>
+            <?php endif; ?>
+          </div>
         </div>
+      <?php endif; ?>
 
-        <div>
-          <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Your Feedback</label>
-          <textarea name="comment" rows="3" required placeholder="Detailed review of packaging, functionality, delivery, or build quality..."
-                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B2299]"></textarea>
+      <!-- SELLER QUICK ACTION CARD (IF AUTHORIZED) -->
+      <?php if ($canEditProduct): ?>
+        <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-3xl p-6 shadow-xl space-y-3">
+          <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-xs text-amber-300">
+              <i class="fas fa-pen-ruler"></i>
+            </span>
+            <div>
+              <h4 class="text-xs font-black uppercase tracking-wider">Merchant Quick Actions</h4>
+              <p class="text-[10px] text-blue-200">Catalog Listing Owner</p>
+            </div>
+          </div>
+          <p class="text-xs text-blue-100/90 leading-relaxed">
+            Update prices, edit rich text descriptions with Quill, manage key features, variety options, and stock allocations.
+          </p>
+          <a href="<?php echo zavora_asset('seller/product-edit.php?id=' . $product['id']); ?>" 
+             class="w-full py-3 bg-amber-400 hover:bg-amber-500 text-gray-950 font-black text-xs rounded-xl shadow transition flex items-center justify-center gap-2">
+            <i class="fas fa-pen-to-square"></i>
+            <span>Edit Product Listing</span>
+          </a>
         </div>
+      <?php endif; ?>
 
-        <button type="submit" class="px-6 py-2.5 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-bold rounded-xl transition-all shadow-sm">
-          Submit Review
-        </button>
-      </form>
     </div>
 
   </div>
+
 </div>
 
 <script>
