@@ -64,6 +64,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     $thumbnail = trim($_POST['thumbnail'] ?? '');
     $narrativeDesc = trim($_POST['narrative_description'] ?? $_POST['description'] ?? '');
 
+    // Process Direct Product Image Upload
+    if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['product_image'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        if (in_array($ext, $allowedExts) && $file['size'] <= 5 * 1024 * 1024) {
+            $uploadDir = __DIR__ . '/../uploads/products/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            $newFileName = 'prod_' . $vendorId . '_' . time() . '_' . substr(bin2hex(random_bytes(4)), 0, 8) . '.' . $ext;
+            if (move_uploaded_file($file['tmp_name'], $uploadDir . $newFileName)) {
+                $thumbnail = 'uploads/products/' . $newFileName;
+            }
+        }
+    }
+
     // Collect Key Features
     $rawFeatures = $_POST['key_features'] ?? [];
     if (!is_array($rawFeatures)) $rawFeatures = [];
@@ -290,7 +307,7 @@ require_once __DIR__ . '/../includes/header.php';
       </div>
     <?php endif; ?>
 
-    <form method="POST" id="mainProductForm" class="grid lg:grid-cols-12 gap-8 items-start">
+    <form method="POST" id="mainProductForm" enctype="multipart/form-data" class="grid lg:grid-cols-12 gap-8 items-start">
       <input type="hidden" name="action" value="update_product">
       <input type="hidden" name="id" value="<?php echo $product['id']; ?>">
 
@@ -580,107 +597,64 @@ require_once __DIR__ . '/../includes/header.php';
            ════════════════════════════════════════════════════════════════════════ -->
       <div class="lg:col-span-5 space-y-6">
 
-        <!-- CARD A: AI MERCHANT COPYWRITER SUITE (1 Credit) -->
-        <div class="bg-gradient-to-br from-indigo-900 via-[#1B2299] to-slate-900 text-white rounded-3xl p-6 sm:p-7 shadow-xl space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-white/10">
-            <div class="flex items-center gap-2">
-              <span class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-xs">
-                <i class="fas fa-sparkles text-amber-300"></i>
-              </span>
-              <div>
-                <h4 class="text-xs font-black uppercase tracking-wider">AI Listing Copywriter</h4>
-                <p class="text-[10px] text-blue-200">Re-Draft Listing Copy & Highlights (1 Credit)</p>
-              </div>
-            </div>
-            <span class="px-2 py-0.5 rounded-full bg-white/15 text-xs font-black text-amber-300" id="boxAiCredits">
-              <?php echo intval($vendor['ai_credits']); ?> Credits
-            </span>
-          </div>
-
-          <div class="space-y-3">
-            <div>
-              <label class="block text-[11px] font-bold text-blue-200 mb-1">Keywords / Features to Emphasize</label>
-              <input type="text" id="aiKeywords" value="<?php echo htmlspecialchars($product['title']); ?>"
-                     class="w-full px-3.5 py-2.5 bg-white/10 border border-white/20 rounded-xl text-xs text-white placeholder-blue-300/60 focus:bg-white/20 focus:outline-none">
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-[11px] font-bold text-blue-200 mb-1">Brand Name</label>
-                <input type="text" id="aiBrand" value="<?php echo htmlspecialchars($vendor['store_name']); ?>"
-                       class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-xl text-xs text-white focus:bg-white/20 focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-[11px] font-bold text-blue-200 mb-1">Tone</label>
-                <select id="aiTone" class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-xl text-xs text-white focus:bg-white/20 focus:outline-none">
-                  <option value="Commercial" class="text-gray-900">Commercial & Compelling</option>
-                  <option value="Luxury" class="text-gray-900">Luxury & Premium</option>
-                  <option value="Technical" class="text-gray-900">Technical & Detailed</option>
-                  <option value="Minimalist" class="text-gray-900">Minimalist & Direct</option>
-                </select>
-              </div>
-            </div>
-
-            <button type="button" id="btnRunAiCopy" onclick="runAiCopyGeneration()"
-                    class="w-full py-3 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-gray-950 font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
-              <i class="fas fa-wand-magic-sparkles"></i>
-              <span>Auto-Draft Listing Upgrade (1 Credit)</span>
-            </button>
-            <div id="aiCopyStatus" class="hidden text-[11px] font-bold p-2.5 rounded-xl"></div>
-          </div>
-        </div>
-
-        <!-- CARD B: AI PHOTOGRAPHY & ONLINE SOURCING STUDIO -->
-        <div class="bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-7 shadow-sm space-y-5">
+        <!-- CARD A: PRODUCT PHOTOGRAPHY & DIRECT IMAGE UPLOAD -->
+        <div class="bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-7 shadow-sm space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-gray-100">
             <div>
               <h4 class="text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                <i class="fas fa-camera-retro text-purple-600"></i> AI Photography & Online Sourcing
+                <i class="fas fa-camera text-[#1B2299]"></i> Product Photography & Media
               </h4>
-              <p class="text-[10px] text-gray-400">Synthesizes title, brand, colors and specs for authentic matches.</p>
+              <p class="text-[10px] text-gray-400">Upload replacement photos or manage the active thumbnail.</p>
             </div>
-            <span class="text-[10px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-full">FLUX.1 + Real Sourced</span>
+            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Active Image</span>
           </div>
 
-          <!-- Studio Mode Selector -->
-          <div class="space-y-3">
-            <div class="flex items-center justify-between gap-1 p-1 bg-gray-100 rounded-xl text-[10px] font-black">
-              <button type="button" onclick="setPhotoStudioMode('hero')" id="tabModeHero" 
-                      class="flex-1 py-1.5 rounded-lg bg-white text-[#1B2299] shadow-sm transition">
-                Pure White (#FFFFFF)
-              </button>
-              <button type="button" onclick="setPhotoStudioMode('lifestyle')" id="tabModeLife" 
-                      class="flex-1 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 transition">
-                Lifestyle In-Situ
-              </button>
-              <button type="button" onclick="setPhotoStudioMode('online')" id="tabModeOnline" 
-                      class="flex-1 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 transition">
-                Online Real Match
-              </button>
-            </div>
+          <!-- Direct Device File Upload Zone -->
+          <div>
+            <div id="dropzoneWrap" onclick="document.getElementById('productImageInput').click()" 
+                 class="cursor-pointer border-2 border-dashed border-gray-300 hover:border-[#1B2299] bg-slate-50/80 hover:bg-indigo-50/20 rounded-2xl p-6 text-center transition-all group">
+              <input type="file" name="product_image" id="productImageInput" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden" onchange="handleImageFileSelect(this)">
+              
+              <div id="uploadPrompt" class="space-y-2.5">
+                <div class="w-12 h-12 rounded-2xl bg-white border border-gray-200 shadow-2xs text-[#1B2299] group-hover:scale-110 flex items-center justify-center mx-auto transition-transform">
+                  <i class="fas fa-cloud-arrow-up text-lg"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-black text-gray-900">Upload new image from your device</p>
+                  <p class="text-[10px] text-gray-400 mt-0.5">PNG, JPG, WEBP or GIF (Up to 5MB)</p>
+                </div>
+                <span class="inline-block px-3.5 py-1.5 bg-white border border-gray-200 text-[#1B2299] text-xs font-bold rounded-xl shadow-2xs group-hover:border-[#1B2299] transition">
+                  <i class="fas fa-folder-open mr-1"></i> Choose New Photo
+                </span>
+              </div>
 
-            <button type="button" id="btnRunAiPhoto" onclick="runAiPhotoGeneration()"
-                    class="w-full py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2">
-              <i class="fas fa-camera"></i>
-              <span>Source 4 New Matches (1 Credit)</span>
-            </button>
-            <div id="aiPhotoStatus" class="hidden text-[11px] font-bold p-2.5 rounded-xl"></div>
+              <!-- Selected Upload Preview -->
+              <div id="uploadSelectedPreview" class="hidden space-y-2">
+                <div class="w-28 h-28 mx-auto rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white p-1">
+                  <img id="uploadImgThumb" src="" class="w-full h-full object-contain">
+                </div>
+                <p id="uploadFileName" class="text-xs font-bold text-gray-800 truncate max-w-xs mx-auto"></p>
+                <button type="button" onclick="clearSelectedImage(event)" class="text-[11px] font-bold text-rose-600 hover:underline">
+                  <i class="fas fa-trash-can mr-1"></i> Cancel New Upload & Keep Existing
+                </button>
+              </div>
+            </div>
           </div>
 
-          <!-- Active Thumbnail Input -->
-          <div class="pt-2 border-t border-gray-100">
-            <label class="block text-[11px] font-bold text-gray-700 uppercase mb-1">Product Image URL</label>
-            <input type="url" name="thumbnail" id="activeThumbnailInput" required
+          <!-- Secondary / External Image URL Option -->
+          <div class="pt-3 border-t border-gray-100">
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-[11px] font-bold text-gray-600 uppercase">Or Product Image URL</label>
+              <span class="text-[10px] text-gray-400">External CDN / Cloud</span>
+            </div>
+            <input type="text" name="thumbnail" id="activeThumbnailInput"
                    value="<?php echo htmlspecialchars($product['thumbnail']); ?>"
                    oninput="onThumbnailUrlChanged(this.value)"
-                   class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-600 focus:bg-white focus:outline-none">
-          </div>
-          <div id="photoMatchesWrap" class="hidden space-y-2">
-            <div class="grid grid-cols-2 gap-3" id="photoMatchesGrid"></div>
+                   class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-700 focus:bg-white focus:outline-none">
           </div>
         </div>
 
-        <!-- CARD C: REAL-TIME STOREFRONT LIVE PREVIEW -->
+        <!-- CARD B: REAL-TIME STOREFRONT LIVE PREVIEW -->
         <div class="bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-7 shadow-sm space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-gray-100">
             <h4 class="text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
@@ -691,7 +665,7 @@ require_once __DIR__ . '/../includes/header.php';
 
           <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
             <div class="aspect-square rounded-xl bg-white border border-gray-200 flex items-center justify-center p-3 relative overflow-hidden">
-              <img id="previewImg" src="<?php echo htmlspecialchars($product['thumbnail']); ?>" class="w-full h-full object-contain">
+              <img id="previewImg" src="<?php echo htmlspecialchars(zavora_image_url($product['thumbnail'])); ?>" class="w-full h-full object-contain">
               <span id="previewDiscountBadge" class="hidden absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-black bg-[#E4306D] text-white">
                 -25%
               </span>
@@ -714,6 +688,36 @@ require_once __DIR__ . '/../includes/header.php';
                 </span>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- CARD C: AI CATALOG STUDIO (COMING SOON) -->
+        <div class="bg-gradient-to-br from-indigo-950 via-slate-900 to-purple-950 text-white rounded-3xl p-6 sm:p-7 border border-indigo-900/60 shadow-xl space-y-4 relative overflow-hidden">
+          <div class="flex items-center justify-between pb-3 border-b border-white/10">
+            <div class="flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center text-xs">
+                <i class="fas fa-sparkles"></i>
+              </span>
+              <div>
+                <h4 class="text-xs font-black uppercase tracking-wider">AI Catalog & Photography Studio</h4>
+                <p class="text-[10px] text-blue-200">Autonomous Merchant Intelligence</p>
+              </div>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full bg-amber-400 text-gray-950 text-[9px] font-black uppercase tracking-wider">
+              Coming Soon
+            </span>
+          </div>
+
+          <p class="text-xs text-blue-100/90 leading-relaxed">
+            Automated copy upgrades, multi-angle product photo rendering, and competitor price tracking are being calibrated for enterprise launch.
+          </p>
+
+          <div class="pt-2">
+            <button type="button" disabled
+                    class="w-full py-2.5 bg-white/10 text-white/50 border border-white/10 font-bold text-xs rounded-xl cursor-not-allowed flex items-center justify-center gap-2">
+              <i class="fas fa-lock"></i>
+              <span>AI Studio In Private Beta (Coming Soon)</span>
+            </button>
           </div>
         </div>
 
@@ -854,6 +858,54 @@ function onThumbnailUrlChanged(url) {
   const img = document.getElementById('previewImg');
   if (img && url && url.length > 5) {
     img.src = url;
+  }
+}
+
+// Device Image File Upload Handler
+function handleImageFileSelect(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Selected image exceeds 5MB size limit. Please choose a smaller image.');
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const dataUrl = e.target.result;
+      const previewImg = document.getElementById('previewImg');
+      if (previewImg) previewImg.src = dataUrl;
+
+      const uploadImgThumb = document.getElementById('uploadImgThumb');
+      if (uploadImgThumb) uploadImgThumb.src = dataUrl;
+
+      const uploadSelectedPreview = document.getElementById('uploadSelectedPreview');
+      const uploadPrompt = document.getElementById('uploadPrompt');
+      const uploadFileName = document.getElementById('uploadFileName');
+
+      if (uploadSelectedPreview) uploadSelectedPreview.classList.remove('hidden');
+      if (uploadPrompt) uploadPrompt.classList.add('hidden');
+      if (uploadFileName) uploadFileName.textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function clearSelectedImage(e) {
+  if (e) e.stopPropagation();
+  const input = document.getElementById('productImageInput');
+  if (input) input.value = '';
+
+  const uploadSelectedPreview = document.getElementById('uploadSelectedPreview');
+  const uploadPrompt = document.getElementById('uploadPrompt');
+  if (uploadSelectedPreview) uploadSelectedPreview.classList.add('hidden');
+  if (uploadPrompt) uploadPrompt.classList.remove('hidden');
+
+  // Reset preview image to existing thumbnail
+  const activeUrl = document.getElementById('activeThumbnailInput') ? document.getElementById('activeThumbnailInput').value : '';
+  const previewImg = document.getElementById('previewImg');
+  if (previewImg && activeUrl) {
+    previewImg.src = activeUrl;
   }
 }
 

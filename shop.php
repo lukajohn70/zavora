@@ -151,7 +151,7 @@ $catList = $pdo->query("SELECT * FROM categories ORDER BY id ASC")->fetchAll();
             <div class="group bg-white rounded-2xl border border-gray-200/90 hover:border-[#1B2299]/30 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden relative">
               <div>
                 <div class="relative bg-gray-100 aspect-square overflow-hidden">
-                  <img src="<?php echo htmlspecialchars($item['thumbnail']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" 
+                  <img src="<?php echo htmlspecialchars(zavora_image_url($item['thumbnail'])); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" 
                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                   <span class="absolute top-3 left-3 bg-[#0B132B] text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase">
                     <?php echo htmlspecialchars($item['type']); ?>
@@ -203,7 +203,7 @@ $catList = $pdo->query("SELECT * FROM categories ORDER BY id ASC")->fetchAll();
                   <input type="hidden" name="type" value="<?php echo $item['type']; ?>">
                   <input type="hidden" name="title" value="<?php echo htmlspecialchars($item['title']); ?>">
                   <input type="hidden" name="price" value="<?php echo $item['price']; ?>">
-                  <input type="hidden" name="image" value="<?php echo htmlspecialchars($item['thumbnail']); ?>">
+                  <input type="hidden" name="image" value="<?php echo htmlspecialchars(zavora_image_url($item['thumbnail'])); ?>">
                   <button type="submit" class="w-full py-2.5 bg-gray-50 hover:bg-[#1B2299] text-gray-800 hover:text-white rounded-xl text-xs font-bold border border-gray-200 transition-colors flex items-center justify-center gap-2">
                     <i class="fas fa-cart-plus"></i>
                     <span>Add to Cart</span>

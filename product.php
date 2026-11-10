@@ -182,7 +182,7 @@ require_once __DIR__ . '/includes/header.php';
     <!-- Left: Product Image Gallery (5 Cols) -->
     <div class="lg:col-span-5">
       <div class="relative rounded-2xl overflow-hidden aspect-square bg-white border border-gray-200 shadow-inner flex items-center justify-center p-3">
-        <img id="main-product-img" src="<?php echo htmlspecialchars($product['thumbnail']); ?>" alt="<?php echo htmlspecialchars($product['title']); ?>" 
+        <img id="main-product-img" src="<?php echo htmlspecialchars(zavora_image_url($product['thumbnail'])); ?>" alt="<?php echo htmlspecialchars($product['title']); ?>" 
              class="w-full h-full object-contain">
         
         <?php if (!empty($product['is_boosted'])): ?>
@@ -307,7 +307,7 @@ require_once __DIR__ . '/includes/header.php';
         <input type="hidden" name="type" value="<?php echo $product['type']; ?>">
         <input type="hidden" name="title" id="form-item-title" value="<?php echo htmlspecialchars($product['title']); ?>">
         <input type="hidden" name="price" id="form-item-price" value="<?php echo $product['price']; ?>">
-        <input type="hidden" name="image" value="<?php echo htmlspecialchars($product['thumbnail']); ?>">
+        <input type="hidden" name="image" value="<?php echo htmlspecialchars(zavora_image_url($product['thumbnail'])); ?>">
         <input type="hidden" name="variant_id" id="form-variant-id" value="">
         <input type="hidden" name="variant_title" id="form-variant-title" value="">
 

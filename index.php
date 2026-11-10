@@ -93,7 +93,7 @@ $categories = $catStmt->fetchAll();
             <!-- Main Hero Card Preview -->
             <a href="<?php echo zavora_asset('product.php?id=' . $heroProduct['id']); ?>" class="block rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 p-6 shadow-2xl hover:border-white/40 transition-all duration-300 group">
               <div class="relative rounded-2xl overflow-hidden aspect-[4/3] mb-4 bg-gray-900">
-                <img src="<?php echo htmlspecialchars($heroProduct['thumbnail']); ?>" alt="<?php echo htmlspecialchars($heroProduct['title']); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                <img src="<?php echo htmlspecialchars(zavora_image_url($heroProduct['thumbnail'])); ?>" alt="<?php echo htmlspecialchars($heroProduct['title']); ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                 <span class="absolute top-3 left-3 bg-[#E4306D] text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
                   <?php echo !empty($heroProduct['is_boosted']) ? 'Featured Spotlight' : 'Marketplace Pick'; ?>
                 </span>
@@ -204,7 +204,7 @@ $categories = $catStmt->fetchAll();
         <div class="group bg-white rounded-2xl border border-gray-200/90 hover:border-[#1B2299]/30 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden">
           <div>
             <div class="relative bg-gray-100 aspect-square overflow-hidden">
-              <img src="<?php echo htmlspecialchars($item['thumbnail']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" 
+              <img src="<?php echo htmlspecialchars(zavora_image_url($item['thumbnail'])); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" 
                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
               <span class="absolute top-3 left-3 bg-[#E4306D] text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
                 Flash Sale
@@ -237,7 +237,7 @@ $categories = $catStmt->fetchAll();
               <input type="hidden" name="type" value="<?php echo $item['type']; ?>">
               <input type="hidden" name="title" value="<?php echo htmlspecialchars($item['title']); ?>">
               <input type="hidden" name="price" value="<?php echo $item['price']; ?>">
-              <input type="hidden" name="image" value="<?php echo htmlspecialchars($item['thumbnail']); ?>">
+              <input type="hidden" name="image" value="<?php echo htmlspecialchars(zavora_image_url($item['thumbnail'])); ?>">
               <button type="submit" class="w-full py-2.5 bg-gray-50 hover:bg-[#1B2299] text-gray-800 hover:text-white rounded-xl text-xs font-bold border border-gray-200 transition-colors flex items-center justify-center gap-2">
                 <i class="fas fa-cart-plus"></i>
                 <span>Add to Cart</span>
@@ -353,7 +353,7 @@ $categories = $catStmt->fetchAll();
         <div class="bg-gray-50 rounded-2xl border border-gray-200/90 p-5 flex flex-col justify-between hover:bg-white hover:shadow-xl transition-all duration-300">
           <div>
             <div class="relative rounded-xl overflow-hidden aspect-video bg-gray-900 mb-4">
-              <img src="<?php echo htmlspecialchars($item['thumbnail']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" class="w-full h-full object-cover">
+              <img src="<?php echo htmlspecialchars(zavora_image_url($item['thumbnail'])); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" class="w-full h-full object-cover">
               <span class="absolute top-2.5 left-2.5 bg-[#0B132B] text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
                 <i class="fas fa-download text-[9px] text-[#F7DE7A]"></i>
                 <span>Digital Asset</span>
@@ -380,7 +380,7 @@ $categories = $catStmt->fetchAll();
               <input type="hidden" name="type" value="digital">
               <input type="hidden" name="title" value="<?php echo htmlspecialchars($item['title']); ?>">
               <input type="hidden" name="price" value="<?php echo $item['price']; ?>">
-              <input type="hidden" name="image" value="<?php echo htmlspecialchars($item['thumbnail']); ?>">
+              <input type="hidden" name="image" value="<?php echo htmlspecialchars(zavora_image_url($item['thumbnail'])); ?>">
               <button type="submit" class="px-4 py-2 bg-[#0B132B] hover:bg-[#1B2299] text-white text-xs font-bold rounded-xl transition-colors">
                 Add to Cart
               </button>

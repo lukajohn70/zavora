@@ -87,6 +87,14 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
   </header>
 
+  <!-- Coming Soon Announcement Banner -->
+  <div class="bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-indigo-500/20 border-b border-amber-500/30 px-4 py-2.5 text-center flex items-center justify-center gap-3">
+    <span class="px-2.5 py-0.5 rounded-full bg-amber-400 text-gray-950 text-[10px] font-black uppercase tracking-wider">Coming Soon</span>
+    <p class="text-xs text-amber-200 font-semibold">
+      ZAVORA AI Studio is currently undergoing final beta calibration for all merchant stores. Full commercial access coming soon!
+    </p>
+  </div>
+
   <!-- Workspace Body: Split Screen (50% Chat Copilot | 50% Live Canvas) -->
   <main class="flex-1 flex flex-col lg:flex-row overflow-hidden">
 

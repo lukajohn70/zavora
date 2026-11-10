@@ -446,9 +446,10 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
         <div class="flex items-center gap-2">
           <a href="<?php echo zavora_asset('seller/ai-studio.php'); ?>"
-             class="px-4 py-2.5 bg-gradient-to-r from-indigo-600 via-[#1B2299] to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white rounded-xl text-xs font-black transition-all shadow-md flex items-center gap-2">
-            <i class="fas fa-sparkles text-amber-300"></i>
-            <span>AI Chat Studio</span>
+             class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-gray-700 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-gray-200">
+            <i class="fas fa-sparkles text-purple-600"></i>
+            <span>AI Studio</span>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">Coming Soon</span>
           </a>
           <a href="<?php echo zavora_asset('seller/product-create.php'); ?>"
              class="px-4 py-2.5 bg-[#1B2299] hover:bg-[#0B132B] text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2">
@@ -491,7 +492,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <tr class="hover:bg-gray-50 transition-colors">
                   <td class="p-3">
                     <div class="flex items-center gap-3">
-                      <img src="<?php echo htmlspecialchars($prod['thumbnail']); ?>" class="w-12 h-12 rounded-xl object-cover border border-gray-200 flex-shrink-0">
+                      <img src="<?php echo htmlspecialchars(zavora_image_url($prod['thumbnail'])); ?>" class="w-12 h-12 rounded-xl object-cover border border-gray-200 flex-shrink-0">
                       <div>
                         <div class="font-bold text-gray-900"><?php echo htmlspecialchars($prod['title']); ?></div>
                         <div class="text-[11px] text-gray-400 font-mono"><?php echo htmlspecialchars($prod['sku']); ?></div>
@@ -833,21 +834,19 @@ require_once __DIR__ . '/../includes/header.php';
           </div>
           <div>
             <div class="flex items-center gap-2 mb-1">
-              <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase tracking-wider">Gemini 1.5 + FLUX.1</span>
-              <span class="text-xs text-indigo-300 font-bold">• Full Studio Canvas</span>
+              <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black bg-amber-400 text-gray-950 uppercase tracking-wider">COMING SOON</span>
+              <span class="text-xs text-indigo-300 font-bold">• Fine-Tuning For Enterprise Launch</span>
             </div>
             <h3 class="text-xl font-black text-white font-display">Conversational AI Merchant Studio (Chat & Canvas)</h3>
             <p class="text-xs text-slate-300 mt-1 max-w-xl leading-relaxed">
-              Chat naturally with the AI like ChatGPT or Gemini. Architect international-standard GS1 listings, generate 4-photo studio galleries, optimize Naira pricing, and publish directly to your catalog.
+              Automated listing generation and AI photography sourcing are undergoing final calibration. Full enterprise release coming soon!
             </p>
           </div>
         </div>
-        <a href="<?php echo zavora_asset('seller/ai-studio.php'); ?>" 
-           class="px-6 py-3.5 bg-gradient-to-r from-indigo-500 via-[#1B2299] to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-black text-xs rounded-2xl shadow-xl hover:shadow-2xl transition flex items-center justify-center gap-2.5 whitespace-nowrap">
-          <i class="fas fa-comments text-sm"></i>
-          <span>Launch AI Chat Studio</span>
-          <i class="fas fa-arrow-right text-xs"></i>
-        </a>
+        <div class="px-5 py-3 bg-white/10 border border-white/20 text-white font-black text-xs rounded-2xl flex items-center justify-center gap-2 whitespace-nowrap">
+          <i class="fas fa-lock text-amber-300"></i>
+          <span>Feature In Early Access Preview</span>
+        </div>
       </div>
 
       <!-- Pricing Packs Cards -->

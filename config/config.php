@@ -101,6 +101,20 @@ function zavora_asset($path) {
 }
 
 /**
+ * Resolves product image URLs: handles both local uploads (uploads/products/...)
+ * and external URLs (https://...) or data URIs seamlessly.
+ */
+function zavora_image_url($url) {
+    if (empty($url)) {
+        return 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800';
+    }
+    if (strpos($url, 'http://') === 0 || strpos($url, 'https://') === 0 || strpos($url, 'data:') === 0) {
+        return $url;
+    }
+    return zavora_asset($url);
+}
+
+/**
  * Shopping Cart Management
  */
 function zavora_get_cart() {
