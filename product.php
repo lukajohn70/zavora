@@ -45,7 +45,7 @@ $varStmt->execute([$id]);
 $variants = $varStmt->fetchAll();
 
 // Handle Customer Review Submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'submit_review') {
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['action']) && $_POST['action'] === 'submit_review') {
     $custName = trim($_POST['customer_name'] ?? '');
     $custRating = max(1, min(5, intval($_POST['rating'] ?? 5)));
     $custTitle = trim($_POST['review_title'] ?? '');
@@ -196,25 +196,25 @@ require_once __DIR__ . '/includes/header.php';
   <!-- ════════════════════════════════════════════════════════════════════════
        TOP HERO: PRODUCT SHOWCASE & PURCHASE CONTROLS
        ════════════════════════════════════════════════════════════════════════ -->
-  <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-10 shadow-sm">
+  <div class="grid lg:grid-cols-12 gap-6 lg:gap-10 items-start bg-white rounded-3xl border border-gray-200/90 p-5 sm:p-7 shadow-sm">
     
     <!-- Left: Product Image Gallery (5 Cols) -->
-    <div class="lg:col-span-5 space-y-3.5">
-      <div class="relative rounded-2xl overflow-hidden aspect-square bg-white border border-gray-200 shadow-inner flex items-center justify-center p-3 group">
+    <div class="lg:col-span-5 space-y-3">
+      <div class="relative rounded-2xl overflow-hidden h-[320px] sm:h-[380px] bg-white border border-gray-200 shadow-inner flex items-center justify-center p-3 group">
         <img id="main-product-img" 
              src="<?php echo htmlspecialchars(zavora_image_url($galleryImages[0] ?? $product['thumbnail'])); ?>" 
              alt="<?php echo htmlspecialchars($product['title']); ?>" 
              onclick="openLightbox()"
-             class="w-full h-full object-contain cursor-zoom-in transition-all duration-200">
+             class="w-full h-full object-contain cursor-zoom-in transition-opacity duration-150">
         
         <?php if (!empty($product['is_boosted'])): ?>
-          <span class="absolute top-4 left-4 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-black rounded-lg shadow-md uppercase tracking-wider flex items-center gap-1.5 z-10 pointer-events-none">
+          <span class="absolute top-3.5 left-3.5 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-black rounded-lg shadow-md uppercase tracking-wider flex items-center gap-1.5 z-10 pointer-events-none">
             <i class="fas fa-bolt text-yellow-200"></i> <?php echo htmlspecialchars($product['boost_tier'] ?: 'Featured Sponsor'); ?>
           </span>
         <?php endif; ?>
 
         <?php if (!empty($product['is_preorder'])): ?>
-          <span class="absolute top-4 right-14 px-3 py-1 bg-indigo-600 text-white text-xs font-black rounded-lg shadow-md uppercase tracking-wider flex items-center gap-1.5 z-10 pointer-events-none">
+          <span class="absolute top-3.5 right-14 px-3 py-1 bg-indigo-600 text-white text-xs font-black rounded-lg shadow-md uppercase tracking-wider flex items-center gap-1.5 z-10 pointer-events-none">
             <i class="fas fa-calendar-check"></i> Pre-Order
           </span>
         <?php endif; ?>
@@ -222,7 +222,7 @@ require_once __DIR__ . '/includes/header.php';
         <!-- Zoom Icon Button (Top-Right) -->
         <button type="button" onclick="openLightbox()" 
                 title="Click to zoom high-resolution photo"
-                class="absolute top-3.5 right-3.5 w-9 h-9 rounded-xl bg-white/90 hover:bg-white text-gray-700 hover:text-black shadow-md border border-gray-200/80 flex items-center justify-center transition z-10 opacity-90 group-hover:opacity-100">
+                class="absolute top-3 right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/90 hover:bg-white text-gray-700 hover:text-black shadow-md border border-gray-200/80 flex items-center justify-center transition z-10 opacity-90 group-hover:opacity-100">
           <i class="fas fa-magnifying-glass-plus text-xs"></i>
         </button>
 
@@ -230,20 +230,20 @@ require_once __DIR__ . '/includes/header.php';
           <!-- Prev Arrow (Visible on hover on desktop, always on touch) -->
           <button type="button" onclick="navigateGallery(-1)" 
                   title="Previous Angle"
-                  class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 hover:bg-white text-gray-800 shadow-md border border-gray-200/80 flex items-center justify-center transition opacity-90 sm:opacity-0 group-hover:opacity-100 focus:opacity-100 hover:scale-105 z-10">
+                  class="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/95 hover:bg-white text-gray-800 shadow-md border border-gray-200/80 flex items-center justify-center transition opacity-90 sm:opacity-0 group-hover:opacity-100 focus:opacity-100 hover:scale-105 z-10">
             <i class="fas fa-chevron-left text-xs sm:text-sm"></i>
           </button>
 
           <!-- Next Arrow (Visible on hover on desktop, always on touch) -->
           <button type="button" onclick="navigateGallery(1)" 
                   title="Next Angle"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 hover:bg-white text-gray-800 shadow-md border border-gray-200/80 flex items-center justify-center transition opacity-90 sm:opacity-0 group-hover:opacity-100 focus:opacity-100 hover:scale-105 z-10">
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/95 hover:bg-white text-gray-800 shadow-md border border-gray-200/80 flex items-center justify-center transition opacity-90 sm:opacity-0 group-hover:opacity-100 focus:opacity-100 hover:scale-105 z-10">
             <i class="fas fa-chevron-right text-xs sm:text-sm"></i>
           </button>
 
           <!-- Dynamic Photo Counter Badge (Bottom-Right) -->
-          <div class="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-gray-950/80 text-white text-[11px] font-bold shadow-md flex items-center gap-1.5 z-10 pointer-events-none backdrop-blur-2xs">
-            <i class="fas fa-images text-[10px] text-amber-300"></i>
+          <div class="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-full bg-gray-950/80 text-white text-[10px] sm:text-[11px] font-bold shadow-md flex items-center gap-1.5 z-10 pointer-events-none backdrop-blur-2xs">
+            <i class="fas fa-images text-[9px] text-amber-300"></i>
             <span><span id="gallery-current-idx">1</span> / <?php echo count($galleryImages); ?></span>
           </div>
         <?php endif; ?>
@@ -252,20 +252,21 @@ require_once __DIR__ . '/includes/header.php';
       <!-- Multi-Image Thumbnail Selector Strip -->
       <?php if (count($galleryImages) > 1): ?>
         <div>
-          <div class="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-thin">
+          <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin scroll-smooth" id="galleryThumbsContainer">
             <?php foreach ($galleryImages as $gIdx => $gImg): ?>
               <?php $gUrl = zavora_image_url($gImg); ?>
               <button type="button" 
                       data-index="<?php echo $gIdx; ?>"
-                      onclick="selectGalleryIndex(<?php echo $gIdx; ?>)" 
+                      data-src="<?php echo htmlspecialchars($gUrl, ENT_QUOTES); ?>"
+                      onclick="selectGalleryIndex(<?php echo $gIdx; ?>); return false;" 
                       onmouseenter="selectGalleryIndex(<?php echo $gIdx; ?>)"
-                      class="gallery-thumb-btn flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 bg-white p-1 transition-all overflow-hidden <?php echo $gIdx === 0 ? 'border-[#1B2299] shadow-md ring-2 ring-indigo-200 scale-105' : 'border-gray-200 opacity-70 hover:opacity-100 hover:border-gray-400'; ?>"
+                      class="gallery-thumb-btn flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-xl border-2 bg-white p-1 transition-all overflow-hidden <?php echo $gIdx === 0 ? 'border-[#1B2299] shadow-md ring-2 ring-indigo-200 scale-105' : 'border-gray-200 opacity-70 hover:opacity-100 hover:border-gray-400'; ?>"
                       title="View Angle <?php echo $gIdx + 1; ?>">
-                <img src="<?php echo htmlspecialchars($gUrl); ?>" alt="Angle <?php echo $gIdx + 1; ?>" class="w-full h-full object-contain">
+                <img src="<?php echo htmlspecialchars($gUrl); ?>" alt="Angle <?php echo $gIdx + 1; ?>" class="w-full h-full object-contain pointer-events-none">
               </button>
             <?php endforeach; ?>
           </div>
-          <div class="flex items-center justify-between text-[11px] text-gray-400 mt-1.5 px-0.5">
+          <div class="flex items-center justify-between text-[11px] text-gray-400 mt-1 px-0.5">
             <span class="flex items-center gap-1 text-gray-500 font-medium">
               <i class="fas fa-hand-pointer text-[#1B2299]"></i> Click or hover thumbnail to switch angle
             </span>
@@ -284,30 +285,22 @@ require_once __DIR__ . '/includes/header.php';
           </button>
         </div>
       <?php endif; ?>
-      
-      <!-- Type & Stock Pill Under Image -->
-      <div class="p-3.5 rounded-xl bg-gray-50 border border-gray-150 flex items-center justify-between text-xs text-gray-600">
-        <span class="font-bold flex items-center gap-1.5 text-gray-800">
-          <?php if ($product['type'] === 'digital'): ?>
-            <i class="fas fa-bolt text-[#E4306D]"></i> Instant Digital Download
-          <?php elseif ($product['type'] === 'course'): ?>
-            <i class="fas fa-graduation-cap text-indigo-600"></i> Video LMS Course
-          <?php else: ?>
-            <i class="fas fa-truck text-[#1B2299]"></i> Physical Delivery Across Nigeria
-          <?php endif; ?>
-        </span>
-        <span id="product-sku-display" class="text-gray-400 font-mono">SKU: <?php echo htmlspecialchars($product['sku']); ?></span>
-      </div>
     </div>
 
     <!-- Right: Product Details & Purchase Controls (7 Cols) -->
     <div class="lg:col-span-7">
       
-      <!-- Category & Rating -->
-      <div class="flex items-center justify-between gap-4 mb-2">
-        <span class="text-xs font-bold uppercase tracking-wider text-[#1B2299]">
-          <?php echo htmlspecialchars($product['category_name'] ?? 'ZAVORA Store'); ?>
-        </span>
+      <!-- Category, SKU & Rating Header -->
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold uppercase tracking-wider text-[#1B2299]">
+            <?php echo htmlspecialchars($product['category_name'] ?? 'ZAVORA Store'); ?>
+          </span>
+          <span class="text-gray-300">•</span>
+          <span id="product-sku-display" class="text-xs text-gray-400 font-mono">
+            SKU: <?php echo htmlspecialchars($product['sku']); ?>
+          </span>
+        </div>
         <a href="#reviews" class="flex items-center gap-1 text-xs text-amber-500 font-bold hover:underline">
           <i class="fas fa-star"></i>
           <span><?php echo number_format($avgRating, 1); ?></span>
@@ -316,24 +309,22 @@ require_once __DIR__ . '/includes/header.php';
       </div>
 
       <!-- Title -->
-      <h1 class="text-2xl sm:text-3xl font-black font-display text-gray-900 mb-4 leading-tight">
+      <h1 class="text-xl sm:text-2xl lg:text-3xl font-black font-display text-gray-900 mb-3 leading-tight">
         <?php echo htmlspecialchars($product['title']); ?>
       </h1>
 
       <!-- Pre-Order Alert Banner (If Applicable) -->
       <?php if (!empty($product['is_preorder'])): ?>
-        <div class="mb-6 p-4 rounded-2xl bg-indigo-50 border border-indigo-200/80 flex items-start gap-3.5">
-          <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5">
-            <i class="fas fa-calendar-alt text-sm"></i>
+        <div class="mb-4 p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200/80 flex items-start gap-3">
+          <div class="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5">
+            <i class="fas fa-calendar-alt text-xs"></i>
           </div>
           <div>
-            <h4 class="text-sm font-black text-indigo-950">Official Pre-Order Product</h4>
-            <p class="text-xs text-indigo-800 mt-0.5 leading-relaxed">
+            <h4 class="text-xs font-black text-indigo-950">Official Pre-Order Product</h4>
+            <p class="text-[11px] text-indigo-800 mt-0.5 leading-relaxed">
               Expected Release / Ship Date: <strong><?php echo htmlspecialchars($product['preorder_release_date'] ?: 'Upcoming Release'); ?></strong>.
               <?php if (!empty($product['preorder_deposit'])): ?>
-                Minimum deposit required to secure initial allocation: <strong><?php echo zavora_format_price($product['preorder_deposit']); ?></strong>.
-              <?php else: ?>
-                Your pre-order reserves your unit directly from the verified vendor.
+                Minimum deposit required: <strong><?php echo zavora_format_price($product['preorder_deposit']); ?></strong>.
               <?php endif; ?>
             </p>
           </div>
@@ -341,14 +332,14 @@ require_once __DIR__ . '/includes/header.php';
       <?php endif; ?>
 
       <!-- Pricing Bar -->
-      <div class="p-5 rounded-2xl bg-gray-50 border border-gray-150 mb-6 flex flex-wrap items-baseline justify-between gap-4">
-        <div class="flex items-baseline gap-3">
-          <span id="product-price-display" class="text-3xl font-black text-[#1B2299]">
+      <div class="p-4 rounded-2xl bg-gray-50 border border-gray-150 mb-4 flex flex-wrap items-baseline justify-between gap-3">
+        <div class="flex items-baseline gap-2.5">
+          <span id="product-price-display" class="text-2xl sm:text-3xl font-black text-[#1B2299]">
             <?php echo zavora_format_price($product['price']); ?>
           </span>
           <?php if ($product['previous_price'] && $product['previous_price'] > $product['price']): ?>
-            <span class="text-base text-gray-400 line-through"><?php echo zavora_format_price($product['previous_price']); ?></span>
-            <span class="px-2.5 py-0.5 rounded-full bg-[#E4306D] text-white text-xs font-black uppercase">
+            <span class="text-sm text-gray-400 line-through"><?php echo zavora_format_price($product['previous_price']); ?></span>
+            <span class="px-2 py-0.5 rounded-full bg-[#E4306D] text-white text-[11px] font-black uppercase">
               Save <?php echo round((($product['previous_price'] - $product['price']) / $product['previous_price']) * 100); ?>%
             </span>
           <?php endif; ?>
@@ -357,30 +348,30 @@ require_once __DIR__ . '/includes/header.php';
         <div id="product-stock-display">
           <?php if ($product['type'] === 'physical'): ?>
             <?php if ($product['stock_quantity'] > 10): ?>
-              <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> In Stock (<?php echo $product['stock_quantity']; ?> units)
               </span>
             <?php elseif ($product['stock_quantity'] > 0): ?>
-              <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-amber-500"></span> Low Stock (Only <?php echo $product['stock_quantity']; ?> left)
               </span>
             <?php else: ?>
-              <span class="px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
                 Out of Stock
               </span>
             <?php endif; ?>
           <?php elseif ($product['type'] === 'digital'): ?>
             <?php if (!empty($product['stock_quantity']) && $product['stock_quantity'] < 500): ?>
-              <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
-                <i class="fas fa-certificate text-amber-600"></i> Limited Release (<?php echo $product['stock_quantity']; ?> licenses remaining)
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1.5">
+                <i class="fas fa-certificate text-amber-600"></i> Limited Release (<?php echo $product['stock_quantity']; ?> left)
               </span>
             <?php else: ?>
-              <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1.5">
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1.5">
                 <i class="fas fa-infinity text-indigo-600"></i> Lifetime Access • Unlimited Downloads
               </span>
             <?php endif; ?>
           <?php else: ?>
-            <span class="px-3 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1.5">
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1.5">
               <i class="fas fa-graduation-cap text-purple-600"></i> Instant LMS Course Access
             </span>
           <?php endif; ?>
@@ -388,7 +379,7 @@ require_once __DIR__ . '/includes/header.php';
       </div>
 
       <!-- Purchase Form with Dynamic Variations -->
-      <form action="<?php echo zavora_asset('cart.php'); ?>" method="POST" id="purchase-form" class="space-y-6">
+      <form action="<?php echo zavora_asset('cart.php'); ?>" method="POST" id="purchase-form" class="space-y-4">
         <input type="hidden" name="action" value="add">
         <input type="hidden" name="id" value="<?php echo $product['id']; ?>">
         <input type="hidden" name="type" value="<?php echo $product['type']; ?>">
@@ -400,7 +391,7 @@ require_once __DIR__ . '/includes/header.php';
 
         <!-- Product Variations / Variety Selector -->
         <?php if (!empty($variants)): ?>
-          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-4">
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-3">
             <div class="flex items-center justify-between">
               <h3 class="text-xs font-bold uppercase tracking-wider text-gray-800 flex items-center gap-2">
                 <i class="fas fa-sliders text-[#1B2299]"></i> Select Product Option / Variety
@@ -408,9 +399,9 @@ require_once __DIR__ . '/includes/header.php';
               <span class="text-xs text-gray-500"><?php echo count($variants); ?> options available</span>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <?php foreach ($variants as $idx => $v): ?>
-                <label class="variant-option-card cursor-pointer p-3.5 rounded-xl border-2 transition-all flex items-center justify-between gap-3 bg-white hover:border-[#1B2299] <?php echo $idx === 0 ? 'border-[#1B2299] bg-indigo-50/30' : 'border-gray-200'; ?>">
+                <label class="variant-option-card cursor-pointer p-3 rounded-xl border-2 transition-all flex items-center justify-between gap-2.5 bg-white hover:border-[#1B2299] <?php echo $idx === 0 ? 'border-[#1B2299] bg-indigo-50/30' : 'border-gray-200'; ?>">
                   <input type="radio" name="variant_radio" value="<?php echo $v['id']; ?>" 
                          data-price="<?php echo $v['price']; ?>"
                          data-formatted-price="<?php echo zavora_format_price($v['price']); ?>"
@@ -418,13 +409,13 @@ require_once __DIR__ . '/includes/header.php';
                          data-stock="<?php echo $v['stock_quantity']; ?>"
                          data-title="<?php echo htmlspecialchars($v['title']); ?>"
                          class="sr-only" <?php echo $idx === 0 ? 'checked' : ''; ?>>
-                  <div class="flex-1">
-                    <p class="text-xs font-bold text-gray-900"><?php echo htmlspecialchars($v['title']); ?></p>
-                    <p class="text-[11px] text-gray-400 font-mono">SKU: <?php echo htmlspecialchars($v['sku']); ?></p>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-gray-900 truncate"><?php echo htmlspecialchars($v['title']); ?></p>
+                    <p class="text-[10px] text-gray-400 font-mono">SKU: <?php echo htmlspecialchars($v['sku']); ?></p>
                   </div>
-                  <div class="text-right">
+                  <div class="text-right flex-shrink-0">
                     <span class="text-xs font-black text-[#1B2299] block"><?php echo zavora_format_price($v['price']); ?></span>
-                    <span class="text-[10px] text-gray-400"><?php echo $v['stock_quantity']; ?> in stock</span>
+                    <span class="text-[10px] text-gray-400"><?php echo $v['stock_quantity']; ?> left</span>
                   </div>
                 </label>
               <?php endforeach; ?>
@@ -433,22 +424,22 @@ require_once __DIR__ . '/includes/header.php';
         <?php endif; ?>
 
         <!-- Quantity & Add to Cart Action -->
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
           <?php if ($product['type'] === 'physical'): ?>
-            <div class="w-28">
+            <div class="w-28 flex-shrink-0">
               <label for="quantity" class="sr-only">Quantity</label>
-              <div class="flex items-center border border-gray-200 rounded-xl bg-gray-50 overflow-hidden">
-                <button type="button" onclick="decrementQty()" class="px-3 py-3.5 text-gray-500 hover:text-gray-900 transition">-</button>
+              <div class="flex items-center border border-gray-200 rounded-xl bg-gray-50 overflow-hidden h-12">
+                <button type="button" onclick="decrementQty()" class="w-9 h-full flex items-center justify-center text-gray-500 hover:text-gray-900 transition font-bold text-base">-</button>
                 <input type="number" id="quantity" name="quantity" value="1" min="1" max="10" 
-                       class="w-full text-center font-bold text-sm bg-transparent focus:outline-none">
-                <button type="button" onclick="incrementQty()" class="px-3 py-3.5 text-gray-500 hover:text-gray-900 transition">+</button>
+                       class="w-full text-center font-black text-sm bg-transparent focus:outline-none">
+                <button type="button" onclick="incrementQty()" class="w-9 h-full flex items-center justify-center text-gray-500 hover:text-gray-900 transition font-bold text-base">+</button>
               </div>
             </div>
           <?php else: ?>
             <input type="hidden" name="quantity" value="1">
           <?php endif; ?>
 
-          <button type="submit" class="flex-1 py-4 bg-[#1B2299] hover:bg-[#0B132B] text-white font-extrabold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
+          <button type="submit" class="flex-1 h-12 bg-[#1B2299] hover:bg-[#0B132B] text-white font-extrabold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
             <?php if (!empty($product['is_preorder'])): ?>
               <i class="fas fa-calendar-check"></i>
               <span>Pre-Order Allocation</span>
@@ -462,23 +453,85 @@ require_once __DIR__ . '/includes/header.php';
           <?php $isSaved = zavora_in_wishlist($product['id']); ?>
           <button type="button" onclick="toggleProductWishlist(<?php echo $product['id']; ?>)" id="btnWishlistToggle"
                   title="<?php echo $isSaved ? 'Remove from Wishlist' : 'Save to Wishlist'; ?>"
-                  class="w-14 h-14 rounded-xl border <?php echo $isSaved ? 'bg-rose-50 border-rose-200 text-rose-600' : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-rose-600 hover:bg-rose-50'; ?> flex items-center justify-center text-xl transition-all shadow-sm flex-shrink-0">
+                  class="w-12 h-12 rounded-xl border <?php echo $isSaved ? 'bg-rose-50 border-rose-200 text-rose-600' : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-rose-600 hover:bg-rose-50'; ?> flex items-center justify-center text-lg transition-all shadow-2xs flex-shrink-0">
             <i class="<?php echo $isSaved ? 'fas text-rose-500' : 'far'; ?> fa-heart" id="wishlistIcon"></i>
           </button>
         </div>
       </form>
 
-      <!-- Trust Assurance Badges -->
-      <div class="mt-8 pt-6 border-t border-gray-150 grid grid-cols-2 gap-4 text-xs text-gray-500">
-        <div class="flex items-center gap-2">
-          <i class="fas fa-shield-halved text-[#16865B]"></i>
-          <span>Encrypted Online Payment</span>
+      <!-- Balanced Delivery, Returns & Merchant Information Box -->
+      <div class="mt-4 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div class="flex items-start gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-indigo-50 text-[#1B2299] flex items-center justify-center flex-shrink-0 text-xs">
+            <i class="fas fa-truck-fast"></i>
+          </div>
+          <div>
+            <h5 class="font-extrabold text-gray-900">Door Delivery Across Nigeria</h5>
+            <p class="text-[11px] text-gray-500 mt-0.5">Dispatched within 24-72 hours across 36 states.</p>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <i class="fas fa-rotate-left text-[#1B2299]"></i>
-          <span>7-Day Return & Replacement Guarantee</span>
+
+        <div class="flex items-start gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 text-xs">
+            <i class="fas fa-rotate-left"></i>
+          </div>
+          <div>
+            <h5 class="font-extrabold text-gray-900">7-Day Free Returns</h5>
+            <p class="text-[11px] text-gray-500 mt-0.5">Hassle-free replacement or refund guarantee.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 text-xs">
+            <i class="fas fa-shield-check"></i>
+          </div>
+          <div>
+            <h5 class="font-extrabold text-gray-900">100% Genuine Guaranteed</h5>
+            <p class="text-[11px] text-gray-500 mt-0.5">Authentic sourced products with warranty.</p>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0 text-xs">
+            <i class="fas fa-store"></i>
+          </div>
+          <div>
+            <h5 class="font-extrabold text-gray-900">Verified Seller</h5>
+            <p class="text-[11px] text-gray-500 mt-0.5 truncate max-w-[180px]"><?php echo htmlspecialchars($product['vendor_store_name'] ?? 'Authorized Vendor Partner'); ?></p>
+          </div>
         </div>
       </div>
+
+      <!-- Quick Highlights Bullets (Immediately visible beside gallery) -->
+      <?php if (!empty($highlights)): ?>
+        <div class="mt-4 pt-3.5 border-t border-gray-150">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-[11px] font-black uppercase tracking-wider text-gray-800 flex items-center gap-1.5">
+              <i class="fas fa-list-check text-[#1B2299]"></i> Key Feature Highlights
+            </h4>
+            <a href="#highlights" class="text-[11px] text-[#1B2299] font-bold hover:underline flex items-center gap-1">
+              <span>View Full Specs</span> <i class="fas fa-arrow-down text-[10px]"></i>
+            </a>
+          </div>
+          <ul class="space-y-1.5 text-xs text-gray-700">
+            <?php foreach (array_slice($highlights, 0, 3) as $h): ?>
+              <?php
+                $hText = $h;
+                if (strpos($h, ':') !== false) {
+                    [$pfx, $bdy] = explode(':', $h, 2);
+                    $hText = '<strong>' . htmlspecialchars(trim($pfx)) . ':</strong> ' . htmlspecialchars(trim($bdy));
+                } else {
+                    $hText = htmlspecialchars($h);
+                }
+              ?>
+              <li class="flex items-start gap-2 text-[11px] sm:text-xs leading-relaxed">
+                <span class="w-4 h-4 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0 text-[10px] font-bold mt-0.5">✓</span>
+                <span class="text-gray-800 line-clamp-1"><?php echo $hText; ?></span>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+        </div>
+      <?php endif; ?>
 
     </div>
 
@@ -904,6 +957,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (radio.checked) updateSelectedVariant(radio);
   });
 });
+</script>
 
 <!-- Full-Screen High-Resolution Product Lightbox Modal -->
 <div id="galleryLightboxModal" 
@@ -970,27 +1024,27 @@ const productGalleryList = <?php echo json_encode(array_values(array_map('zavora
 let currentGalleryIdx = 0;
 
 function selectGalleryIndex(index) {
-  if (index < 0 || index >= productGalleryList.length) return;
+  if (!productGalleryList || index < 0 || index >= productGalleryList.length) return;
   currentGalleryIdx = index;
   const url = productGalleryList[index];
 
   const mainImg = document.getElementById('main-product-img');
   if (mainImg) {
-    mainImg.style.opacity = '0.35';
-    setTimeout(() => {
-      mainImg.src = url;
-      mainImg.style.opacity = '1';
-    }, 100);
+    mainImg.src = url;
   }
 
   const counterEl = document.getElementById('gallery-current-idx');
   if (counterEl) counterEl.textContent = (index + 1);
 
   // Sync Storefront Thumbnails
-  document.querySelectorAll('.gallery-thumb-btn').forEach((b, idx) => {
+  const thumbs = document.querySelectorAll('.gallery-thumb-btn');
+  thumbs.forEach((b, idx) => {
     if (idx === index) {
       b.classList.add('border-[#1B2299]', 'shadow-md', 'ring-2', 'ring-indigo-200', 'scale-105');
       b.classList.remove('border-gray-200', 'opacity-70');
+      try {
+        b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      } catch(e) {}
     } else {
       b.classList.remove('border-[#1B2299]', 'shadow-md', 'ring-2', 'ring-indigo-200', 'scale-105');
       b.classList.add('border-gray-200', 'opacity-70');
@@ -1006,6 +1060,9 @@ function selectGalleryIndex(index) {
     if (idx === index) {
       b.classList.add('border-white', 'ring-2', 'ring-white', 'scale-105');
       b.classList.remove('border-transparent', 'opacity-60');
+      try {
+        b.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      } catch(e) {}
     } else {
       b.classList.remove('border-white', 'ring-2', 'ring-white', 'scale-105');
       b.classList.add('border-transparent', 'opacity-60');

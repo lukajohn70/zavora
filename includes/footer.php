@@ -5,16 +5,16 @@
     <div class="container mx-auto px-4 lg:px-8">
       
       <!-- Top Newsletter / Trust Strip -->
-      <div class="p-8 rounded-2xl bg-gradient-to-r from-[#1B2299]/30 via-white/5 to-[#E4306D]/20 border border-white/10 mb-14 flex flex-col lg:flex-row items-center justify-between gap-8">
+      <div class="p-5 sm:p-8 rounded-2xl bg-gradient-to-r from-[#1B2299]/30 via-white/5 to-[#E4306D]/20 border border-white/10 mb-10 sm:mb-14 flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8 text-center lg:text-left">
         <div>
           <span class="text-xs font-bold uppercase tracking-wider text-[#F7DE7A] block mb-1">Stay Ahead of the Deals</span>
-          <h3 class="text-2xl font-black font-display text-white">Subscribe to ZAVORA Insiders</h3>
-          <p class="text-gray-300 text-sm mt-1">Get flash discounts, new digital release alerts, and course enrolment scholarships.</p>
+          <h3 class="text-xl sm:text-2xl font-black font-display text-white">Subscribe to ZAVORA Insiders</h3>
+          <p class="text-gray-300 text-xs sm:text-sm mt-1">Get flash discounts, new digital release alerts, and course enrolment scholarships.</p>
         </div>
-        <form class="flex w-full lg:w-auto max-w-md gap-2" onsubmit="event.preventDefault(); alert('Thank you for subscribing to ZAVORA!');">
+        <form class="flex flex-col sm:flex-row w-full lg:w-auto max-w-md gap-2" onsubmit="event.preventDefault(); alert('Thank you for subscribing to ZAVORA!');">
           <input type="email" placeholder="Enter your email address" required 
-                 class="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E4306D]" />
-          <button type="submit" class="px-6 py-3 bg-[#E4306D] hover:bg-[#c2285a] text-white font-bold text-sm rounded-xl transition-transform hover:scale-105 shadow-lg">
+                 class="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-xs sm:text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#E4306D]" />
+          <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-[#E4306D] hover:bg-[#c2285a] text-white font-bold text-xs sm:text-sm rounded-xl transition-transform hover:scale-105 shadow-lg whitespace-nowrap">
             Subscribe
           </button>
         </form>
@@ -78,12 +78,12 @@
       </div>
 
       <!-- Bottom Bar -->
-      <div class="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-gray-400">
+      <div class="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-gray-400 text-center md:text-left">
         <div>
           © <?php echo date('Y'); ?> ZAVORA Marketplace. All rights reserved. Technology powered by John Luka Media.
         </div>
-        <div class="flex items-center gap-4">
-          <span class="text-gray-500">Secured with:</span>
+        <div class="flex flex-wrap items-center justify-center md:justify-end gap-2 text-xs">
+          <span class="text-gray-400 w-full sm:w-auto text-center sm:text-left">Secured with:</span>
           <span class="px-2 py-1 bg-white/10 rounded font-semibold text-white">Paystack</span>
           <span class="px-2 py-1 bg-white/10 rounded font-semibold text-white">Flutterwave</span>
           <span class="px-2 py-1 bg-white/10 rounded font-semibold text-white">Mastercard</span>
