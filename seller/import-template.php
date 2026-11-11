@@ -312,6 +312,9 @@ function parseCsvFile($filePath) {
  */
 function extractSectionsFromLines(array $lines) {
     $title = '';
+    $category = '';
+    $price = 0;
+    $prevPrice = null;
     $highlights = [];
     $specifications = [];
     $boxContents = '';
@@ -321,9 +324,8 @@ function extractSectionsFromLines(array $lines) {
         $trimmed = trim($line);
         if (empty($trimmed)) continue;
 
-        // The very first non-empty line is likely the Title
-        if (empty($title) && strlen($trimmed) > 5 && strlen($trimmed) < 180) {
-            $title = $trimmed;
+        // Skip template header titles
+        if (preg_match('/^(zavora\s+catalog|edit\s+this\s+word|catalog\s+product\s+description\s+template)/i', $trimmed)) {
             continue;
         }
 
@@ -344,9 +346,35 @@ function extractSectionsFromLines(array $lines) {
             $currentSection = 'description';
             continue;
         }
+        if (preg_match('/^(category\s*&?\s*pricing|pricing\s*&?\s*category)/i', $trimmed)) {
+            $currentSection = 'pricing';
+            continue;
+        }
+        if (preg_match('/^product\s+title$/i', $trimmed)) {
+            $currentSection = 'title';
+            continue;
+        }
+
+        // Explicit field matches
+        if (preg_match('/^category\s*[:—\-]\s*(.+)$/i', $trimmed, $m)) {
+            $category = trim($m[1]);
+            continue;
+        }
+        if (preg_match('/^(?:selling\s+)?price\s*[:—\-]\s*[₦N\$\s]*([0-9,\.]+)/i', $trimmed, $m)) {
+            $price = floatval(str_replace(',', '', $m[1]));
+            continue;
+        }
+        if (preg_match('/^(?:regular|previous|strikethrough)\s+price\s*[:—\-]\s*[₦N\$\s]*([0-9,\.]+)/i', $trimmed, $m)) {
+            $prevPrice = floatval(str_replace(',', '', $m[1]));
+            continue;
+        }
 
         // Section handling
-        if ($currentSection === 'highlights') {
+        if ($currentSection === 'title' && empty($title)) {
+            $title = $trimmed;
+            $currentSection = 'intro';
+            continue;
+        } elseif ($currentSection === 'highlights') {
             $cleanBullet = trim(ltrim($trimmed, "•-* \t"));
             if (strlen($cleanBullet) > 2) {
                 $highlights[] = $cleanBullet;
@@ -361,11 +389,18 @@ function extractSectionsFromLines(array $lines) {
             if (!empty($cleanItem)) {
                 $boxContents .= ($boxContents ? ', ' : '') . $cleanItem;
             }
+        } elseif ($currentSection === 'intro' && empty($title)) {
+            if (strlen($trimmed) > 5 && strlen($trimmed) < 180) {
+                $title = $trimmed;
+            }
         }
     }
 
     return [
         'title' => $title,
+        'category' => $category,
+        'price' => $price,
+        'previous_price' => $prevPrice,
         'highlights' => array_slice($highlights, 0, 8),
         'specifications' => $specifications,
         'box_contents' => $boxContents

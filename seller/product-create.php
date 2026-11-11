@@ -299,33 +299,71 @@ require_once __DIR__ . '/../includes/header.php';
            ════════════════════════════════════════════════════════════════════════ -->
       <div class="lg:col-span-7 space-y-6">
 
-        <!-- TEMPLATE IMPORTER SUITE: WORD (.DOCX) & CSV -->
-        <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-[#0B132B] text-white rounded-3xl p-5 sm:p-6 shadow-md border border-indigo-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div class="flex items-start sm:items-center gap-3.5">
-            <div class="w-11 h-11 rounded-2xl bg-white/10 border border-white/20 text-[#F7DE7A] flex items-center justify-center text-lg flex-shrink-0 shadow-inner">
-              <i class="fas fa-file-word"></i>
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <h4 class="text-xs font-black uppercase tracking-wider text-white">Import from Word (.docx) or CSV Template</h4>
-                <span class="px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[9px] font-black uppercase">Fast Catalog</span>
+        <!-- REFORMATTED TEMPLATE IMPORTER SUITE: WORD (.DOCX) & CSV -->
+        <div class="bg-gradient-to-br from-[#0B132B] via-[#1B2299] to-slate-900 text-white rounded-3xl p-6 sm:p-7 shadow-lg border border-indigo-700/50 space-y-5">
+          
+          <!-- Top Row: Icon, Headline & Status Badges -->
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0 shadow-inner">
+                <div class="flex items-center -space-x-1.5 text-lg">
+                  <i class="fas fa-file-word text-blue-300 drop-shadow"></i>
+                  <i class="fas fa-file-csv text-emerald-300 drop-shadow"></i>
+                </div>
               </div>
-              <p class="text-[11px] text-blue-200 mt-0.5 leading-relaxed">
-                Auto-fill Title, Key Highlights, Quill Rich Text Description, and Technical Specs in 1 click.
-              </p>
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="text-sm font-black tracking-wide text-white font-display">
+                    Catalog Template Importer &amp; Auto-Fill
+                  </h3>
+                  <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold uppercase tracking-wider">
+                    Word &amp; Excel Ready
+                  </span>
+                </div>
+                <p class="text-xs text-blue-200/90 mt-1 leading-relaxed">
+                  Download our pre-structured template, fill in your product details, and upload here to auto-populate Title, Highlights, Quill WYSIWYG Description, and Technical Specs in 1 click.
+                </p>
+              </div>
             </div>
           </div>
-          <div class="flex items-center gap-2 flex-shrink-0">
-            <a href="<?php echo zavora_asset('seller/download-template.php'); ?>" 
-               title="Download sample spreadsheet template"
-               class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-blue-100 hover:text-white border border-white/20 text-xs font-bold rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
-              <i class="fas fa-download text-amber-300 text-xs"></i> Download CSV Template
-            </a>
-            <button type="button" onclick="document.getElementById('catalogTemplateFileInput').click()" 
-                    class="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-gray-950 text-xs font-black rounded-xl shadow-md transition flex items-center gap-1.5 whitespace-nowrap">
-              <i class="fas fa-file-import"></i> Upload Word / CSV
-            </button>
-            <input type="file" id="catalogTemplateFileInput" accept=".docx,.csv,.txt" class="hidden" onchange="handleTemplateUpload(this)">
+
+          <!-- Bottom Row: Download Templates & Upload Actions -->
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pt-1">
+            
+            <!-- Download Options (Clear & Distinct for Word and CSV) -->
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2.5">
+              <span class="text-[11px] font-black uppercase tracking-wider text-blue-300/80 flex items-center gap-1.5 whitespace-nowrap">
+                <i class="fas fa-download text-amber-300 text-xs"></i> Download Template:
+              </span>
+              <div class="flex items-center gap-2">
+                <!-- Word (.docx) Download Button -->
+                <a href="<?php echo zavora_asset('seller/download-template.php?format=docx'); ?>" 
+                   title="Download formatted Microsoft Word template with headings and bullet lists"
+                   class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-2xs group whitespace-nowrap">
+                  <i class="fas fa-file-word text-blue-400 text-sm group-hover:scale-110 transition-transform"></i>
+                  <span>Word (.docx) Template</span>
+                </a>
+
+                <!-- CSV / Excel Download Button -->
+                <a href="<?php echo zavora_asset('seller/download-template.php?format=csv'); ?>" 
+                   title="Download standard CSV spreadsheet template"
+                   class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-2xs group whitespace-nowrap">
+                  <i class="fas fa-file-csv text-emerald-400 text-sm group-hover:scale-110 transition-transform"></i>
+                  <span>CSV (.csv) Template</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Upload / Auto-fill Button -->
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="document.getElementById('catalogTemplateFileInput').click()" 
+                      class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-gray-950 text-xs font-black rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+                <i class="fas fa-cloud-arrow-up text-sm"></i>
+                <span>Upload Word / CSV to Auto-Fill</span>
+              </button>
+              <input type="file" id="catalogTemplateFileInput" accept=".docx,.csv,.txt" class="hidden" onchange="handleTemplateUpload(this)">
+            </div>
+
           </div>
         </div>
 
@@ -525,7 +563,13 @@ require_once __DIR__ . '/../includes/header.php';
               </h3>
               <p class="text-[11px] text-gray-400">Professional rich text editor with formatting, headings, and bullet points.</p>
             </div>
-            <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">Quill WYSIWYG</span>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="document.getElementById('catalogTemplateFileInput').click()" 
+                      class="text-[11px] font-bold text-[#1B2299] hover:underline flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg border border-indigo-100 transition">
+                <i class="fas fa-file-word text-blue-600"></i> Import Word (.docx)
+              </button>
+              <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">Quill WYSIWYG</span>
+            </div>
           </div>
 
           <!-- Quill Container -->
