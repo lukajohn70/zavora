@@ -201,39 +201,87 @@ require_once __DIR__ . '/includes/header.php';
     <!-- Left: Product Image Gallery (5 Cols) -->
     <div class="lg:col-span-5 space-y-3.5">
       <div class="relative rounded-2xl overflow-hidden aspect-square bg-white border border-gray-200 shadow-inner flex items-center justify-center p-3 group">
-        <img id="main-product-img" src="<?php echo htmlspecialchars(zavora_image_url($product['thumbnail'])); ?>" alt="<?php echo htmlspecialchars($product['title']); ?>" 
-             class="w-full h-full object-contain transition-all duration-200">
+        <img id="main-product-img" 
+             src="<?php echo htmlspecialchars(zavora_image_url($galleryImages[0] ?? $product['thumbnail'])); ?>" 
+             alt="<?php echo htmlspecialchars($product['title']); ?>" 
+             onclick="openLightbox()"
+             class="w-full h-full object-contain cursor-zoom-in transition-all duration-200">
         
         <?php if (!empty($product['is_boosted'])): ?>
-          <span class="absolute top-4 left-4 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-black rounded-lg shadow-md uppercase tracking-wider flex items-center gap-1.5">
+          <span class="absolute top-4 left-4 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-black rounded-lg shadow-md uppercase tracking-wider flex items-center gap-1.5 z-10 pointer-events-none">
             <i class="fas fa-bolt text-yellow-200"></i> <?php echo htmlspecialchars($product['boost_tier'] ?: 'Featured Sponsor'); ?>
           </span>
         <?php endif; ?>
 
         <?php if (!empty($product['is_preorder'])): ?>
-          <span class="absolute top-4 right-4 px-3 py-1 bg-indigo-600 text-white text-xs font-black rounded-lg shadow-md uppercase tracking-wider flex items-center gap-1.5">
+          <span class="absolute top-4 right-14 px-3 py-1 bg-indigo-600 text-white text-xs font-black rounded-lg shadow-md uppercase tracking-wider flex items-center gap-1.5 z-10 pointer-events-none">
             <i class="fas fa-calendar-check"></i> Pre-Order
           </span>
+        <?php endif; ?>
+
+        <!-- Zoom Icon Button (Top-Right) -->
+        <button type="button" onclick="openLightbox()" 
+                title="Click to zoom high-resolution photo"
+                class="absolute top-3.5 right-3.5 w-9 h-9 rounded-xl bg-white/90 hover:bg-white text-gray-700 hover:text-black shadow-md border border-gray-200/80 flex items-center justify-center transition z-10 opacity-90 group-hover:opacity-100">
+          <i class="fas fa-magnifying-glass-plus text-xs"></i>
+        </button>
+
+        <?php if (count($galleryImages) > 1): ?>
+          <!-- Prev Arrow (Visible on hover on desktop, always on touch) -->
+          <button type="button" onclick="navigateGallery(-1)" 
+                  title="Previous Angle"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 hover:bg-white text-gray-800 shadow-md border border-gray-200/80 flex items-center justify-center transition opacity-90 sm:opacity-0 group-hover:opacity-100 focus:opacity-100 hover:scale-105 z-10">
+            <i class="fas fa-chevron-left text-xs sm:text-sm"></i>
+          </button>
+
+          <!-- Next Arrow (Visible on hover on desktop, always on touch) -->
+          <button type="button" onclick="navigateGallery(1)" 
+                  title="Next Angle"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 hover:bg-white text-gray-800 shadow-md border border-gray-200/80 flex items-center justify-center transition opacity-90 sm:opacity-0 group-hover:opacity-100 focus:opacity-100 hover:scale-105 z-10">
+            <i class="fas fa-chevron-right text-xs sm:text-sm"></i>
+          </button>
+
+          <!-- Dynamic Photo Counter Badge (Bottom-Right) -->
+          <div class="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-gray-950/80 text-white text-[11px] font-bold shadow-md flex items-center gap-1.5 z-10 pointer-events-none backdrop-blur-2xs">
+            <i class="fas fa-images text-[10px] text-amber-300"></i>
+            <span><span id="gallery-current-idx">1</span> / <?php echo count($galleryImages); ?></span>
+          </div>
         <?php endif; ?>
       </div>
 
       <!-- Multi-Image Thumbnail Selector Strip -->
       <?php if (count($galleryImages) > 1): ?>
         <div>
-          <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+          <div class="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-thin">
             <?php foreach ($galleryImages as $gIdx => $gImg): ?>
               <?php $gUrl = zavora_image_url($gImg); ?>
               <button type="button" 
-                      onclick="switchGalleryImage('<?php echo htmlspecialchars($gUrl, ENT_QUOTES); ?>', this)" 
-                      class="gallery-thumb-btn flex-shrink-0 w-16 h-16 rounded-xl border-2 bg-white p-1 transition-all overflow-hidden <?php echo $gIdx === 0 ? 'border-[#1B2299] shadow-sm ring-2 ring-indigo-100' : 'border-gray-200 opacity-70 hover:opacity-100 hover:border-gray-400'; ?>"
-                      title="View Photo <?php echo $gIdx + 1; ?>">
-                <img src="<?php echo htmlspecialchars($gUrl); ?>" alt="Thumbnail <?php echo $gIdx + 1; ?>" class="w-full h-full object-contain">
+                      data-index="<?php echo $gIdx; ?>"
+                      onclick="selectGalleryIndex(<?php echo $gIdx; ?>)" 
+                      onmouseenter="selectGalleryIndex(<?php echo $gIdx; ?>)"
+                      class="gallery-thumb-btn flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 bg-white p-1 transition-all overflow-hidden <?php echo $gIdx === 0 ? 'border-[#1B2299] shadow-md ring-2 ring-indigo-200 scale-105' : 'border-gray-200 opacity-70 hover:opacity-100 hover:border-gray-400'; ?>"
+                      title="View Angle <?php echo $gIdx + 1; ?>">
+                <img src="<?php echo htmlspecialchars($gUrl); ?>" alt="Angle <?php echo $gIdx + 1; ?>" class="w-full h-full object-contain">
               </button>
             <?php endforeach; ?>
           </div>
-          <p class="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
-            <i class="fas fa-images text-[#1B2299]"></i> Click any thumbnail above to view angles
-          </p>
+          <div class="flex items-center justify-between text-[11px] text-gray-400 mt-1.5 px-0.5">
+            <span class="flex items-center gap-1 text-gray-500 font-medium">
+              <i class="fas fa-hand-pointer text-[#1B2299]"></i> Click or hover thumbnail to switch angle
+            </span>
+            <button type="button" onclick="openLightbox()" class="hover:text-[#1B2299] font-bold flex items-center gap-1 transition">
+              <i class="fas fa-expand text-[10px]"></i> Fullscreen
+            </button>
+          </div>
+        </div>
+      <?php else: ?>
+        <div class="flex items-center justify-between text-xs text-gray-400 px-1">
+          <span class="flex items-center gap-1 text-[11px] text-gray-500">
+            <i class="fas fa-camera text-[#1B2299]"></i> 1 Photo Available
+          </span>
+          <button type="button" onclick="openLightbox()" class="text-[11px] hover:text-[#1B2299] font-bold flex items-center gap-1 transition">
+            <i class="fas fa-magnifying-glass-plus"></i> Click photo to zoom
+          </button>
         </div>
       <?php endif; ?>
       
@@ -857,25 +905,155 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Interactive Gallery Photo Switcher
-function switchGalleryImage(url, btn) {
+<!-- Full-Screen High-Resolution Product Lightbox Modal -->
+<div id="galleryLightboxModal" 
+     onclick="if (event.target === this) closeLightbox()"
+     class="fixed inset-0 z-50 bg-black/95 backdrop-blur-md hidden items-center justify-center p-4 sm:p-6 transition-opacity duration-200">
+  
+  <!-- Close Button (Esc) -->
+  <button type="button" onclick="closeLightbox()" 
+          title="Close (Esc)" 
+          class="absolute top-4 right-4 sm:top-6 sm:right-6 w-11 h-11 rounded-2xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-lg transition z-50 border border-white/20">
+    <i class="fas fa-xmark"></i>
+  </button>
+
+  <!-- Title & Index Header -->
+  <div class="absolute top-4 left-4 sm:top-6 sm:left-6 flex items-center gap-3 text-white z-40 max-w-[80vw]">
+    <span class="px-3 py-1 rounded-xl bg-white/15 text-xs font-mono font-bold tracking-wider border border-white/10">
+      <span id="lightbox-current-idx">1</span> / <?php echo count($galleryImages); ?>
+    </span>
+    <span class="text-sm font-bold truncate hidden sm:inline drop-shadow-sm"><?php echo htmlspecialchars($product['title']); ?></span>
+  </div>
+
+  <?php if (count($galleryImages) > 1): ?>
+    <!-- Prev Arrow (Left Arrow Key) -->
+    <button type="button" onclick="navigateGallery(-1)" 
+            title="Previous Angle (Left Arrow)" 
+            class="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/25 text-white flex items-center justify-center text-lg transition z-40 border border-white/20 hover:scale-105">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <!-- Next Arrow (Right Arrow Key) -->
+    <button type="button" onclick="navigateGallery(1)" 
+            title="Next Angle (Right Arrow)" 
+            class="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-2xl bg-white/10 hover:bg-white/25 text-white flex items-center justify-center text-lg transition z-40 border border-white/20 hover:scale-105">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  <?php endif; ?>
+
+  <!-- Centered Image Container -->
+  <div class="max-w-4xl max-h-[75vh] w-full h-full flex items-center justify-center p-2" onclick="event.stopPropagation()">
+    <img id="lightbox-main-img" 
+         src="<?php echo htmlspecialchars(zavora_image_url($galleryImages[0] ?? $product['thumbnail'])); ?>" 
+         alt="<?php echo htmlspecialchars($product['title']); ?>" 
+         class="max-w-full max-h-[72vh] object-contain rounded-2xl shadow-2xl transition-all duration-150">
+  </div>
+
+  <?php if (count($galleryImages) > 1): ?>
+    <!-- Bottom Thumbnail Bar in Lightbox -->
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 max-w-[92vw] overflow-x-auto p-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center gap-2 z-40 scrollbar-none">
+      <?php foreach ($galleryImages as $lbIdx => $lbImg): ?>
+        <?php $lbUrl = zavora_image_url($lbImg); ?>
+        <button type="button" 
+                onclick="selectGalleryIndex(<?php echo $lbIdx; ?>)" 
+                class="lightbox-thumb-btn w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 bg-white/5 <?php echo $lbIdx === 0 ? 'border-white ring-2 ring-white scale-105' : 'border-transparent opacity-60 hover:opacity-100'; ?>">
+          <img src="<?php echo htmlspecialchars($lbUrl); ?>" alt="Angle <?php echo $lbIdx + 1; ?>" class="w-full h-full object-contain p-0.5">
+        </button>
+      <?php endforeach; ?>
+    </div>
+  <?php endif; ?>
+</div>
+
+<script>
+// Interactive Multi-Angle Gallery & Lightbox Suite
+const productGalleryList = <?php echo json_encode(array_values(array_map('zavora_image_url', $galleryImages))); ?>;
+let currentGalleryIdx = 0;
+
+function selectGalleryIndex(index) {
+  if (index < 0 || index >= productGalleryList.length) return;
+  currentGalleryIdx = index;
+  const url = productGalleryList[index];
+
   const mainImg = document.getElementById('main-product-img');
   if (mainImg) {
-    mainImg.style.opacity = '0.3';
+    mainImg.style.opacity = '0.35';
     setTimeout(() => {
       mainImg.src = url;
       mainImg.style.opacity = '1';
-    }, 120);
+    }, 100);
   }
-  document.querySelectorAll('.gallery-thumb-btn').forEach(b => {
-    b.classList.remove('border-[#1B2299]', 'shadow-sm', 'ring-2', 'ring-indigo-100');
-    b.classList.add('border-gray-200', 'opacity-70');
+
+  const counterEl = document.getElementById('gallery-current-idx');
+  if (counterEl) counterEl.textContent = (index + 1);
+
+  // Sync Storefront Thumbnails
+  document.querySelectorAll('.gallery-thumb-btn').forEach((b, idx) => {
+    if (idx === index) {
+      b.classList.add('border-[#1B2299]', 'shadow-md', 'ring-2', 'ring-indigo-200', 'scale-105');
+      b.classList.remove('border-gray-200', 'opacity-70');
+    } else {
+      b.classList.remove('border-[#1B2299]', 'shadow-md', 'ring-2', 'ring-indigo-200', 'scale-105');
+      b.classList.add('border-gray-200', 'opacity-70');
+    }
   });
-  if (btn) {
-    btn.classList.add('border-[#1B2299]', 'shadow-sm', 'ring-2', 'ring-indigo-100');
-    btn.classList.remove('border-gray-200', 'opacity-70');
+
+  // Sync Lightbox
+  const lbImg = document.getElementById('lightbox-main-img');
+  if (lbImg) lbImg.src = url;
+  const lbCounter = document.getElementById('lightbox-current-idx');
+  if (lbCounter) lbCounter.textContent = (index + 1);
+  document.querySelectorAll('.lightbox-thumb-btn').forEach((b, idx) => {
+    if (idx === index) {
+      b.classList.add('border-white', 'ring-2', 'ring-white', 'scale-105');
+      b.classList.remove('border-transparent', 'opacity-60');
+    } else {
+      b.classList.remove('border-white', 'ring-2', 'ring-white', 'scale-105');
+      b.classList.add('border-transparent', 'opacity-60');
+    }
+  });
+}
+
+function navigateGallery(direction) {
+  if (!productGalleryList || productGalleryList.length <= 1) return;
+  let newIdx = currentGalleryIdx + direction;
+  if (newIdx < 0) newIdx = productGalleryList.length - 1;
+  if (newIdx >= productGalleryList.length) newIdx = 0;
+  selectGalleryIndex(newIdx);
+}
+
+// Lightbox Open & Close
+function openLightbox() {
+  const modal = document.getElementById('galleryLightboxModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    selectGalleryIndex(currentGalleryIdx);
   }
 }
+
+function closeLightbox() {
+  const modal = document.getElementById('galleryLightboxModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+  }
+}
+
+// Keyboard Navigation for Gallery (Left/Right Arrows and Escape)
+document.addEventListener('keydown', (e) => {
+  const modal = document.getElementById('galleryLightboxModal');
+  const isLbOpen = modal && !modal.classList.contains('hidden');
+  
+  if (e.key === 'Escape' && isLbOpen) {
+    closeLightbox();
+  } else if (e.key === 'ArrowLeft') {
+    navigateGallery(-1);
+  } else if (e.key === 'ArrowRight') {
+    navigateGallery(1);
+  }
+});
 
 // Interactive Wishlist Toggle with Header Synchronization
 function toggleProductWishlist(productId) {

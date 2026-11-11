@@ -356,6 +356,88 @@ function zavora_ensure_schema(PDO $pdo) {
             $pdo->exec("UPDATE products SET vendor_id = 2 WHERE id IN (4, 5, 6, 7)");
         } catch (\Throwable $e) {}
     }
+
+    // Automatically populate rich multi-angle product photography for catalog products lacking gallery images
+    try {
+        $productsNeedingImages = $pdo->query("SELECT id, title, thumbnail FROM products WHERE images IS NULL OR images = '' OR images = '[]'")->fetchAll();
+        if (!empty($productsNeedingImages)) {
+            $defaultGalleries = [
+                // 1: Sony WH-1000XM5 Wireless Headphones
+                1 => [
+                    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800',
+                    'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800',
+                    'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800',
+                    'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800',
+                ],
+                // 2: Apple MacBook Air 15" M3
+                2 => [
+                    'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800',
+                    'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=800',
+                    'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=800',
+                    'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800',
+                ],
+                // 3: Logitech MX Master 3S
+                3 => [
+                    'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=800',
+                    'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=800',
+                    'https://images.unsplash.com/photo-1626218174358-7769486c4b79?w=800',
+                ],
+                // 4: JLM Signature Tech Heavyweight Hoodie
+                4 => [
+                    'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=800',
+                    'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800',
+                    'https://images.unsplash.com/photo-1509967419530-da38b4704bc6?w=800',
+                ],
+                // 5: ZAVORA UI Design System & Commercial Figma Kit
+                5 => [
+                    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800',
+                    'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800',
+                    'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=800',
+                ],
+                // 6: Full-Stack Multi-Vendor SaaS Starter Kit
+                6 => [
+                    'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800',
+                    'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800',
+                    'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800',
+                ],
+                // 7: The 431-Hour Blueprint
+                7 => [
+                    'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800',
+                    'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800',
+                    'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800',
+                ],
+                // 8: Apple iPhone 15 Pro Max
+                8 => [
+                    'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800',
+                    'https://images.unsplash.com/photo-1695048064977-bc60408ca46c?w=800',
+                    'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=800',
+                ],
+                // 9: Sony PlayStation 5 Pro Console
+                9 => [
+                    'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=800',
+                    'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800',
+                    'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800',
+                ],
+                // 10: iPhone 14 Pro Max
+                10 => [
+                    'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800',
+                    'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800',
+                    'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=800',
+                ],
+            ];
+            $upStmt = $pdo->prepare("UPDATE products SET images = ?, thumbnail = ? WHERE id = ?");
+            foreach ($productsNeedingImages as $p) {
+                $pId = (int)$p['id'];
+                if (isset($defaultGalleries[$pId])) {
+                    $imgs = $defaultGalleries[$pId];
+                    $thumb = $imgs[0];
+                    $upStmt->execute([json_encode($imgs), $thumb, $pId]);
+                } elseif (!empty($p['thumbnail'])) {
+                    $upStmt->execute([json_encode([$p['thumbnail']]), $p['thumbnail'], $pId]);
+                }
+            }
+        }
+    } catch (\Throwable $e) {}
 }
 
 /**

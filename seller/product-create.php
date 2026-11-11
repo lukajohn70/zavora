@@ -111,6 +111,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
         $thumbnail = $allImages[0];
     }
 
+    // Ensure featured thumbnail is guaranteed at index 0 in the gallery
+    if (!empty($thumbnail)) {
+        $allImages = array_values(array_unique(array_merge([$thumbnail], $allImages)));
+    }
+
     // Collect Key Features & Highlights
     $rawFeatures = $_POST['key_features'] ?? [];
     if (!is_array($rawFeatures)) $rawFeatures = [];
@@ -917,7 +922,13 @@ let galleryItems = []; // Array of { id, type: 'file'|'url'|'existing', src, fil
 
 function handleMultipleImagesSelect(input) {
   if (!input.files || input.files.length === 0) return;
-  const files = Array.from(input.files);
+  addFilesToGallery(input.files);
+  input.value = ''; // Reset so the same file or new files can be selected again cleanly
+}
+
+function addFilesToGallery(fileList) {
+  if (!fileList || fileList.length === 0) return;
+  const files = Array.from(fileList);
 
   files.forEach((file, index) => {
     if (file.size > 10 * 1024 * 1024) {
@@ -935,10 +946,28 @@ function handleMultipleImagesSelect(input) {
         filename: file.name,
         isFeatured: isFirst
       });
+      syncFileInputFiles();
       renderGalleryGrid();
     };
     reader.readAsDataURL(file);
   });
+}
+
+function syncFileInputFiles() {
+  try {
+    const dt = new DataTransfer();
+    galleryItems.forEach(item => {
+      if (item.type === 'file' && item.file instanceof File) {
+        dt.items.add(item.file);
+      }
+    });
+    const fileInput = document.getElementById('productImagesInput');
+    if (fileInput) {
+      fileInput.files = dt.files;
+    }
+  } catch (err) {
+    console.warn('DataTransfer sync note:', err);
+  }
 }
 
 function addExternalImageUrl() {
@@ -976,8 +1005,36 @@ function removeGalleryItem(itemId, event) {
   if (wasFeatured && galleryItems.length > 0) {
     galleryItems[0].isFeatured = true;
   }
+  syncFileInputFiles();
   renderGalleryGrid();
 }
+
+// Drag & drop attachment for dropzone
+document.addEventListener('DOMContentLoaded', () => {
+  const dropzone = document.getElementById('dropzoneWrap');
+  if (dropzone) {
+    ['dragenter', 'dragover'].forEach(name => {
+      dropzone.addEventListener(name, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add('border-[#1B2299]', 'bg-indigo-50/40');
+      });
+    });
+    ['dragleave', 'drop'].forEach(name => {
+      dropzone.addEventListener(name, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('border-[#1B2299]', 'bg-indigo-50/40');
+      });
+    });
+    dropzone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      if (dt && dt.files && dt.files.length) {
+        addFilesToGallery(dt.files);
+      }
+    });
+  }
+});
 
 function renderGalleryGrid() {
   const grid = document.getElementById('galleryGrid');
