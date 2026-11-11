@@ -209,6 +209,13 @@ $categories = $catStmt->fetchAll();
               <span class="absolute top-3 left-3 bg-[#E4306D] text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
                 Flash Sale
               </span>
+              <?php $inWishlist = zavora_in_wishlist($item['id']); ?>
+              <button type="button" 
+                      onclick="toggleIndexWishlist(<?php echo $item['id']; ?>, this)" 
+                      title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Save to Wishlist'; ?>"
+                      class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/95 hover:bg-white text-gray-500 shadow-md backdrop-blur-sm flex items-center justify-center transition-all z-10 hover:scale-110">
+                <i class="<?php echo $inWishlist ? 'fas text-rose-500' : 'far text-gray-400'; ?> fa-heart text-xs"></i>
+              </button>
             </div>
             <div class="p-5">
               <div class="flex items-center gap-1 text-xs text-amber-500 mb-1">
@@ -433,5 +440,34 @@ $categories = $catStmt->fetchAll();
     </div>
   </div>
 </section>
+
+<script>
+function toggleIndexWishlist(productId, btn) {
+  const icon = btn.querySelector('i');
+  fetch('<?php echo zavora_asset("wishlist.php?action=toggle&format=json&id="); ?>' + encodeURIComponent(productId))
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.success) {
+        if (data.in_wishlist) {
+          icon.className = 'fas fa-heart text-xs text-rose-500';
+          btn.setAttribute('title', 'Remove from Wishlist');
+        } else {
+          icon.className = 'far fa-heart text-xs text-gray-400';
+          btn.setAttribute('title', 'Save to Wishlist');
+        }
+        const badge = document.getElementById('headerWishlistBadge');
+        if (badge) {
+          badge.textContent = data.count;
+          if (data.count > 0) {
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+      }
+    })
+    .catch(err => console.error(err));
+}
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

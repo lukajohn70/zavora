@@ -39,21 +39,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
     $thumbnail = trim($_POST['thumbnail'] ?? '');
     $narrativeDesc = trim($_POST['narrative_description'] ?? $_POST['description'] ?? '');
 
-    // Process Direct Product Image Upload
+    // Process Multi-Image Uploads & Featured Selection
+    $allImages = [];
+    $featuredSelection = trim($_POST['featured_image'] ?? '');
+
+    // 1. Process Multiple Uploaded Files
+    if (isset($_FILES['product_images']) && is_array($_FILES['product_images']['name'])) {
+        $uploadDir = __DIR__ . '/../uploads/products/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        $totalFiles = count($_FILES['product_images']['name']);
+
+        for ($i = 0; $i < $totalFiles; $i++) {
+            if ($_FILES['product_images']['error'][$i] === UPLOAD_ERR_OK) {
+                $origName = $_FILES['product_images']['name'][$i];
+                $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+                $size = $_FILES['product_images']['size'][$i];
+                if (in_array($ext, $allowedExts) && $size <= 10 * 1024 * 1024) {
+                    $newFileName = 'prod_' . $vendorId . '_' . time() . '_' . substr(bin2hex(random_bytes(4)), 0, 8) . "_{$i}." . $ext;
+                    if (move_uploaded_file($_FILES['product_images']['tmp_name'][$i], $uploadDir . $newFileName)) {
+                        $relPath = 'uploads/products/' . $newFileName;
+                        $allImages[] = $relPath;
+                        if ($featuredSelection === "upload_{$i}" || $featuredSelection === $origName) {
+                            $thumbnail = $relPath;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 2. Process Legacy Single Image Upload if provided
     if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['product_image'];
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-        if (in_array($ext, $allowedExts) && $file['size'] <= 5 * 1024 * 1024) {
+        if (in_array($ext, $allowedExts) && $file['size'] <= 10 * 1024 * 1024) {
             $uploadDir = __DIR__ . '/../uploads/products/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
             $newFileName = 'prod_' . $vendorId . '_' . time() . '_' . substr(bin2hex(random_bytes(4)), 0, 8) . '.' . $ext;
             if (move_uploaded_file($file['tmp_name'], $uploadDir . $newFileName)) {
-                $thumbnail = 'uploads/products/' . $newFileName;
+                $relPath = 'uploads/products/' . $newFileName;
+                $allImages[] = $relPath;
+                if (empty($thumbnail)) $thumbnail = $relPath;
             }
         }
+    }
+
+    // 3. Process External Gallery URLs
+    if (!empty($_POST['gallery_urls']) && is_array($_POST['gallery_urls'])) {
+        foreach ($_POST['gallery_urls'] as $gUrl) {
+            $gUrl = trim($gUrl);
+            if (!empty($gUrl) && filter_var($gUrl, FILTER_VALIDATE_URL)) {
+                $allImages[] = $gUrl;
+            }
+        }
+    }
+    $singleUrl = trim($_POST['thumbnail_url'] ?? $_POST['thumbnail'] ?? '');
+    if (!empty($singleUrl) && !in_array($singleUrl, $allImages, true)) {
+        $allImages[] = $singleUrl;
+    }
+
+    $allImages = array_values(array_unique(array_filter($allImages)));
+
+    // 4. Designate Featured Image (Thumbnail)
+    if (!empty($featuredSelection) && in_array($featuredSelection, $allImages, true)) {
+        $thumbnail = $featuredSelection;
+    } elseif (empty($thumbnail) && !empty($allImages)) {
+        $thumbnail = $allImages[0];
     }
 
     // Collect Key Features & Highlights
@@ -123,13 +178,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
         $insStmt = $pdo->prepare("
             INSERT INTO products (
                 category_id, vendor_id, title, slug, sku, type, price, previous_price, stock_quantity, 
-                thumbnail, description, specifications, is_featured, is_preorder, preorder_release_date, 
+                thumbnail, images, description, specifications, is_featured, is_preorder, preorder_release_date, 
                 preorder_deposit, has_variants, variant_attributes, rating, reviews_count
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, 5.0, 1)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, 5.0, 1)
         ");
         $insStmt->execute([
             $categoryId, $vendorId, $title, $slug, $sku, $type, $price, $prevPrice, $stock, 
-            $thumbnail, $fullDescription, $specsString, $isPreorder, $preorderRelease, $preorderDeposit, 
+            $thumbnail, !empty($allImages) ? json_encode($allImages) : null, $fullDescription, $specsString, $isPreorder, $preorderRelease, $preorderDeposit, 
             $hasVariants, !empty($attrSchema) ? json_encode($attrSchema) : null
         ]);
         $newProdId = $pdo->lastInsertId();
@@ -243,6 +298,44 @@ require_once __DIR__ . '/../includes/header.php';
            LEFT COLUMN: CORE PRODUCT LISTING ATTRIBUTES (7 Cols)
            ════════════════════════════════════════════════════════════════════════ -->
       <div class="lg:col-span-7 space-y-6">
+
+        <!-- TEMPLATE IMPORTER SUITE: WORD (.DOCX) & CSV -->
+        <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-[#0B132B] text-white rounded-3xl p-5 sm:p-6 shadow-md border border-indigo-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-start sm:items-center gap-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-white/10 border border-white/20 text-[#F7DE7A] flex items-center justify-center text-lg flex-shrink-0 shadow-inner">
+              <i class="fas fa-file-word"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="text-xs font-black uppercase tracking-wider text-white">Import from Word (.docx) or CSV Template</h4>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[9px] font-black uppercase">Fast Catalog</span>
+              </div>
+              <p class="text-[11px] text-blue-200 mt-0.5 leading-relaxed">
+                Auto-fill Title, Key Highlights, Quill Rich Text Description, and Technical Specs in 1 click.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <a href="<?php echo zavora_asset('seller/download-template.php'); ?>" 
+               title="Download sample spreadsheet template"
+               class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-blue-100 hover:text-white border border-white/20 text-xs font-bold rounded-xl transition flex items-center gap-1.5 whitespace-nowrap">
+              <i class="fas fa-download text-amber-300 text-xs"></i> Download CSV Template
+            </a>
+            <button type="button" onclick="document.getElementById('catalogTemplateFileInput').click()" 
+                    class="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-gray-950 text-xs font-black rounded-xl shadow-md transition flex items-center gap-1.5 whitespace-nowrap">
+              <i class="fas fa-file-import"></i> Upload Word / CSV
+            </button>
+            <input type="file" id="catalogTemplateFileInput" accept=".docx,.csv,.txt" class="hidden" onchange="handleTemplateUpload(this)">
+          </div>
+        </div>
+
+        <div id="templateImportNotice" class="hidden p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-check-circle text-emerald-600"></i>
+            <span id="templateImportNoticeText"></span>
+          </div>
+          <button type="button" onclick="document.getElementById('templateImportNotice').classList.add('hidden')" class="text-emerald-700 hover:text-emerald-950 font-black"><i class="fas fa-xmark"></i></button>
+        </div>
 
         <!-- CARD 1: TITLE & BASIC TAXONOMY -->
         <div class="bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-8 shadow-sm space-y-5">
@@ -498,60 +591,71 @@ require_once __DIR__ . '/../includes/header.php';
            ════════════════════════════════════════════════════════════════════════ -->
       <div class="lg:col-span-5 space-y-6">
 
-        <!-- CARD A: PRODUCT PHOTOGRAPHY & DIRECT IMAGE UPLOAD -->
+        <!-- CARD A: MULTI-IMAGE GALLERY & FEATURED PHOTO SELECTOR -->
         <div class="bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-7 shadow-sm space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-gray-100">
             <div>
               <h4 class="text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                <i class="fas fa-camera text-[#1B2299]"></i> Product Photography & Media
+                <i class="fas fa-images text-[#1B2299]"></i> Product Photography & Gallery
               </h4>
-              <p class="text-[10px] text-gray-400">Upload high-resolution product photos from your device.</p>
+              <p class="text-[10px] text-gray-400">Upload multiple photos and click any image to designate as Featured.</p>
             </div>
-            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Primary Image</span>
+            <span id="galleryCountBadge" class="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-full">0 Photos</span>
           </div>
 
-          <!-- Direct Device File Upload Zone -->
+          <!-- Hidden Featured & Thumbnail Controls -->
+          <input type="hidden" name="featured_image" id="featuredImageInput" value="">
+          <input type="hidden" name="thumbnail" id="activeThumbnailInput" value="">
+
+          <!-- Multi-File Dropzone -->
           <div>
-            <div id="dropzoneWrap" onclick="document.getElementById('productImageInput').click()" 
+            <div id="dropzoneWrap" onclick="document.getElementById('productImagesInput').click()" 
                  class="cursor-pointer border-2 border-dashed border-gray-300 hover:border-[#1B2299] bg-slate-50/80 hover:bg-indigo-50/20 rounded-2xl p-6 text-center transition-all group">
-              <input type="file" name="product_image" id="productImageInput" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden" onchange="handleImageFileSelect(this)">
+              <input type="file" name="product_images[]" id="productImagesInput" multiple accept="image/png,image/jpeg,image/webp,image/gif" class="hidden" onchange="handleMultipleImagesSelect(this)">
               
               <div id="uploadPrompt" class="space-y-2.5">
                 <div class="w-12 h-12 rounded-2xl bg-white border border-gray-200 shadow-2xs text-[#1B2299] group-hover:scale-110 flex items-center justify-center mx-auto transition-transform">
                   <i class="fas fa-cloud-arrow-up text-lg"></i>
                 </div>
                 <div>
-                  <p class="text-xs font-black text-gray-900">Click to upload from device or drag & drop</p>
-                  <p class="text-[10px] text-gray-400 mt-0.5">PNG, JPG, WEBP or GIF (Up to 5MB)</p>
+                  <p class="text-xs font-black text-gray-900">Click to upload multiple images or drag & drop</p>
+                  <p class="text-[10px] text-gray-400 mt-0.5">PNG, JPG, WEBP or GIF (Select multiple, up to 10MB each)</p>
                 </div>
                 <span class="inline-block px-3.5 py-1.5 bg-white border border-gray-200 text-[#1B2299] text-xs font-bold rounded-xl shadow-2xs group-hover:border-[#1B2299] transition">
-                  <i class="fas fa-folder-open mr-1"></i> Browse Files
+                  <i class="fas fa-folder-open mr-1"></i> Choose Photos from Device
                 </span>
-              </div>
-
-              <!-- Selected Upload Preview -->
-              <div id="uploadSelectedPreview" class="hidden space-y-2">
-                <div class="w-28 h-28 mx-auto rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white p-1">
-                  <img id="uploadImgThumb" src="" class="w-full h-full object-contain">
-                </div>
-                <p id="uploadFileName" class="text-xs font-bold text-gray-800 truncate max-w-xs mx-auto"></p>
-                <button type="button" onclick="clearSelectedImage(event)" class="text-[11px] font-bold text-rose-600 hover:underline">
-                  <i class="fas fa-trash-can mr-1"></i> Remove & Choose Different Photo
-                </button>
               </div>
             </div>
           </div>
 
-          <!-- Secondary / External Image URL Option -->
-          <div class="pt-3 border-t border-gray-100">
-            <div class="flex items-center justify-between mb-1.5">
-              <label class="block text-[11px] font-bold text-gray-600 uppercase">Or Web Image URL (Optional)</label>
-              <span class="text-[10px] text-gray-400">External CDN / Unsplash</span>
+          <!-- External URL Adder Option -->
+          <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="block text-[11px] font-bold text-gray-600 uppercase">Or Add Image via Web URL</label>
+              <span class="text-[10px] text-gray-400">CDN / Unsplash / Cloudinary</span>
             </div>
-            <input type="url" name="thumbnail" id="activeThumbnailInput"
-                   placeholder="https://images.unsplash.com/photo-..."
-                   oninput="onThumbnailUrlChanged(this.value)"
-                   class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono text-gray-700 focus:bg-white focus:outline-none">
+            <div class="flex items-center gap-2">
+              <input type="url" id="externalUrlInput" placeholder="https://images.unsplash.com/photo-..." 
+                     class="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-mono text-gray-800 focus:outline-none">
+              <button type="button" onclick="addExternalImageUrl()" 
+                      class="px-3 py-2 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-bold rounded-xl transition flex-shrink-0">
+                <i class="fas fa-plus mr-1"></i> Add URL
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic Multi-Image Gallery Grid -->
+          <div id="galleryContainer" class="space-y-2">
+            <div class="flex items-center justify-between text-[11px] text-gray-500 font-bold">
+              <span>Selected Product Photos</span>
+              <span class="text-amber-600 flex items-center gap-1"><i class="fas fa-star text-[10px]"></i> Gold border = Featured Cover</span>
+            </div>
+
+            <div id="galleryGrid" class="grid grid-cols-3 gap-2.5 min-h-[90px] p-2.5 rounded-2xl bg-gray-50 border border-dashed border-gray-200">
+              <div id="emptyGalleryPrompt" class="col-span-3 text-center py-6 text-gray-400 text-xs italic">
+                No images added yet. Upload files from device or enter an image URL above.
+              </div>
+            </div>
           </div>
         </div>
 
@@ -631,31 +735,6 @@ require_once __DIR__ . '/../includes/header.php';
               <i class="fas fa-lock"></i>
               <span>AI Studio In Private Beta (Coming Soon)</span>
             </button>
-          </div>
-        </div>
-
-          <!-- Simulated Storefront Card -->
-          <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
-            <div class="aspect-square rounded-xl bg-white border border-gray-200 flex items-center justify-center p-3 relative overflow-hidden">
-              <img id="previewImg" src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800" class="w-full h-full object-contain">
-              <span id="previewDiscountBadge" class="hidden absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-black bg-[#E4306D] text-white">
-                -25%
-              </span>
-            </div>
-
-            <div>
-              <div class="flex items-center justify-between text-[10px] text-gray-400 uppercase font-bold mb-1">
-                <span id="previewCategory">Category</span>
-                <span class="text-emerald-600 flex items-center gap-1"><i class="fas fa-check-circle"></i> Verified</span>
-              </div>
-              <h5 id="previewTitle" class="text-xs font-black text-gray-900 line-clamp-2 leading-snug">
-                Product Title will appear here in real-time...
-              </h5>
-              <div class="flex items-baseline gap-2 mt-2">
-                <span id="previewPrice" class="text-sm font-black text-[#1B2299]">₦0.00</span>
-                <span id="previewOldPrice" class="text-xs text-gray-400 line-through hidden">₦0.00</span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -789,52 +868,274 @@ function onThumbnailUrlChanged(url) {
   }
 }
 
-// Device Image File Upload Handler
-function handleImageFileSelect(input) {
-  if (input.files && input.files[0]) {
-    const file = input.files[0];
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Selected image exceeds 5MB size limit. Please choose a smaller image.');
-      input.value = '';
+// Multi-Image Gallery State & Handlers
+let galleryItems = []; // Array of { id, type: 'file'|'url'|'existing', src, file, filename, isFeatured }
+
+function handleMultipleImagesSelect(input) {
+  if (!input.files || input.files.length === 0) return;
+  const files = Array.from(input.files);
+
+  files.forEach((file, index) => {
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File "' + file.name + '" exceeds the 10MB limit.');
       return;
     }
     const reader = new FileReader();
     reader.onload = function(e) {
-      const dataUrl = e.target.result;
-      const previewImg = document.getElementById('previewImg');
-      if (previewImg) previewImg.src = dataUrl;
-
-      const uploadImgThumb = document.getElementById('uploadImgThumb');
-      if (uploadImgThumb) uploadImgThumb.src = dataUrl;
-
-      const uploadSelectedPreview = document.getElementById('uploadSelectedPreview');
-      const uploadPrompt = document.getElementById('uploadPrompt');
-      const uploadFileName = document.getElementById('uploadFileName');
-
-      if (uploadSelectedPreview) uploadSelectedPreview.classList.remove('hidden');
-      if (uploadPrompt) uploadPrompt.classList.add('hidden');
-      if (uploadFileName) uploadFileName.textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
+      const isFirst = (galleryItems.length === 0);
+      galleryItems.push({
+        id: 'file_' + Date.now() + '_' + index + '_' + Math.random().toString(36).substring(2, 6),
+        type: 'file',
+        src: e.target.result,
+        file: file,
+        filename: file.name,
+        isFeatured: isFirst
+      });
+      renderGalleryGrid();
     };
     reader.readAsDataURL(file);
-  }
+  });
 }
 
-function clearSelectedImage(e) {
-  if (e) e.stopPropagation();
-  const input = document.getElementById('productImageInput');
-  if (input) input.value = '';
-
-  const uploadSelectedPreview = document.getElementById('uploadSelectedPreview');
-  const uploadPrompt = document.getElementById('uploadPrompt');
-  if (uploadSelectedPreview) uploadSelectedPreview.classList.add('hidden');
-  if (uploadPrompt) uploadPrompt.classList.remove('hidden');
-
-  // Reset preview image to fallback URL
-  const activeUrl = document.getElementById('activeThumbnailInput') ? document.getElementById('activeThumbnailInput').value : '';
-  const previewImg = document.getElementById('previewImg');
-  if (previewImg) {
-    previewImg.src = activeUrl || 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800';
+function addExternalImageUrl() {
+  const input = document.getElementById('externalUrlInput');
+  const url = (input.value || '').trim();
+  if (!url) return;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    alert('Please enter a valid HTTP or HTTPS image URL.');
+    return;
   }
+  const isFirst = (galleryItems.length === 0);
+  const name = url.split('/').pop().split('?')[0] || 'Web Image';
+  galleryItems.push({
+    id: 'url_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    type: 'url',
+    src: url,
+    filename: name,
+    isFeatured: isFirst
+  });
+  input.value = '';
+  renderGalleryGrid();
+}
+
+function setFeaturedImage(itemId) {
+  galleryItems.forEach(item => {
+    item.isFeatured = (item.id === itemId);
+  });
+  renderGalleryGrid();
+}
+
+function removeGalleryItem(itemId, event) {
+  if (event) event.stopPropagation();
+  const wasFeatured = galleryItems.find(i => i.id === itemId)?.isFeatured;
+  galleryItems = galleryItems.filter(i => i.id !== itemId);
+  if (wasFeatured && galleryItems.length > 0) {
+    galleryItems[0].isFeatured = true;
+  }
+  renderGalleryGrid();
+}
+
+function renderGalleryGrid() {
+  const grid = document.getElementById('galleryGrid');
+  const countBadge = document.getElementById('galleryCountBadge');
+  const featuredInput = document.getElementById('featuredImageInput');
+  const activeThumbInput = document.getElementById('activeThumbnailInput');
+  const previewImg = document.getElementById('previewImg');
+
+  if (countBadge) {
+    countBadge.textContent = galleryItems.length + ' Photo' + (galleryItems.length === 1 ? '' : 's');
+  }
+
+  if (galleryItems.length === 0) {
+    grid.innerHTML = '<div id="emptyGalleryPrompt" class="col-span-3 text-center py-6 text-gray-400 text-xs italic">No images added yet. Upload files from device or enter an image URL above.</div>';
+    if (featuredInput) featuredInput.value = '';
+    if (activeThumbInput) activeThumbInput.value = '';
+    if (previewImg) previewImg.src = 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800';
+    return;
+  }
+
+  // Ensure one item is featured
+  let featuredItem = galleryItems.find(i => i.isFeatured);
+  if (!featuredItem && galleryItems.length > 0) {
+    galleryItems[0].isFeatured = true;
+    featuredItem = galleryItems[0];
+  }
+
+  if (featuredItem) {
+    if (featuredInput) {
+      featuredInput.value = (featuredItem.type === 'existing' || featuredItem.type === 'url') ? featuredItem.src : featuredItem.filename;
+    }
+    if (activeThumbInput) {
+      activeThumbInput.value = featuredItem.src;
+    }
+    if (previewImg) {
+      previewImg.src = featuredItem.src;
+    }
+  }
+
+  grid.innerHTML = '';
+  galleryItems.forEach(item => {
+    const card = document.createElement('div');
+    card.className = `relative group rounded-xl overflow-hidden border-2 bg-white aspect-square shadow-2xs p-1 transition-all ${
+      item.isFeatured ? 'border-amber-400 ring-2 ring-amber-200' : 'border-gray-200 hover:border-gray-400'
+    }`;
+
+    let hiddenFields = '';
+    if (item.type === 'existing') {
+      hiddenFields = `<input type="hidden" name="existing_images[]" value="${escapeHtml(item.src)}">`;
+    } else if (item.type === 'url') {
+      hiddenFields = `<input type="hidden" name="gallery_urls[]" value="${escapeHtml(item.src)}">`;
+    }
+
+    card.innerHTML = `
+      ${hiddenFields}
+      <img src="${escapeHtml(item.src)}" class="w-full h-full object-contain rounded-lg">
+      
+      <!-- Featured Badge / Button -->
+      ${item.isFeatured ? `
+        <span class="absolute top-1.5 left-1.5 bg-amber-400 text-gray-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow flex items-center gap-0.5 z-10">
+          <i class="fas fa-star text-[8px]"></i> Featured
+        </span>
+      ` : `
+        <button type="button" onclick="setFeaturedImage('${item.id}')" 
+                title="Set as Featured Cover Photo"
+                class="absolute top-1.5 left-1.5 bg-black/60 hover:bg-amber-400 text-white hover:text-gray-950 text-[9px] font-bold px-1.5 py-0.5 rounded transition opacity-0 group-hover:opacity-100 flex items-center gap-0.5 z-10">
+          <i class="far fa-star text-[8px]"></i> Set Featured
+        </button>
+      `}
+
+      <!-- Remove Button -->
+      <button type="button" onclick="removeGalleryItem('${item.id}', event)" 
+              title="Remove Photo"
+              class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-white/90 hover:bg-rose-500 text-gray-600 hover:text-white shadow flex items-center justify-center text-xs transition z-10">
+        <i class="fas fa-trash-can text-[10px]"></i>
+      </button>
+
+      <!-- Bottom label -->
+      <span class="absolute bottom-1 left-1 right-1 bg-black/60 text-white text-[8px] font-mono px-1 py-0.5 rounded truncate text-center backdrop-blur-2xs">
+        ${escapeHtml(item.filename || 'Photo')}
+      </span>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+// Template Document Importer Handler (Word .docx, CSV, TXT)
+function handleTemplateUpload(input) {
+  if (!input.files || input.files.length === 0) return;
+  const file = input.files[0];
+  const formData = new FormData();
+  formData.append('template_file', file);
+
+  const notice = document.getElementById('templateImportNotice');
+  const noticeText = document.getElementById('templateImportNoticeText');
+  if (notice && noticeText) {
+    noticeText.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Reading and parsing template document (' + file.name + ')...';
+    notice.classList.remove('hidden', 'bg-rose-50', 'border-rose-200', 'text-rose-800');
+    notice.classList.add('bg-blue-50', 'border-blue-200', 'text-blue-800');
+  }
+
+  fetch('<?php echo zavora_asset("seller/import-template.php"); ?>', {
+    method: 'POST',
+    body: formData
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data && data.success && data.data) {
+      const d = data.data;
+
+      // 1. Title
+      if (d.title) {
+        const titleInput = document.getElementById('full_title');
+        if (titleInput) {
+          titleInput.value = d.title;
+          if (typeof onTitleChanged === 'function') onTitleChanged(d.title);
+        }
+      }
+
+      // 2. Price & Previous Price
+      if (d.price && d.price > 0) {
+        const priceInput = document.getElementById('full_price');
+        if (priceInput) {
+          priceInput.value = d.price;
+          if (typeof calculateDiscount === 'function') calculateDiscount();
+        }
+      }
+      if (d.previous_price && d.previous_price > 0) {
+        const prevPriceInput = document.getElementById('full_prev_price');
+        if (prevPriceInput) {
+          prevPriceInput.value = d.previous_price;
+          if (typeof calculateDiscount === 'function') calculateDiscount();
+        }
+      }
+
+      // 3. Category Match
+      if (d.category) {
+        const catSelect = document.getElementById('full_category');
+        if (catSelect) {
+          const catNorm = d.category.toLowerCase().trim();
+          for (let opt of catSelect.options) {
+            if (opt.text.toLowerCase().includes(catNorm) || catNorm.includes(opt.text.toLowerCase())) {
+              catSelect.value = opt.value;
+              catSelect.dispatchEvent(new Event('change'));
+              break;
+            }
+          }
+        }
+      }
+
+      // 4. Key Highlights
+      if (d.highlights && Array.isArray(d.highlights) && d.highlights.length > 0) {
+        const container = document.getElementById('keyFeaturesContainer');
+        if (container) {
+          container.innerHTML = '';
+          d.highlights.forEach(h => addKeyFeatureRow(h));
+        }
+      }
+
+      // 5. Quill Rich Text Description
+      if (d.html_description && quillEditor) {
+        quillEditor.root.innerHTML = d.html_description;
+        const hiddenNarrative = document.getElementById('full_narrative');
+        if (hiddenNarrative) hiddenNarrative.value = d.html_description;
+      }
+
+      // 6. Specifications Matrix
+      if (d.specifications && Array.isArray(d.specifications) && d.specifications.length > 0) {
+        const specsContainer = document.getElementById('specRowsContainer');
+        if (specsContainer) {
+          specsContainer.innerHTML = '';
+          d.specifications.forEach(sp => addSpecRow(sp.key, sp.val));
+        }
+      }
+
+      // 7. Box Contents
+      if (d.box_contents) {
+        const boxInput = document.getElementById('box_contents');
+        if (boxInput) boxInput.value = d.box_contents;
+      }
+
+      if (notice && noticeText) {
+        noticeText.innerHTML = `<strong>Success!</strong> Imported ${data.filename} (${data.format.toUpperCase()}). Title, highlights, Quill description, and specs auto-filled.`;
+        notice.classList.remove('hidden', 'bg-blue-50', 'border-blue-200', 'text-blue-800');
+        notice.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+      }
+    } else {
+      if (notice && noticeText) {
+        noticeText.innerHTML = `<strong>Import Warning:</strong> ` + (data.message || 'Could not parse template file.');
+        notice.classList.remove('hidden', 'bg-blue-50', 'border-blue-200', 'text-blue-800');
+        notice.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-800');
+      }
+    }
+  })
+  .catch(err => {
+    if (notice && noticeText) {
+      noticeText.innerHTML = `<strong>Import Error:</strong> Failed to connect to server: ` + err.message;
+      notice.classList.remove('hidden', 'bg-blue-50', 'border-blue-200', 'text-blue-800');
+      notice.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-800');
+    }
+  });
 }
 
 // 4. Variety & Preorder Toggles
@@ -1113,6 +1414,18 @@ function updateAllCreditCounters(credits) {
   const box = document.getElementById('boxAiCredits');
   if (box) box.innerText = c + ' Credits';
 }
+
+// Sync Quill editor before any form submit
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('mainProductForm');
+  if (form) {
+    form.addEventListener('submit', function() {
+      if (quillEditor) {
+        document.getElementById('full_narrative').value = quillEditor.root.innerHTML;
+      }
+    });
+  }
+});
 
 function submitProductForm() {
   const title = document.getElementById('full_title').value.trim();

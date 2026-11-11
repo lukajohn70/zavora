@@ -389,17 +389,16 @@ require_once __DIR__ . '/../includes/header.php';
           <span class="text-[11px] font-bold text-blue-200 uppercase tracking-wider flex items-center gap-1.5">
             <i class="fas fa-wand-magic-sparkles text-[#F7DE7A]"></i> AI Studio
           </span>
-          <span class="px-2 py-0.5 rounded-full bg-white/10 text-amber-300 border border-white/20 text-[9px] font-black uppercase">
-            Paid
+          <span class="px-2 py-0.5 rounded-full bg-amber-400 text-gray-950 text-[9px] font-black uppercase tracking-wider">
+            Coming Soon
           </span>
         </div>
         <p class="text-2xl font-black text-white mt-2 font-display" id="kpiAiCreditsDisplay"><?php echo intval($vendor['ai_credits'] ?? 3); ?> Credits</p>
         <p class="text-[11px] text-blue-200 font-medium mt-1">Copy, titles & studio photos</p>
       </div>
-      <button onclick="openAiTopupModal()" 
-              class="mt-4 w-full py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-gray-950 font-black text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5">
-        <i class="fas fa-plus-circle text-xs"></i> Top Up Credits
-      </button>
+      <div class="mt-4 w-full py-2 bg-white/10 text-white/60 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-not-allowed select-none pointer-events-none border border-white/10">
+        <i class="fas fa-lock text-[10px]"></i> Feature Coming Soon
+      </div>
     </div>
   </div>
 
@@ -430,10 +429,10 @@ require_once __DIR__ . '/../includes/header.php';
         <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[11px] font-bold"><?php echo count($payouts); ?></span>
       </button>
 
-      <button onclick="switchVendorTab('ai')" id="vtab-btn-ai" class="vtab-btn pb-4 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-900 flex items-center gap-2">
-        <i class="fas fa-wand-magic-sparkles text-amber-500"></i>
+      <button type="button" class="vtab-btn pb-4 font-semibold text-sm border-b-2 border-transparent text-gray-400 cursor-not-allowed select-none flex items-center gap-2 opacity-60" title="AI Merchant Studio (Coming Soon)" disabled>
+        <i class="fas fa-wand-magic-sparkles text-gray-400"></i>
         <span>AI Merchant Studio</span>
-        <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold" id="tabAiCreditsBadge"><?php echo intval($vendor['ai_credits'] ?? 3); ?> credits</span>
+        <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">Coming Soon</span>
       </button>
     </div>
 
@@ -445,12 +444,11 @@ require_once __DIR__ . '/../includes/header.php';
           <p class="text-xs text-gray-500">Configure variety options, set preorders, boost visibility, and adjust stock in real-time.</p>
         </div>
         <div class="flex items-center gap-2">
-          <a href="<?php echo zavora_asset('seller/ai-studio.php'); ?>"
-             class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-gray-700 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-gray-200">
-            <i class="fas fa-sparkles text-purple-600"></i>
+          <div class="px-3.5 py-2.5 bg-gray-100 text-gray-400 rounded-xl text-xs font-bold flex items-center gap-2 border border-gray-200 cursor-not-allowed select-none pointer-events-none opacity-70" title="AI Studio is Coming Soon">
+            <i class="fas fa-sparkles text-gray-400"></i>
             <span>AI Studio</span>
             <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-200">Coming Soon</span>
-          </a>
+          </div>
           <a href="<?php echo zavora_asset('seller/product-create.php'); ?>"
              class="px-4 py-2.5 bg-[#1B2299] hover:bg-[#0B132B] text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2">
             <i class="fas fa-plus"></i>
@@ -479,11 +477,11 @@ require_once __DIR__ . '/../includes/header.php';
                     <i class="fas fa-box-open"></i>
                   </div>
                   <p class="font-bold text-gray-700 text-sm mb-1">No products listed in your store yet</p>
-                  <p class="text-xs text-gray-400 mb-4">Use the full-page enterprise AI studio to draft, generate photography, and list your first item.</p>
+                  <p class="text-xs text-gray-400 mb-4">Add your catalog items with rich descriptions, specs, and multiple high-resolution photos.</p>
                   <a href="<?php echo zavora_asset('seller/product-create.php'); ?>" 
                      class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-extrabold rounded-xl shadow transition">
-                    <i class="fas fa-sparkles"></i>
-                    <span>List Product with AI Studio</span>
+                    <i class="fas fa-plus"></i>
+                    <span>Add Your First Product</span>
                   </a>
                 </td>
               </tr>

@@ -278,6 +278,7 @@ function zavora_ensure_schema(PDO $pdo) {
         "ALTER TABLE products ADD COLUMN boost_expires_at {$timeType} NULL",
         "ALTER TABLE products ADD COLUMN has_variants INT DEFAULT 0",
         "ALTER TABLE products ADD COLUMN variant_attributes {$textType} NULL",
+        "ALTER TABLE products ADD COLUMN images {$textType} NULL",
     ];
     foreach ($productCols as $sql) {
         try { $pdo->exec($sql); } catch (\Throwable $e) {}

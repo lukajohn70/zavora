@@ -91,8 +91,39 @@ require_once __DIR__ . '/../includes/header.php';
   <div class="bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-indigo-500/20 border-b border-amber-500/30 px-4 py-2.5 text-center flex items-center justify-center gap-3">
     <span class="px-2.5 py-0.5 rounded-full bg-amber-400 text-gray-950 text-[10px] font-black uppercase tracking-wider">Coming Soon</span>
     <p class="text-xs text-amber-200 font-semibold">
-      ZAVORA AI Studio is currently undergoing final beta calibration for all merchant stores. Full commercial access coming soon!
+      ZAVORA AI Studio is currently undergoing final beta calibration. Feature controls are non-clickable until official release.
     </p>
+  </div>
+
+  <!-- Non-Clickable Coming Soon Modal Overlay -->
+  <div class="fixed inset-0 top-[56px] z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-gradient-to-br from-slate-900 via-indigo-950/90 to-slate-900 border border-slate-700/80 rounded-3xl p-8 max-w-md text-center shadow-2xl space-y-5">
+      <div class="w-16 h-16 rounded-3xl bg-amber-400/20 text-amber-300 flex items-center justify-center mx-auto text-2xl border border-amber-400/30 shadow-lg">
+        <i class="fas fa-wand-magic-sparkles"></i>
+      </div>
+      <div>
+        <span class="px-3 py-1 rounded-full bg-amber-400 text-gray-950 text-[10px] font-black uppercase tracking-wider">
+          Coming Soon
+        </span>
+        <h2 class="text-xl font-black text-white mt-3">AI Merchant Studio In Calibration</h2>
+        <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+          Our multimodal AI listing architect and FLUX.1 photography engine are undergoing final calibration for the Nigerian market.
+          All automated AI controls are in private preview and will be unlocked soon.
+        </p>
+      </div>
+      <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <a href="<?php echo zavora_asset('seller/product-create.php'); ?>" 
+           class="w-full sm:w-auto px-5 py-2.5 bg-[#1B2299] hover:bg-blue-800 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+          <i class="fas fa-plus"></i>
+          <span>List Products Manually</span>
+        </a>
+        <a href="<?php echo zavora_asset('seller/index.php'); ?>" 
+           class="w-full sm:w-auto px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5">
+          <i class="fas fa-arrow-left"></i>
+          <span>Dashboard</span>
+        </a>
+      </div>
+    </div>
   </div>
 
   <!-- Workspace Body: Split Screen (50% Chat Copilot | 50% Live Canvas) -->

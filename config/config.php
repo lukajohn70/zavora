@@ -160,6 +160,39 @@ function zavora_clear_cart() {
     $_SESSION['zavora_cart'] = [];
 }
 
+/**
+ * Customer Wishlist Management
+ */
+function zavora_get_wishlist() {
+    if (!isset($_SESSION['zavora_wishlist']) || !is_array($_SESSION['zavora_wishlist'])) {
+        $_SESSION['zavora_wishlist'] = [];
+    }
+    return array_values(array_unique(array_map('intval', $_SESSION['zavora_wishlist'])));
+}
+
+function zavora_in_wishlist($productId) {
+    $wishlist = zavora_get_wishlist();
+    return in_array((int)$productId, $wishlist, true);
+}
+
+function zavora_toggle_wishlist($productId) {
+    $productId = (int)$productId;
+    if ($productId <= 0) return false;
+    $wishlist = zavora_get_wishlist();
+    $inWishlist = in_array($productId, $wishlist, true);
+    if ($inWishlist) {
+        $wishlist = array_diff($wishlist, [$productId]);
+    } else {
+        $wishlist[] = $productId;
+    }
+    $_SESSION['zavora_wishlist'] = array_values(array_unique($wishlist));
+    return !$inWishlist; // returns true if added, false if removed
+}
+
+function zavora_wishlist_count() {
+    return count(zavora_get_wishlist());
+}
+
 function zavora_cart_totals($deliveryState = null) {
     $cart = zavora_get_cart();
     $subtotal = 0;

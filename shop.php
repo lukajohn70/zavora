@@ -157,6 +157,15 @@ $catList = $pdo->query("SELECT * FROM categories ORDER BY id ASC")->fetchAll();
                     <?php echo htmlspecialchars($item['type']); ?>
                   </span>
 
+                  <!-- Wishlist Heart Button -->
+                  <?php $inWishlist = zavora_in_wishlist($item['id']); ?>
+                  <button type="button" 
+                          onclick="toggleShopWishlist(<?php echo $item['id']; ?>, this)" 
+                          title="<?php echo $inWishlist ? 'Remove from Wishlist' : 'Save to Wishlist'; ?>"
+                          class="absolute top-3 <?php echo !empty($item['is_boosted']) ? 'right-28' : 'right-3'; ?> w-8 h-8 rounded-full bg-white/95 hover:bg-white text-gray-500 shadow-md backdrop-blur-sm flex items-center justify-center transition-all z-10 hover:scale-110">
+                    <i class="<?php echo $inWishlist ? 'fas text-rose-500' : 'far text-gray-400'; ?> fa-heart text-xs"></i>
+                  </button>
+
                   <?php if (!empty($item['is_boosted'])): ?>
                     <span class="absolute top-3 right-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shadow flex items-center gap-1">
                       <i class="fas fa-bolt text-[9px]"></i> Sponsored
@@ -218,5 +227,34 @@ $catList = $pdo->query("SELECT * FROM categories ORDER BY id ASC")->fetchAll();
 
   </div>
 </div>
+
+<script>
+function toggleShopWishlist(productId, btn) {
+  const icon = btn.querySelector('i');
+  fetch('<?php echo zavora_asset("wishlist.php?action=toggle&format=json&id="); ?>' + encodeURIComponent(productId))
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.success) {
+        if (data.in_wishlist) {
+          icon.className = 'fas fa-heart text-xs text-rose-500';
+          btn.setAttribute('title', 'Remove from Wishlist');
+        } else {
+          icon.className = 'far fa-heart text-xs text-gray-400';
+          btn.setAttribute('title', 'Save to Wishlist');
+        }
+        const badge = document.getElementById('headerWishlistBadge');
+        if (badge) {
+          badge.textContent = data.count;
+          if (data.count > 0) {
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+      }
+    })
+    .catch(err => console.error('Wishlist error:', err));
+}
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

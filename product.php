@@ -145,6 +145,25 @@ if (!empty($rawSpecs)) {
     }
 }
 
+// Parse Multi-Image Gallery
+$galleryImages = [];
+if (!empty($product['images'])) {
+    $decoded = json_decode($product['images'], true);
+    if (is_array($decoded)) {
+        $galleryImages = array_values(array_filter(array_map('trim', $decoded)));
+    }
+}
+if (empty($galleryImages)) {
+    if (!empty($product['thumbnail'])) {
+        $galleryImages = [$product['thumbnail']];
+    }
+} else {
+    if (!empty($product['thumbnail']) && !in_array($product['thumbnail'], $galleryImages, true)) {
+        array_unshift($galleryImages, $product['thumbnail']);
+    }
+}
+$galleryImages = array_values(array_unique($galleryImages));
+
 $title = $product['title'];
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -180,10 +199,10 @@ require_once __DIR__ . '/includes/header.php';
   <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start bg-white rounded-3xl border border-gray-200/90 p-6 sm:p-10 shadow-sm">
     
     <!-- Left: Product Image Gallery (5 Cols) -->
-    <div class="lg:col-span-5">
-      <div class="relative rounded-2xl overflow-hidden aspect-square bg-white border border-gray-200 shadow-inner flex items-center justify-center p-3">
+    <div class="lg:col-span-5 space-y-3.5">
+      <div class="relative rounded-2xl overflow-hidden aspect-square bg-white border border-gray-200 shadow-inner flex items-center justify-center p-3 group">
         <img id="main-product-img" src="<?php echo htmlspecialchars(zavora_image_url($product['thumbnail'])); ?>" alt="<?php echo htmlspecialchars($product['title']); ?>" 
-             class="w-full h-full object-contain">
+             class="w-full h-full object-contain transition-all duration-200">
         
         <?php if (!empty($product['is_boosted'])): ?>
           <span class="absolute top-4 left-4 px-3 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-black rounded-lg shadow-md uppercase tracking-wider flex items-center gap-1.5">
@@ -197,9 +216,29 @@ require_once __DIR__ . '/includes/header.php';
           </span>
         <?php endif; ?>
       </div>
+
+      <!-- Multi-Image Thumbnail Selector Strip -->
+      <?php if (count($galleryImages) > 1): ?>
+        <div>
+          <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+            <?php foreach ($galleryImages as $gIdx => $gImg): ?>
+              <?php $gUrl = zavora_image_url($gImg); ?>
+              <button type="button" 
+                      onclick="switchGalleryImage('<?php echo htmlspecialchars($gUrl, ENT_QUOTES); ?>', this)" 
+                      class="gallery-thumb-btn flex-shrink-0 w-16 h-16 rounded-xl border-2 bg-white p-1 transition-all overflow-hidden <?php echo $gIdx === 0 ? 'border-[#1B2299] shadow-sm ring-2 ring-indigo-100' : 'border-gray-200 opacity-70 hover:opacity-100 hover:border-gray-400'; ?>"
+                      title="View Photo <?php echo $gIdx + 1; ?>">
+                <img src="<?php echo htmlspecialchars($gUrl); ?>" alt="Thumbnail <?php echo $gIdx + 1; ?>" class="w-full h-full object-contain">
+              </button>
+            <?php endforeach; ?>
+          </div>
+          <p class="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
+            <i class="fas fa-images text-[#1B2299]"></i> Click any thumbnail above to view angles
+          </p>
+        </div>
+      <?php endif; ?>
       
       <!-- Type & Stock Pill Under Image -->
-      <div class="mt-4 p-3.5 rounded-xl bg-gray-50 border border-gray-150 flex items-center justify-between text-xs text-gray-600">
+      <div class="p-3.5 rounded-xl bg-gray-50 border border-gray-150 flex items-center justify-between text-xs text-gray-600">
         <span class="font-bold flex items-center gap-1.5 text-gray-800">
           <?php if ($product['type'] === 'digital'): ?>
             <i class="fas fa-bolt text-[#E4306D]"></i> Instant Digital Download
@@ -369,6 +408,14 @@ require_once __DIR__ . '/includes/header.php';
               <i class="fas fa-cart-plus"></i>
               <span>Add to Cart</span>
             <?php endif; ?>
+          </button>
+
+          <!-- Save to Wishlist Button -->
+          <?php $isSaved = zavora_in_wishlist($product['id']); ?>
+          <button type="button" onclick="toggleProductWishlist(<?php echo $product['id']; ?>)" id="btnWishlistToggle"
+                  title="<?php echo $isSaved ? 'Remove from Wishlist' : 'Save to Wishlist'; ?>"
+                  class="w-14 h-14 rounded-xl border <?php echo $isSaved ? 'bg-rose-50 border-rose-200 text-rose-600' : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-rose-600 hover:bg-rose-50'; ?> flex items-center justify-center text-xl transition-all shadow-sm flex-shrink-0">
+            <i class="<?php echo $isSaved ? 'fas text-rose-500' : 'far'; ?> fa-heart" id="wishlistIcon"></i>
           </button>
         </div>
       </form>
@@ -809,6 +856,71 @@ document.addEventListener('DOMContentLoaded', () => {
     if (radio.checked) updateSelectedVariant(radio);
   });
 });
+
+// Interactive Gallery Photo Switcher
+function switchGalleryImage(url, btn) {
+  const mainImg = document.getElementById('main-product-img');
+  if (mainImg) {
+    mainImg.style.opacity = '0.3';
+    setTimeout(() => {
+      mainImg.src = url;
+      mainImg.style.opacity = '1';
+    }, 120);
+  }
+  document.querySelectorAll('.gallery-thumb-btn').forEach(b => {
+    b.classList.remove('border-[#1B2299]', 'shadow-sm', 'ring-2', 'ring-indigo-100');
+    b.classList.add('border-gray-200', 'opacity-70');
+  });
+  if (btn) {
+    btn.classList.add('border-[#1B2299]', 'shadow-sm', 'ring-2', 'ring-indigo-100');
+    btn.classList.remove('border-gray-200', 'opacity-70');
+  }
+}
+
+// Interactive Wishlist Toggle with Header Synchronization
+function toggleProductWishlist(productId) {
+  const btn = document.getElementById('btnWishlistToggle');
+  const icon = document.getElementById('wishlistIcon');
+  const badge = document.getElementById('headerWishlistBadge');
+
+  fetch('<?php echo zavora_asset("wishlist.php?action=toggle&format=json&id="); ?>' + encodeURIComponent(productId))
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.success) {
+        if (data.in_wishlist) {
+          if (btn) {
+            btn.classList.remove('bg-gray-50', 'border-gray-200', 'text-gray-500');
+            btn.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-600');
+            btn.setAttribute('title', 'Remove from Wishlist');
+          }
+          if (icon) {
+            icon.classList.remove('far');
+            icon.classList.add('fas', 'text-rose-500');
+          }
+        } else {
+          if (btn) {
+            btn.classList.remove('bg-rose-50', 'border-rose-200', 'text-rose-600');
+            btn.classList.add('bg-gray-50', 'border-gray-200', 'text-gray-500');
+            btn.setAttribute('title', 'Save to Wishlist');
+          }
+          if (icon) {
+            icon.classList.remove('fas', 'text-rose-500');
+            icon.classList.add('far');
+          }
+        }
+
+        if (badge) {
+          badge.textContent = data.count;
+          if (data.count > 0) {
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+      }
+    })
+    .catch(err => console.error('Wishlist error:', err));
+}
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

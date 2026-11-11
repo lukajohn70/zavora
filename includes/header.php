@@ -158,6 +158,18 @@ $activeAdmin = zavora_admin_auth();
           <span>Academy</span>
         </a>
 
+        <!-- Wishlist Icon with Dynamic Badge -->
+        <?php $wishlistCount = zavora_wishlist_count(); ?>
+        <a href="<?php echo zavora_asset('wishlist.php'); ?>" 
+           title="Saved Wishlist" 
+           class="relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-gray-700 hover:text-rose-600 hover:bg-rose-50/50 transition-colors">
+          <i class="<?php echo $wishlistCount > 0 ? 'fas text-rose-500' : 'far text-gray-600'; ?> fa-heart text-base"></i>
+          <span class="hidden md:inline text-xs font-bold">Wishlist</span>
+          <span id="headerWishlistBadge" class="<?php echo $wishlistCount > 0 ? '' : 'hidden'; ?> bg-rose-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5 leading-none">
+            <?php echo $wishlistCount; ?>
+          </span>
+        </a>
+
         <!-- Cart Icon with Badge -->
         <a href="<?php echo zavora_asset('cart.php'); ?>" class="relative flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#1B2299] to-[#0B132B] text-white font-bold text-xs shadow-md hover:shadow-lg hover:scale-105 transition-all">
           <i class="fas fa-bag-shopping text-sm"></i>
