@@ -196,7 +196,7 @@ require_once __DIR__ . '/includes/header.php';
   <!-- ════════════════════════════════════════════════════════════════════════
        TOP HERO: PRODUCT SHOWCASE & PURCHASE CONTROLS
        ════════════════════════════════════════════════════════════════════════ -->
-  <div class="grid lg:grid-cols-12 gap-6 lg:gap-10 items-start bg-white rounded-3xl border border-gray-200/90 p-5 sm:p-7 shadow-sm">
+  <div class="grid lg:grid-cols-12 gap-6 lg:gap-10 items-start bg-white rounded-3xl border border-gray-200/90 p-4 sm:p-6 lg:p-8 shadow-sm">
     
     <!-- Left: Product Image Gallery (5 Cols) -->
     <div class="lg:col-span-5 space-y-3">
@@ -424,28 +424,28 @@ require_once __DIR__ . '/includes/header.php';
         <?php endif; ?>
 
         <!-- Quantity & Add to Cart Action -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3">
           <?php if ($product['type'] === 'physical'): ?>
-            <div class="w-28 flex-shrink-0">
+            <div class="w-24 sm:w-28 flex-shrink-0">
               <label for="quantity" class="sr-only">Quantity</label>
               <div class="flex items-center border border-gray-200 rounded-xl bg-gray-50 overflow-hidden h-12">
-                <button type="button" onclick="decrementQty()" class="w-9 h-full flex items-center justify-center text-gray-500 hover:text-gray-900 transition font-bold text-base">-</button>
+                <button type="button" onclick="decrementQty()" class="w-8 sm:w-9 h-full flex items-center justify-center text-gray-500 hover:text-gray-900 transition font-bold text-base">-</button>
                 <input type="number" id="quantity" name="quantity" value="1" min="1" max="10" 
                        class="w-full text-center font-black text-sm bg-transparent focus:outline-none">
-                <button type="button" onclick="incrementQty()" class="w-9 h-full flex items-center justify-center text-gray-500 hover:text-gray-900 transition font-bold text-base">+</button>
+                <button type="button" onclick="incrementQty()" class="w-8 sm:w-9 h-full flex items-center justify-center text-gray-500 hover:text-gray-900 transition font-bold text-base">+</button>
               </div>
             </div>
           <?php else: ?>
             <input type="hidden" name="quantity" value="1">
           <?php endif; ?>
 
-          <button type="submit" class="flex-1 h-12 bg-[#1B2299] hover:bg-[#0B132B] text-white font-extrabold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
+          <button type="submit" class="flex-1 min-w-0 h-12 px-2 sm:px-4 bg-[#1B2299] hover:bg-[#0B132B] text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 sm:gap-2">
             <?php if (!empty($product['is_preorder'])): ?>
-              <i class="fas fa-calendar-check"></i>
-              <span>Pre-Order Allocation</span>
+              <i class="fas fa-calendar-check text-xs"></i>
+              <span class="truncate">Pre-Order Allocation</span>
             <?php else: ?>
-              <i class="fas fa-cart-plus"></i>
-              <span>Add to Cart</span>
+              <i class="fas fa-cart-plus text-xs"></i>
+              <span class="truncate">Add to Cart</span>
             <?php endif; ?>
           </button>
 
@@ -453,7 +453,7 @@ require_once __DIR__ . '/includes/header.php';
           <?php $isSaved = zavora_in_wishlist($product['id']); ?>
           <button type="button" onclick="toggleProductWishlist(<?php echo $product['id']; ?>)" id="btnWishlistToggle"
                   title="<?php echo $isSaved ? 'Remove from Wishlist' : 'Save to Wishlist'; ?>"
-                  class="w-12 h-12 rounded-xl border <?php echo $isSaved ? 'bg-rose-50 border-rose-200 text-rose-600' : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-rose-600 hover:bg-rose-50'; ?> flex items-center justify-center text-lg transition-all shadow-2xs flex-shrink-0">
+                  class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl border <?php echo $isSaved ? 'bg-rose-50 border-rose-200 text-rose-600' : 'bg-gray-50 border-gray-200 text-gray-500 hover:text-rose-600 hover:bg-rose-50'; ?> flex items-center justify-center text-base sm:text-lg transition-all shadow-2xs flex-shrink-0">
             <i class="<?php echo $isSaved ? 'fas text-rose-500' : 'far'; ?> fa-heart" id="wishlistIcon"></i>
           </button>
         </div>
@@ -612,15 +612,15 @@ require_once __DIR__ . '/includes/header.php';
             </span>
           </div>
 
-          <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xs">
+          <div class="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-2xs">
             <table class="w-full text-left text-xs sm:text-sm">
               <tbody class="divide-y divide-gray-150">
                 <?php $sCount = 0; foreach ($parsedSpecs as $sKey => $sVal): $sCount++; ?>
                   <tr class="<?php echo ($sCount % 2 === 1) ? 'bg-slate-50/70' : 'bg-white'; ?> transition-colors hover:bg-indigo-50/30">
-                    <td class="py-3 px-4 font-bold text-gray-600 w-2/5 border-r border-gray-150 text-[11px] sm:text-xs uppercase tracking-wider">
+                    <td class="py-2.5 sm:py-3 px-3 sm:px-4 font-bold text-gray-600 w-2/5 border-r border-gray-150 text-[11px] sm:text-xs uppercase tracking-wider break-words">
                       <?php echo htmlspecialchars($sKey); ?>
                     </td>
-                    <td class="py-3 px-4 font-semibold text-gray-900">
+                    <td class="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold text-gray-900 break-words">
                       <?php echo htmlspecialchars($sVal); ?>
                     </td>
                   </tr>
@@ -1005,7 +1005,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   <?php if (count($galleryImages) > 1): ?>
     <!-- Bottom Thumbnail Bar in Lightbox -->
-    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 max-w-[92vw] overflow-x-auto p-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center gap-2 z-40 scrollbar-none">
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 max-w-[92vw] overflow-x-auto overscroll-contain p-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center gap-2 z-40 scrollbar-none">
       <?php foreach ($galleryImages as $lbIdx => $lbImg): ?>
         <?php $lbUrl = zavora_image_url($lbImg); ?>
         <button type="button" 

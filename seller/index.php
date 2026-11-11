@@ -307,20 +307,20 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="container mx-auto px-4 lg:px-8 py-8 max-w-7xl">
   
   <!-- Merchant Top Banner -->
-  <div class="bg-gradient-to-r from-[#0B132B] via-[#1B2299] to-[#0B132B] rounded-3xl p-6 sm:p-8 text-white mb-8 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-    <div class="flex items-center gap-4">
-      <div class="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-3xl font-black text-[#F7DE7A]">
+  <div class="bg-gradient-to-r from-[#0B132B] via-[#1B2299] to-[#0B132B] rounded-3xl p-5 sm:p-8 text-white mb-8 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div class="flex items-center gap-3 sm:gap-4">
+      <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-2xl sm:text-3xl font-black text-[#F7DE7A] flex-shrink-0">
         <i class="fas fa-store"></i>
       </div>
-      <div>
-        <div class="flex items-center gap-2 mb-1">
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
           <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
             <i class="fas fa-circle-check"></i> Verified Merchant
           </span>
           <span class="text-xs text-gray-300">Commission Rate: <?php echo 100 - (float)$vendor['commission_rate']; ?>% Vendor / <?php echo (float)$vendor['commission_rate']; ?>% ZAVORA</span>
         </div>
-        <h1 class="text-2xl sm:text-3xl font-black font-display"><?php echo htmlspecialchars($vendor['store_name']); ?></h1>
-        <p class="text-xs text-gray-300">
+        <h1 class="text-xl sm:text-3xl font-black font-display truncate"><?php echo htmlspecialchars($vendor['store_name']); ?></h1>
+        <p class="text-xs text-gray-300 mt-0.5">
           Owner: <?php echo htmlspecialchars($vendor['owner_name']); ?> • 
           Payout Bank: <strong class="text-white"><?php echo htmlspecialchars($vendor['bank_name'] ?: 'Not configured'); ?></strong> 
           (<?php echo htmlspecialchars($vendor['account_number'] ?: 'Setup Required'); ?>)
@@ -328,13 +328,13 @@ require_once __DIR__ . '/../includes/header.php';
       </div>
     </div>
 
-    <div class="flex items-center gap-3">
-      <a href="<?php echo zavora_asset('shop.php'); ?>" target="_blank" class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all border border-white/20 flex items-center gap-1.5">
+    <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+      <a href="<?php echo zavora_asset('shop.php'); ?>" target="_blank" class="px-3.5 sm:px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all border border-white/20 flex items-center gap-1.5">
         <i class="fas fa-globe"></i> View Marketplace Storefront
       </a>
       <form method="POST">
         <input type="hidden" name="action" value="signout">
-        <button type="submit" class="px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 rounded-xl text-xs font-bold transition-all border border-rose-500/30 flex items-center gap-1">
+        <button type="submit" class="px-3.5 sm:px-4 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 rounded-xl text-xs font-bold transition-all border border-rose-500/30 flex items-center gap-1">
           <i class="fas fa-sign-out-alt"></i> Sign Out
         </button>
       </form>
@@ -405,31 +405,31 @@ require_once __DIR__ . '/../includes/header.php';
   <!-- Main Tabs Hub -->
   <div class="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden mb-12">
     
-    <div class="border-b border-gray-200 px-6 pt-4 flex gap-6 overflow-x-auto" id="vendorTabs">
-      <button onclick="switchVendorTab('products')" id="vtab-btn-products" class="vtab-btn pb-4 font-bold text-sm border-b-2 border-[#1B2299] text-[#1B2299] flex items-center gap-2">
+    <div class="border-b border-gray-200 px-4 sm:px-6 pt-4 flex gap-4 sm:gap-6 overflow-x-auto scrollbar-none whitespace-nowrap" id="vendorTabs">
+      <button onclick="switchVendorTab('products')" id="vtab-btn-products" class="vtab-btn pb-4 font-bold text-sm border-b-2 border-[#1B2299] text-[#1B2299] flex items-center gap-2 flex-shrink-0">
         <i class="fas fa-box"></i>
         <span>My Products & Inventory</span>
         <span class="px-2 py-0.5 rounded-full bg-blue-100 text-[#1B2299] text-[11px] font-black"><?php echo count($vendorProducts); ?></span>
       </button>
 
-      <button onclick="switchVendorTab('settings')" id="vtab-btn-settings" class="vtab-btn pb-4 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-900 flex items-center gap-2">
+      <button onclick="switchVendorTab('settings')" id="vtab-btn-settings" class="vtab-btn pb-4 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-900 flex items-center gap-2 flex-shrink-0">
         <i class="fas fa-store"></i>
         <span>Store & Payout Accounts</span>
       </button>
 
-      <button onclick="switchVendorTab('orders')" id="vtab-btn-orders" class="vtab-btn pb-4 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-900 flex items-center gap-2">
+      <button onclick="switchVendorTab('orders')" id="vtab-btn-orders" class="vtab-btn pb-4 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-900 flex items-center gap-2 flex-shrink-0">
         <i class="fas fa-truck-fast"></i>
         <span>Fulfillment & Orders</span>
         <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[11px] font-bold"><?php echo count($vendorOrders); ?></span>
       </button>
 
-      <button onclick="switchVendorTab('payouts')" id="vtab-btn-payouts" class="vtab-btn pb-4 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-900 flex items-center gap-2">
+      <button onclick="switchVendorTab('payouts')" id="vtab-btn-payouts" class="vtab-btn pb-4 font-semibold text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-900 flex items-center gap-2 flex-shrink-0">
         <i class="fas fa-building-columns"></i>
         <span>Settlements & Payouts</span>
         <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[11px] font-bold"><?php echo count($payouts); ?></span>
       </button>
 
-      <button type="button" class="vtab-btn pb-4 font-semibold text-sm border-b-2 border-transparent text-gray-400 cursor-not-allowed select-none flex items-center gap-2 opacity-60" title="AI Merchant Studio (Coming Soon)" disabled>
+      <button type="button" class="vtab-btn pb-4 font-semibold text-sm border-b-2 border-transparent text-gray-400 cursor-not-allowed select-none flex items-center gap-2 opacity-60 flex-shrink-0" title="AI Merchant Studio (Coming Soon)" disabled>
         <i class="fas fa-wand-magic-sparkles text-gray-400"></i>
         <span>AI Merchant Studio</span>
         <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">Coming Soon</span>

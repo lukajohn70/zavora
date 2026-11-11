@@ -119,20 +119,20 @@ $categories = $catStmt->fetchAll();
           <?php endif; ?>
 
           <!-- Floating badge: Course Academy -->
-          <div class="absolute -bottom-6 -left-6 bg-white text-gray-900 p-4 rounded-2xl shadow-2xl border border-gray-100 flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-[#1B2299] text-white flex items-center justify-center font-bold">
+          <div class="absolute -bottom-3 left-2 sm:-bottom-6 sm:-left-6 bg-white text-gray-900 p-3 sm:p-4 rounded-2xl shadow-2xl border border-gray-100 flex items-center gap-2.5 sm:gap-3 z-10">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#1B2299] text-white flex items-center justify-center font-bold text-xs sm:text-base">
               <i class="fas fa-graduation-cap"></i>
             </div>
             <div>
-              <span class="text-[10px] font-bold uppercase text-[#1B2299] block">Academy Integrated</span>
-              <span class="text-xs font-bold text-gray-900">Auto-Enrolment Active</span>
+              <span class="text-[9px] sm:text-[10px] font-bold uppercase text-[#1B2299] block">Academy Integrated</span>
+              <span class="text-[11px] sm:text-xs font-bold text-gray-900">Auto-Enrolment Active</span>
             </div>
           </div>
 
           <!-- Floating badge: Secure Payment -->
-          <div class="absolute -top-6 -right-6 bg-white text-gray-900 px-4 py-3 rounded-2xl shadow-2xl border border-gray-100 flex items-center gap-2">
-            <i class="fas fa-lock text-[#16865B]"></i>
-            <span class="text-xs font-bold">Encrypted Checkout</span>
+          <div class="absolute -top-3 right-2 sm:-top-6 sm:-right-6 bg-white text-gray-900 px-3 py-2 sm:px-4 sm:py-3 rounded-2xl shadow-2xl border border-gray-100 flex items-center gap-2 z-10">
+            <i class="fas fa-lock text-[#16865B] text-xs sm:text-sm"></i>
+            <span class="text-[11px] sm:text-xs font-bold">Encrypted Checkout</span>
           </div>
 
         </div>

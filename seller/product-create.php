@@ -243,51 +243,67 @@ require_once __DIR__ . '/../includes/header.php';
 <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 
-<div class="min-h-screen bg-slate-50/60 pb-20">
+<style>
+  .ql-toolbar.ql-snow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+  }
+  .ql-container.ql-snow {
+    border-bottom-left-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+  }
+</style>
+
+<div class="min-h-screen bg-slate-50/60 pb-20 overflow-x-hidden">
 
   <!-- Sticky Enterprise Top Bar -->
-  <div class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200 px-4 lg:px-8 py-3.5">
-    <div class="container mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200 px-3 sm:px-4 lg:px-8 py-3 sm:py-3.5">
+    <div class="container mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
       <div class="flex items-center gap-3">
         <a href="<?php echo zavora_asset('seller/index.php'); ?>" 
-           class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center transition" title="Back to Dashboard">
+           class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 flex items-center justify-center transition flex-shrink-0" title="Back to Dashboard">
           <i class="fas fa-arrow-left text-sm"></i>
         </a>
-        <div>
+        <div class="min-w-0">
           <div class="flex items-center gap-2">
             <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Vendor Studio</span>
             <span class="text-gray-300">•</span>
-            <span class="text-[11px] font-bold text-[#1B2299]"><?php echo htmlspecialchars($vendor['store_name']); ?></span>
+            <span class="text-[11px] font-bold text-[#1B2299] truncate"><?php echo htmlspecialchars($vendor['store_name']); ?></span>
           </div>
-          <h1 class="text-lg font-black text-gray-900 font-display flex items-center gap-2">
+          <h1 class="text-base sm:text-lg font-black text-gray-900 font-display flex flex-wrap items-center gap-2">
             <span>List a New Product</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-[#1B2299] uppercase tracking-wider">Enterprise Catalog Suite</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-[#1B2299] uppercase tracking-wider">Catalog Suite</span>
           </h1>
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
         <!-- AI Credits Pill -->
-        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200/80">
+        <div class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200/80">
           <i class="fas fa-sparkles text-amber-500 text-xs"></i>
           <span class="text-xs font-black text-amber-900" id="topAiCredits"><?php echo intval($vendor['ai_credits']); ?> Credits</span>
           <a href="<?php echo zavora_asset('seller/index.php#vtab-ai'); ?>" class="text-[10px] text-amber-700 font-bold hover:underline">+ Top Up</a>
         </div>
 
-        <a href="<?php echo zavora_asset('seller/index.php'); ?>" 
-           class="px-4 py-2 border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-xl transition">
-          Discard
-        </a>
-        <button type="button" onclick="submitProductForm()" 
-                class="px-5 py-2 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-extrabold rounded-xl shadow-md hover:shadow-lg transition flex items-center gap-2">
-          <i class="fas fa-cloud-arrow-up"></i>
-          <span>Publish to Storefront</span>
-        </button>
+        <div class="flex items-center gap-2">
+          <a href="<?php echo zavora_asset('seller/index.php'); ?>" 
+             class="px-3 sm:px-4 py-2 border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-xl transition">
+            Discard
+          </a>
+          <button type="button" onclick="submitProductForm()" 
+                  class="px-3.5 sm:px-5 py-2 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-extrabold rounded-xl shadow-md hover:shadow-lg transition flex items-center gap-1.5 sm:gap-2">
+            <i class="fas fa-cloud-arrow-up text-xs"></i>
+            <span>Publish</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="container mx-auto px-4 lg:px-8 py-8">
+  <div class="container mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8 max-w-7xl">
 
     <?php if (!empty($flashMessage)): ?>
       <div class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2">
@@ -296,16 +312,16 @@ require_once __DIR__ . '/../includes/header.php';
       </div>
     <?php endif; ?>
 
-    <form method="POST" id="mainProductForm" enctype="multipart/form-data" class="grid lg:grid-cols-12 gap-8 items-start">
+    <form method="POST" id="mainProductForm" enctype="multipart/form-data" class="grid lg:grid-cols-12 gap-6 sm:gap-8 items-start">
       <input type="hidden" name="action" value="create_product">
 
       <!-- ════════════════════════════════════════════════════════════════════════
            LEFT COLUMN: CORE PRODUCT LISTING ATTRIBUTES (7 Cols)
            ════════════════════════════════════════════════════════════════════════ -->
-      <div class="lg:col-span-7 space-y-6">
+      <div class="lg:col-span-7 space-y-6 min-w-0">
 
         <!-- REFORMATTED TEMPLATE IMPORTER SUITE: WORD (.DOCX) & CSV -->
-        <div class="bg-gradient-to-br from-[#0B132B] via-[#1B2299] to-slate-900 text-white rounded-3xl p-6 sm:p-7 shadow-lg border border-indigo-700/50 space-y-5">
+        <div class="bg-gradient-to-br from-[#0B132B] via-[#1B2299] to-slate-900 text-white rounded-3xl p-5 sm:p-7 shadow-lg border border-indigo-700/50 space-y-5">
           
           <!-- Top Row: Icon, Headline & Status Badges -->
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10">
@@ -337,14 +353,14 @@ require_once __DIR__ . '/../includes/header.php';
             
             <!-- Download Options (Clear & Distinct for Word and CSV) -->
             <div class="flex flex-col sm:flex-row sm:items-center gap-2.5">
-              <span class="text-[11px] font-black uppercase tracking-wider text-blue-300/80 flex items-center gap-1.5 whitespace-nowrap">
+              <span class="text-[11px] font-black uppercase tracking-wider text-blue-300/80 flex items-center gap-1.5">
                 <i class="fas fa-download text-amber-300 text-xs"></i> Download Template:
               </span>
-              <div class="flex items-center gap-2">
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <!-- Word (.docx) Download Button -->
                 <a href="<?php echo zavora_asset('seller/download-template.php?format=docx'); ?>" 
                    title="Download formatted Microsoft Word template with headings and bullet lists"
-                   class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-2xs group whitespace-nowrap">
+                   class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-2xs group">
                   <i class="fas fa-file-word text-blue-400 text-sm group-hover:scale-110 transition-transform"></i>
                   <span>Word (.docx) Template</span>
                 </a>
@@ -352,7 +368,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <!-- CSV / Excel Download Button -->
                 <a href="<?php echo zavora_asset('seller/download-template.php?format=csv'); ?>" 
                    title="Download standard CSV spreadsheet template"
-                   class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-2xs group whitespace-nowrap">
+                   class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-2xs group">
                   <i class="fas fa-file-csv text-emerald-400 text-sm group-hover:scale-110 transition-transform"></i>
                   <span>CSV (.csv) Template</span>
                 </a>
@@ -360,9 +376,9 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <!-- Upload / Auto-fill Button -->
-            <div class="flex items-center gap-2">
+            <div class="w-full sm:w-auto">
               <button type="button" onclick="document.getElementById('catalogTemplateFileInput').click()" 
-                      class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-gray-950 text-xs font-black rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+                      class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-gray-950 text-xs font-black rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
                 <i class="fas fa-cloud-arrow-up text-sm"></i>
                 <span>Upload Word / CSV to Auto-Fill</span>
               </button>

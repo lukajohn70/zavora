@@ -336,37 +336,51 @@ require_once __DIR__ . '/../includes/header.php';
 <link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 
-<div class="min-h-screen bg-slate-50/60 pb-20">
+<style>
+  .ql-toolbar.ql-snow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+  }
+  .ql-container.ql-snow {
+    border-bottom-left-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+  }
+</style>
+
+<div class="min-h-screen bg-slate-50/60 pb-20 overflow-x-hidden">
 
   <!-- Sticky Enterprise Top Bar -->
-  <div class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200 px-4 lg:px-8 py-3.5">
+  <div class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200 px-3 sm:px-4 lg:px-8 py-3 sm:py-3.5">
     <div class="container mx-auto flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 min-w-0">
         <a href="<?php echo zavora_asset('seller/index.php?tab=products'); ?>" 
-           class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 transition">
+           class="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 transition flex-shrink-0">
           <i class="fas fa-arrow-left text-sm"></i>
         </a>
-        <div>
+        <div class="min-w-0">
           <div class="flex items-center gap-2">
             <span class="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
               Product Editor
             </span>
-            <span class="text-[11px] text-gray-400 font-mono">SKU: <?php echo htmlspecialchars($product['sku']); ?></span>
+            <span class="text-[11px] text-gray-400 font-mono truncate">SKU: <?php echo htmlspecialchars($product['sku']); ?></span>
           </div>
-          <h1 class="text-base sm:text-lg font-black text-gray-900 leading-tight truncate max-w-md">
+          <h1 class="text-sm sm:text-lg font-black text-gray-900 leading-tight truncate max-w-xs sm:max-w-md">
             Edit: <?php echo htmlspecialchars($product['title']); ?>
           </h1>
         </div>
       </div>
 
-      <div class="flex items-center gap-2.5">
+      <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
         <a href="<?php echo zavora_asset('product.php?id=' . $product['id']); ?>" target="_blank"
            class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-gray-800 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
           <i class="fas fa-external-link-alt text-xs text-gray-500"></i>
           <span>View Storefront</span>
         </a>
         <button type="button" onclick="submitProductForm()"
-                class="px-5 py-2 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-black rounded-xl shadow-md transition flex items-center gap-1.5">
+                class="px-4 sm:px-5 py-2 bg-[#1B2299] hover:bg-[#0B132B] text-white text-xs font-black rounded-xl shadow-md transition flex items-center gap-1.5">
           <i class="fas fa-floppy-disk"></i>
           <span>Save Changes</span>
         </button>
@@ -433,14 +447,14 @@ require_once __DIR__ . '/../includes/header.php';
             
             <!-- Download Options (Clear & Distinct for Word and CSV) -->
             <div class="flex flex-col sm:flex-row sm:items-center gap-2.5">
-              <span class="text-[11px] font-black uppercase tracking-wider text-blue-300/80 flex items-center gap-1.5 whitespace-nowrap">
+              <span class="text-[11px] font-black uppercase tracking-wider text-blue-300/80 flex items-center gap-1.5">
                 <i class="fas fa-download text-amber-300 text-xs"></i> Download Template:
               </span>
-              <div class="flex items-center gap-2">
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <!-- Word (.docx) Download Button -->
                 <a href="<?php echo zavora_asset('seller/download-template.php?format=docx'); ?>" 
                    title="Download formatted Microsoft Word template with headings and bullet lists"
-                   class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-2xs group whitespace-nowrap">
+                   class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-2xs group">
                   <i class="fas fa-file-word text-blue-400 text-sm group-hover:scale-110 transition-transform"></i>
                   <span>Word (.docx) Template</span>
                 </a>
@@ -448,7 +462,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <!-- CSV / Excel Download Button -->
                 <a href="<?php echo zavora_asset('seller/download-template.php?format=csv'); ?>" 
                    title="Download standard CSV spreadsheet template"
-                   class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-2xs group whitespace-nowrap">
+                   class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-2xs group">
                   <i class="fas fa-file-csv text-emerald-400 text-sm group-hover:scale-110 transition-transform"></i>
                   <span>CSV (.csv) Template</span>
                 </a>
@@ -456,9 +470,9 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <!-- Upload / Auto-fill Button -->
-            <div class="flex items-center gap-2">
+            <div class="w-full sm:w-auto">
               <button type="button" onclick="document.getElementById('catalogTemplateFileInput').click()" 
-                      class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-gray-950 text-xs font-black rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+                      class="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-gray-950 text-xs font-black rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2">
                 <i class="fas fa-cloud-arrow-up text-sm"></i>
                 <span>Upload Word / CSV to Auto-Fill</span>
               </button>

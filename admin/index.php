@@ -120,7 +120,7 @@ require_once __DIR__ . '/../includes/header.php';
       <p class="text-xs text-gray-500">Monitor multi-category commerce transactions and real-time Learnerium LMS course provisioning.</p>
     </div>
 
-    <div class="flex items-center gap-3">
+    <div class="flex flex-wrap items-center gap-2 sm:gap-3">
       <div class="hidden lg:flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-700">
         <i class="fas fa-shield-halved text-[#1B2299]"></i>
         <span><?php echo htmlspecialchars($adminUser['email'] ?? 'admin@jlm.com.ng'); ?></span>
@@ -190,7 +190,7 @@ require_once __DIR__ . '/../includes/header.php';
   <!-- SECTION 1: LEARNERIUM ECOSYSTEM BRIDGE LIVE MONITOR -->
   <div class="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 mb-8">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 mb-6">
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3">
         <div class="w-10 h-10 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center text-lg">
           <i class="fas fa-network-wired"></i>
         </div>
